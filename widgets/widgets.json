@@ -1,0 +1,22 @@
+[
+    {
+      "id": "tasks-today",
+      "url": "widgets/tasks-today.html",
+      "version": "1.0.0"
+    },
+    {
+      "id": "habits-today",
+      "url": "widgets/habits-today.html",
+      "version": "1.0.0"
+    },
+    {
+      "id": "mood-average",
+      "url": "widgets/mood-average.html",
+      "version": "1.0.0"
+    },
+    {
+      "id": "finance-analytics",
+      "url": "widgets/finance-analytics.html",
+      "version": "1.0.0"
+    }
+  ]

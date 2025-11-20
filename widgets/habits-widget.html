@@ -1,0 +1,80 @@
+<div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Habits</h2>
+        <span id="habit-streak-badge" class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded">🔥 0</span>
+    </div>
+
+    <div id="habit-list" class="space-y-3">
+        <div class="text-center text-gray-400 text-sm py-4">Loading habits...</div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dayOfWeek = new Date().getDay(); // 0=Sun, 6=Sat
+
+    const loadHabits = async () => {
+        if (!window.db) return;
+
+        // 1. Get Active Habits
+        const allHabits = await window.db.habits.where('status').equals('Active').toArray();
+        
+        // 2. Filter for Today (based on recurrenceDays array)
+        const todaysHabits = allHabits.filter(h => h.recurrenceDays && h.recurrenceDays.includes(dayOfWeek));
+
+        // 3. Get History for Today
+        const history = await window.db.habitHistory.where('date').equals(todayStr).toArray();
+        const completedSet = new Set(history.filter(h => h.status === 'Completed').map(h => h.habitId));
+
+        render(todaysHabits, completedSet);
+    };
+
+    const render = (habits, completedSet) => {
+        const container = document.getElementById('habit-list');
+        
+        if (habits.length === 0) {
+            container.innerHTML = `<div class="text-gray-500 text-center italic text-sm">No habits scheduled for today.</div>`;
+            return;
+        }
+
+        container.innerHTML = habits.map(h => {
+            const isDone = completedSet.has(h.id);
+            const btnClass = isDone 
+                ? "bg-green-500 text-white border-green-500" 
+                : "bg-white text-gray-400 border-gray-300 hover:border-green-400 hover:text-green-400";
+            
+            return `
+            <div class="flex items-center justify-between group">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleHabit(${h.id}, ${isDone})" 
+                        class="w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${btnClass}">
+                        ${isDone ? '✓' : ''}
+                    </button>
+                    <span class="text-gray-700 dark:text-gray-200 ${isDone ? 'line-through opacity-50' : ''}">${h.name}</span>
+                </div>
+                <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition">Streak: Calc...</span>
+            </div>
+            `;
+        }).join('');
+
+        // Update streak badge (simple logic: count of completed today)
+        document.getElementById('habit-streak-badge').innerText = `Done: ${completedSet.size}/${habits.length}`;
+    };
+
+    window.toggleHabit = async (id, isDone) => {
+        if (isDone) {
+            // Remove completion
+            // Need to find the ID of the history record
+            const record = await window.db.habitHistory.where({habitId: id, date: todayStr}).first();
+            if(record) await window.db.habitHistory.delete(record.id);
+        } else {
+            // Add completion
+            await window.db.habitHistory.add({ habitId: id, date: todayStr, status: 'Completed' });
+        }
+        loadHabits();
+    };
+
+    loadHabits();
+})();
+</script>

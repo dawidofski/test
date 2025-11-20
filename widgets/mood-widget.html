@@ -1,0 +1,67 @@
+<div class="p-4 text-center">
+    <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Mood Check-in</h2>
+    
+    <div class="flex justify-center gap-2 mb-4" id="mood-selector">
+        <button onclick="logMood(1)" class="text-3xl hover:scale-110 transition transform" title="Awful">😠</button>
+        <button onclick="logMood(2)" class="text-3xl hover:scale-110 transition transform" title="Bad">😕</button>
+        <button onclick="logMood(3)" class="text-3xl hover:scale-110 transition transform" title="Okay">😐</button>
+        <button onclick="logMood(4)" class="text-3xl hover:scale-110 transition transform" title="Good">🙂</button>
+        <button onclick="logMood(5)" class="text-3xl hover:scale-110 transition transform" title="Great">😄</button>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+        <div class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Weekly Average</div>
+        <div class="flex items-end justify-center gap-2">
+            <span id="week-avg-val" class="text-2xl font-bold text-gray-700 dark:text-gray-200">--</span>
+            <span id="week-avg-emoji" class="text-xl"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const getEmoji = (val) => ['😠','😕','😐','🙂','😄'][Math.round(val)-1] || '❓';
+
+    // 1. Log Mood
+    window.logMood = async (val) => {
+        if(!window.db) return;
+        
+        await window.db.mood.add({
+            value: val,
+            datetime: Date.now(),
+            tags: [],
+            notes: 'Quick log from widget'
+        });
+        
+        // Visual Feedback
+        const btn = document.querySelector(`button[onclick="logMood(${val})"]`);
+        btn.classList.add('scale-125');
+        setTimeout(() => btn.classList.remove('scale-125'), 200);
+
+        calculateStats();
+    };
+
+    // 2. Calculate Stats
+    const calculateStats = async () => {
+        if(!window.db) return;
+
+        const end = Date.now();
+        const start = end - (7 * 24 * 60 * 60 * 1000); // 7 days ago
+
+        const logs = await window.db.mood.where('datetime').between(start, end).toArray();
+        
+        if (logs.length === 0) {
+            document.getElementById('week-avg-val').innerText = "--";
+            return;
+        }
+
+        const sum = logs.reduce((acc, cur) => acc + cur.value, 0);
+        const avg = sum / logs.length;
+
+        document.getElementById('week-avg-val').innerText = avg.toFixed(1);
+        document.getElementById('week-avg-emoji').innerText = getEmoji(avg);
+    };
+
+    calculateStats();
+})();
+</script>
