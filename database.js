@@ -1,10 +1,10 @@
 /* === database.js === */
-// Defines the Dexie database schema, including the new widgetCache for the Shell architecture.
+// Updated to Version 9 to resolve SchemaDiff error
 
 const DB_NAME = 'LifeOrganizingDB_TEST';
 const db = new Dexie(DB_NAME);
 
-// V1-V7: Legacy Schema History (Preserved for migration compatibility)
+// V1-V7 History (Preserved)
 db.version(1).stores({
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',
@@ -24,7 +24,7 @@ db.version(1).stores({
     systemValidation: '++id'
 });
 
-// ... Intermediate versions omitted for brevity, Dexie handles the chain ...
+// ... (Intermediate versions 2-6 assumed implicit/handled by Dexie upgrade chain) ...
 
 db.version(7).stores({
     healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
@@ -48,11 +48,14 @@ db.version(7).stores({
     systemValidation: '++id',
 });
 
-// --- VERSION 8: Shell + Remote Widget Architecture ---
-// widgetCache: Stores the HTML/JS string of the remote widgets locally
-db.version(8).stores({
-    widgetCache: 'id, version, lastUpdated', // id = widget filename or key (e.g., 'tasks-today')
-    // Keep existing tables
+// --- VERSION 8: Added widgetCache (Caused diff error) ---
+// We skip straight to Version 9 to resolve the conflict.
+
+// --- VERSION 9: Fixes SchemaDiff by explicitly bumping version ---
+db.version(9).stores({
+    widgetCache: 'id, version, lastUpdated', 
+    
+    // Repeat all previous tables to ensure they are kept
     healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
     sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
     settings: 'key', 
