@@ -200,6 +200,7 @@
         document.getElementById('search-trigger').addEventListener('click', () => toggleOverlay('overlay-launcher', true));
 
         // --- 3. WIDGET LOADER ENGINE ---
+        // ARCHITECTURE REQUIREMENT: Always fetch from Remote, even on Localhost.
         const CONFIG_URL = 'https://dawidofski.github.io/test/widgets/widgets.json';
 
         class WidgetLoader {
@@ -217,17 +218,24 @@
             }
 
             async loadFromCache() {
-                const cachedWidgets = await db.widgetCache.toArray();
-                if (cachedWidgets.length === 0) return;
+                try {
+                    const cachedWidgets = await db.widgetCache.toArray();
+                    if (cachedWidgets.length === 0) return;
 
-                console.log(`[Loader] Found ${cachedWidgets.length} cached widgets.`);
-                cachedWidgets.forEach(w => this.renderWidget(w));
+                    console.log(`[Loader] Found ${cachedWidgets.length} cached widgets.`);
+                    cachedWidgets.forEach(w => this.renderWidget(w));
+                } catch (e) {
+                    console.error("Error loading cache (Check DB version):", e);
+                }
             }
 
             async checkForUpdates() {
                 try {
-                    console.log("[Loader] Checking remote config...");
+                    console.log(`[Loader] Checking config at: ${CONFIG_URL}`);
                     const response = await fetch(CONFIG_URL + '?t=' + Date.now()); // Bust browser cache
+                    
+                    if (!response.ok) throw new Error(`Config fetch failed: ${response.status}`);
+                    
                     const data = await response.json();
                     const baseUrl = data.config.baseUrl;
 
@@ -240,29 +248,35 @@
             }
 
             async syncWidget(remoteWidget, baseUrl) {
-                const cached = await db.widgetCache.get(remoteWidget.id);
-                
-                // If we have it and version matches, do nothing (or ensure rendered)
-                if (cached && cached.version === remoteWidget.version) {
-                    // Ensure it's rendered if not already (e.g. page reload)
-                    const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
-                    if (container && container.innerHTML === "") {
-                        this.renderWidget(cached);
-                    }
-                    return; 
-                }
-
-                // New version found or not cached
-                console.log(`[Loader] Updating ${remoteWidget.id} to v${remoteWidget.version}`);
                 try {
-                    const htmlResp = await fetch(baseUrl + remoteWidget.file + '?v=' + remoteWidget.version);
+                    const cached = await db.widgetCache.get(remoteWidget.id);
+                    
+                    // If we have it and version matches, ensure it is rendered
+                    if (cached && cached.version === remoteWidget.version) {
+                        const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
+                        if (container && container.innerHTML === "") {
+                            this.renderWidget(cached);
+                        }
+                        return; 
+                    }
+
+                    // New version found
+                    console.log(`[Loader] Updating ${remoteWidget.id} to v${remoteWidget.version}`);
+                    
+                    // Construct Absolute URL
+                    const widgetUrl = baseUrl + remoteWidget.file;
+                    console.log(`[Loader] Fetching widget from: ${widgetUrl}`);
+                    
+                    const htmlResp = await fetch(widgetUrl + '?v=' + remoteWidget.version);
+                    if (!htmlResp.ok) throw new Error(`Widget fetch failed: ${htmlResp.status}`);
+                    
                     const htmlCode = await htmlResp.text();
 
                     const newCacheEntry = {
                         id: remoteWidget.id,
                         version: remoteWidget.version,
                         code: htmlCode,
-                        containerId: remoteWidget.targetId || remoteWidget.containerId, // Handle both JSON naming conventions
+                        containerId: remoteWidget.targetId || remoteWidget.containerId, 
                         lastUpdated: Date.now()
                     };
 
@@ -284,9 +298,8 @@
                 container.classList.remove('loading');
                 
                 // 1. Safe HTML Injection
-                // We use a range to create a fragment, which helps separate scripts
                 const range = document.createRange();
-                range.selectNode(document.body); // Context
+                range.selectNode(document.body); 
                 const fragment = range.createContextualFragment(widgetData.code);
 
                 // 2. Clear container and append HTML
@@ -294,16 +307,11 @@
                 container.appendChild(fragment);
 
                 // 3. EXECUTE SCRIPTS
-                // ContextualFragment doesn't auto-execute scripts inserted this way.
-                // We must manually recreate script tags.
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
-                    // Copy attributes (src, type, etc)
                     Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    // Copy content
                     newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    // Replace
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             }
