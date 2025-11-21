@@ -200,7 +200,6 @@
         document.getElementById('search-trigger').addEventListener('click', () => toggleOverlay('overlay-launcher', true));
 
         // --- 3. WIDGET LOADER ENGINE ---
-        // ARCHITECTURE REQUIREMENT: Always fetch from Remote, even on Localhost.
         const CONFIG_URL = 'https://dawidofski.github.io/test/widgets/widgets.json';
 
         class WidgetLoader {
@@ -291,22 +290,48 @@
                 }
             }
 
+            /**
+             * Robust Sanitizer: Removes dangerous tags even if multi-line.
+             */
+            sanitizeCode(html) {
+                if (!html) return "";
+                return html
+                    // Remove specific tags completely (including content)
+                    .replace(/<title[\s\S]*?<\/title>/gi, "")
+                    // [\s\S]*? matches across newlines, non-greedy
+                    .replace(/<meta[\s\S]*?>/gi, "") 
+                    
+                    // Remove wrapper tags but keep content
+                    .replace(/<!DOCTYPE[\s\S]*?>/gi, "")
+                    .replace(/<html[\s\S]*?>/gi, "")
+                    .replace(/<\/html>/gi, "")
+                    .replace(/<head[\s\S]*?>/gi, "")
+                    .replace(/<\/head>/gi, "")
+                    .replace(/<body[\s\S]*?>/gi, "")
+                    .replace(/<\/body>/gi, "")
+                    .trim();
+            }
+
             renderWidget(widgetData) {
                 const container = document.getElementById(widgetData.containerId);
                 if (!container) return;
 
                 container.classList.remove('loading');
                 
-                // 1. Safe HTML Injection
+                // 1. Sanitize Code (Remove meta/html tags)
+                // This will clean the data coming from Cache AND Network
+                const cleanCode = this.sanitizeCode(widgetData.code);
+
+                // 2. Safe HTML Injection
                 const range = document.createRange();
                 range.selectNode(document.body); 
-                const fragment = range.createContextualFragment(widgetData.code);
+                const fragment = range.createContextualFragment(cleanCode);
 
-                // 2. Clear container and append HTML
+                // 3. Clear container and append HTML
                 container.innerHTML = '';
                 container.appendChild(fragment);
 
-                // 3. EXECUTE SCRIPTS
+                // 4. EXECUTE SCRIPTS
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
