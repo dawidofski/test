@@ -1,0 +1,187 @@
+<style>
+    /* Scoped styles for Habit Widget */
+    #habit-widget-container {
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hw-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .hw-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .hw-counter {
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent-color);
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .hw-slide-area {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100px;
+    }
+
+    .hw-slide {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0,0,0,0.02);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .hw-info { text-align: left; flex-grow: 1; }
+    .hw-name { font-size: 18px; font-weight: 600; color: var(--text-color); margin-bottom: 4px; }
+    .hw-streak { font-size: 13px; color: #888; }
+
+    .hw-actions { display: flex; gap: 15px; margin-left: 15px; }
+    .hw-btn { cursor: pointer; font-size: 28px; transition: transform 0.1s; user-select: none; }
+    .hw-btn:active { transform: scale(0.9); }
+    .hw-check { color: #ccc; }
+    .hw-check:hover { color: #28a745; }
+    .hw-skip { color: #ccc; font-weight: 300; }
+    .hw-skip:hover { color: #dc3545; }
+
+    .hw-nav { display: flex; justify-content: center; margin-top: 5px; }
+    .hw-nav-btn { font-size: 24px; color: #ccc; cursor: pointer; padding: 0 10px; }
+    .hw-nav-btn:hover { color: var(--accent-color); }
+    .hw-nav-btn.disabled { opacity: 0.3; cursor: default; }
+
+    .hw-msg { font-size: 16px; color: #28a745; font-weight: 600; }
+</style>
+
+<div id="habit-widget-container">
+    <div class="hw-header">
+        <div class="hw-title">Habits</div>
+        <div class="hw-counter" id="hw-counter">0/0</div>
+    </div>
+
+    <div class="hw-slide-area" id="hw-slide-area">
+        <div class="hw-msg" style="color:#888">Loading...</div>
+    </div>
+
+    <div class="hw-nav">
+        <span class="hw-nav-btn disabled" id="hw-prev">❮</span>
+        <span class="hw-nav-btn disabled" id="hw-next">❯</span>
+    </div>
+</div>
+
+<script>
+(() => {
+    const slideArea = document.getElementById('hw-slide-area');
+    const counterEl = document.getElementById('hw-counter');
+    const prevBtn = document.getElementById('hw-prev');
+    const nextBtn = document.getElementById('hw-next');
+
+    let currentSlide = 0;
+    let remainingHabits = [];
+    const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+    function isScheduled(habit) {
+        if (!habit.recurrenceDays) return false;
+        const todayIndex = new Date().getDay();
+        return habit.recurrenceDays.includes(todayIndex);
+    }
+
+    async function loadData() {
+        try {
+            const habits = await window.db.habits.where('status').equals('Active').toArray();
+            const history = await window.db.habitHistory.toArray(); // Optimization: Index this later
+
+            // Filter for today's history
+            const doneToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
+            const doneIds = new Set(doneToday.map(h => h.habitId));
+
+            // Habits scheduled today
+            const dueToday = habits.filter(isScheduled);
+            
+            // Remaining
+            remainingHabits = dueToday.filter(h => !doneIds.has(h.id));
+
+            counterEl.textContent = `${doneToday.length}/${dueToday.length}`;
+            currentSlide = 0;
+            renderSlide();
+
+        } catch (e) {
+            console.error(e);
+            slideArea.innerHTML = `<div class="hw-msg" style="color:red">Error</div>`;
+        }
+    }
+
+    function renderSlide() {
+        if (remainingHabits.length === 0) {
+            slideArea.innerHTML = `<div class="hw-msg">All habits done! 🎉</div>`;
+            updateNav();
+            return;
+        }
+
+        if (currentSlide >= remainingHabits.length) currentSlide = 0;
+        if (currentSlide < 0) currentSlide = remainingHabits.length - 1;
+
+        const habit = remainingHabits[currentSlide];
+
+        slideArea.innerHTML = `
+            <div class="hw-slide">
+                <div class="hw-info">
+                    <div class="hw-name">${habit.name}</div>
+                    <div class="hw-streak">Tap check to complete</div>
+                </div>
+                <div class="hw-actions">
+                    <div class="hw-btn hw-check" id="hw-btn-check">☐</div>
+                    <div class="hw-btn hw-skip" id="hw-btn-skip">✕</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('hw-btn-check').onclick = () => logAction(habit, 'Completed');
+        document.getElementById('hw-btn-skip').onclick = () => logAction(habit, 'Skipped');
+        updateNav();
+    }
+
+    function updateNav() {
+        if (remainingHabits.length <= 1) {
+            prevBtn.classList.add('disabled');
+            nextBtn.classList.add('disabled');
+        } else {
+            prevBtn.classList.remove('disabled');
+            nextBtn.classList.remove('disabled');
+        }
+    }
+
+    async function logAction(habit, status) {
+        try {
+            await window.db.habitHistory.add({
+                habitId: habit.id,
+                date: todayStr,
+                status: status
+            });
+            loadData();
+        } catch(e) { console.error(e); }
+    }
+
+    prevBtn.onclick = () => { if(remainingHabits.length > 1) { currentSlide--; renderSlide(); }};
+    nextBtn.onclick = () => { if(remainingHabits.length > 1) { currentSlide++; renderSlide(); }};
+
+    loadData();
+})();
+</script>

@@ -1,135 +1,272 @@
+<!-- This file is loaded inside the Shell's Overlay div -->
 <style>
-    .utils-container { padding: 20px; color: var(--text-color); }
-    .utils-section { margin-bottom: 25px; padding: 15px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); }
-    .utils-btn { 
-        display: block; width: 100%; padding: 12px; margin-bottom: 10px; 
-        background: var(--primary-color); color: white; border: none; border-radius: 8px; 
-        font-size: 1rem; font-weight: 600; cursor: pointer;
+    .util-container { font-family: -apple-system, sans-serif; color: var(--text-color); }
+    .util-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+    .util-btn {
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
     }
-    .utils-btn.danger { background: var(--danger-color); }
-    .utils-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .log-output { 
-        font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.05); 
-        padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; 
-        margin-top: 10px; color: var(--text-color);
+    .util-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .btn-backup { background-color: #24292e; color: white; } /* GitHub Color */
+    .btn-reset { background-color: #dc3545; color: white; }
+    .btn-restore { background-color: #28a745; color: white; }
+    .btn-save { background-color: #007bff; color: white; }
+
+    .input-field {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    
+    .status-log {
+        background: rgba(0,0,0,0.05);
+        padding: 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        min-height: 60px;
+        max-height: 150px;
+        overflow-y: auto;
     }
 </style>
 
-<div class="utils-container">
-    <h2>⚙️ Settings & Data</h2>
+<div class="util-container">
 
-    <div class="utils-section">
+    <div class="util-section">
+        <h3>🔑 Configuration</h3>
+        <p style="font-size: 0.9em; color: #666;">Enter your GitHub PAT to enable cloud backups. This is stored locally on your device.</p>
+        <input type="password" id="gh-token-input" class="input-field" placeholder="github_pat_...">
+        <button id="btn-save-token" class="util-btn btn-save">Save Token</button>
+    </div>
+    
+    <div class="util-section">
         <h3>☁️ Cloud Backup</h3>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Backs up all DexieDB data to your private GitHub Repo.</p>
-        <button id="btnBackupGitHub" class="utils-btn">Backup Now</button>
-        <div id="backupLog" class="log-output">Ready...</div>
+        <p style="font-size: 0.9em; color: #666;">Backs up 'LifeOrganizingDB_TEST' to your private GitHub repo.</p>
+        <button id="btn-gh-backup" class="util-btn btn-backup">Backup to GitHub</button>
+        <button id="btn-gh-restore" class="util-btn btn-restore">Restore from GitHub</button>
     </div>
 
-    <div class="utils-section">
+    <div class="util-section">
         <h3>⚠️ Danger Zone</h3>
-        <button id="btnResetAll" class="utils-btn danger">Factory Reset (Wipe DB)</button>
+        <button id="btn-wipe" class="util-btn btn-reset">Wipe Database</button>
     </div>
+
+    <div class="util-section">
+        <h3>Log</h3>
+        <div id="backup-log" class="status-log">Ready...</div>
+    </div>
+
 </div>
 
 <script>
-(function() {
-    // Scoped Logic for Settings
-    const outputLog = document.getElementById('backupLog');
-    
-    // --- GITHUB CONFIG ---
-    // WARNING: In a real production app, never expose PAT in client-side code. 
-    // For a personal local PWA, this is acceptable but risky if device is stolen.
-    const GITHUB_PAT = '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'; 
-    const GITHUB_OWNER = 'dawidofski';
-    const GITHUB_REPO = 'backup';
-    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/`;
-
-    function log(msg) {
-        outputLog.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-        outputLog.scrollTop = outputLog.scrollHeight;
-    }
-
-    // --- BACKUP LOGIC ---
-    async function extractDbToJson() {
-        log('Reading database...');
-        const data = {};
-        await db.transaction('r', db.tables, async () => {
-            for (const table of db.tables) {
-                // Skip the cache table to save space
-                if (table.name !== 'widgetCache') {
-                    const count = await table.count();
-                    if (count > 0) data[table.name] = await table.toArray();
-                }
-            }
-        });
-        return JSON.stringify(data, null, 2);
-    }
-
-    async function getFileSha(filename) {
-        try {
-            const res = await fetch(GITHUB_API_URL + filename, {
-                headers: { 'Authorization': `token ${GITHUB_PAT}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if (res.status === 404) return null;
-            const json = await res.json();
-            return json.sha;
-        } catch (e) { return null; }
-    }
-
-    async function performBackup() {
-        const btn = document.getElementById('btnBackupGitHub');
-        btn.disabled = true;
-        btn.innerText = "Backing up...";
+    // Since this is injected into index.html, 'db' is already available globally.
+    // We wrap in an IIFE to avoid variable pollution in the global scope.
+    (() => {
+        const logEl = document.getElementById('backup-log');
+        const btnBackup = document.getElementById('btn-gh-backup');
+        const btnRestore = document.getElementById('btn-gh-restore');
+        const btnWipe = document.getElementById('btn-wipe');
         
-        try {
-            const jsonContent = await extractDbToJson();
+        // Config Elements
+        const tokenInput = document.getElementById('gh-token-input');
+        const btnSaveToken = document.getElementById('btn-save-token');
+
+        // --- CONFIGURATION ---
+        const REPO_OWNER = 'dawidofski';
+        const REPO_NAME = 'backup';
+        const FILE_PATH = 'life_organizer_backup.json'; 
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+        // Load saved token on init
+        const savedToken = localStorage.getItem('gh_pat');
+        if (savedToken) {
+            tokenInput.value = savedToken;
+        }
+
+        function getToken() {
+            return localStorage.getItem('gh_pat');
+        }
+
+        function log(msg) {
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logEl.prepend(line);
+        }
+
+        // --- EXPORT LOGIC ---
+        async function exportDB() {
+            log('Starting export...');
+            try {
+                const data = {};
+                // Iterate all tables in the global 'db' object
+                await db.transaction('r', db.tables, async () => {
+                    for (const table of db.tables) {
+                        // Skip cache, history, or system tables if desired. 
+                        // Currently backing up everything except widgetCache to save space.
+                        if (table.name !== 'widgetCache') {
+                            data[table.name] = await table.toArray();
+                        }
+                    }
+                });
+                return JSON.stringify(data);
+            } catch (e) {
+                throw new Error('DB Export failed: ' + e.message);
+            }
+        }
+
+        // --- GITHUB API LOGIC ---
+        async function getFileSHA(token) {
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { 
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (res.status === 404) return null; // File doesn't exist yet
+                const json = await res.json();
+                return json.sha;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function uploadToGitHub(content) {
+            const token = getToken();
+            if (!token) throw new Error("Missing GitHub Token. Please save it in Configuration.");
+
+            const sha = await getFileSHA(token);
             const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `life_organizer_backup_${dateStr}.json`;
             
-            log(`Preparing upload: ${filename}`);
-            
-            const sha = await getFileSha(filename);
-            const contentBase64 = btoa(unescape(encodeURIComponent(jsonContent)));
-            
-            const body = { 
-                message: `Auto-Backup ${new Date().toISOString()}`, 
-                content: contentBase64 
+            // Base64 encode (handle UTF8)
+            const contentBase64 = btoa(unescape(encodeURIComponent(content)));
+
+            const body = {
+                message: `Auto-backup ${dateStr}`,
+                content: contentBase64
             };
             if (sha) body.sha = sha;
 
-            const res = await fetch(GITHUB_API_URL + filename, {
+            const res = await fetch(API_URL, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${GITHUB_PAT}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(body)
             });
 
-            if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
-            
-            log('✅ Backup Successful!');
-            // Update last backup timestamp in Settings table
-            await db.settings.put({ key: 'lastBackup', value: Date.now() });
-
-        } catch (e) {
-            console.error(e);
-            log(`❌ Error: ${e.message}`);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Backup Now";
+            if (!res.ok) throw new Error(`GitHub API Error: ${res.status}`);
         }
-    }
 
-    // --- RESET LOGIC ---
-    async function factoryReset() {
-        if(confirm("CRITICAL: This will delete ALL data. Are you sure?")) {
-            if(confirm("Really? This cannot be undone.")) {
-                await db.delete();
-                window.location.reload();
+        async function downloadFromGitHub() {
+            const token = getToken();
+            if (!token) throw new Error("Missing GitHub Token. Please save it in Configuration.");
+
+            const res = await fetch(API_URL, {
+                headers: { 
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3.raw' // Get raw content
+                }
+            });
+            if (!res.ok) throw new Error('Download failed');
+            return await res.json();
+        }
+
+        // --- EVENT HANDLERS ---
+
+        btnSaveToken.addEventListener('click', () => {
+            const val = tokenInput.value.trim();
+            if (val) {
+                localStorage.setItem('gh_pat', val);
+                log('✅ Token saved securely.');
+                alert('Token saved!');
+            } else {
+                alert('Please enter a valid token.');
+            }
+        });
+
+        btnBackup.addEventListener('click', async () => {
+            btnBackup.disabled = true;
+            log('⏳ Backing up...');
+            try {
+                const json = await exportDB();
+                await uploadToGitHub(json);
+                log('✅ Backup successful!');
+            } catch (e) {
+                log('❌ Error: ' + e.message);
+                console.error(e);
+            }
+            btnBackup.disabled = false;
+        });
+
+        btnRestore.addEventListener('click', async () => {
+            if(!confirm("Overwrite local data with GitHub backup?")) return;
+            
+            btnRestore.disabled = true;
+            log('⏳ Downloading...');
+            try {
+                const data = await downloadFromGitHub();
+                log('📥 Importing to DB...');
+                
+                await db.transaction('rw', db.tables, async () => {
+                    // Clear existing tables (except cache)
+                    for (const table of db.tables) {
+                        if (table.name !== 'widgetCache') {
+                            await table.clear();
+                            if (data[table.name]) {
+                                await table.bulkAdd(data[table.name]);
+                            }
+                        }
+                    }
+                });
+                log('✅ Restore complete! Reloading...');
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                log('❌ Error: ' + e.message);
+            }
+            btnRestore.disabled = false;
+        });
+
+        btnWipe.addEventListener('click', async () => {
+            if(!confirm("Wipe ALL data? This cannot be undone.")) return;
+            await db.delete();
+            location.reload();
+        });
+
+        // --- AUTOMATED BACKUP CHECK ---
+        // Simple logic: Check local storage for last backup time. If > 24h, run backup.
+        async function checkAutoBackup() {
+            const lastBackup = localStorage.getItem('last_gh_backup');
+            const token = getToken();
+            const now = Date.now();
+            const ONE_DAY = 24 * 60 * 60 * 1000;
+
+            if (token && (!lastBackup || (now - parseInt(lastBackup)) > ONE_DAY)) {
+                log('🔄 Running auto-backup...');
+                try {
+                    const json = await exportDB();
+                    await uploadToGitHub(json);
+                    localStorage.setItem('last_gh_backup', now.toString());
+                    log('✅ Auto-backup finished.');
+                } catch (e) {
+                    log('⚠️ Auto-backup failed (will retry later).');
+                }
             }
         }
-    }
+        
+        checkAutoBackup();
 
-    // Event Listeners
-    document.getElementById('btnBackupGitHub').addEventListener('click', performBackup);
-    document.getElementById('btnResetAll').addEventListener('click', factoryReset);
-})();
+    })();
 </script>

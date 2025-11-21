@@ -1,0 +1,178 @@
+<style>
+    #app-list-container {
+        width: 100%;
+        padding-bottom: 20px;
+    }
+    
+    .app-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .app-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .app-item:hover {
+        background-color: rgba(0,0,0,0.03);
+    }
+
+    .app-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 15px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #eee; /* Placeholder */
+    }
+
+    .app-info {
+        flex-grow: 1;
+    }
+
+    .app-label {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-color);
+        display: block;
+    }
+
+    .app-pkg {
+        font-size: 12px;
+        color: #888;
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        background: transparent;
+        border: 1px solid #ccc;
+        color: var(--text-color);
+        border-radius: 8px;
+        cursor: pointer;
+    }
+</style>
+
+<div id="app-list-container">
+    <div id="loading-apps" style="text-align: center; color: #888; padding: 20px;">
+        Loading apps...
+    </div>
+    <ul id="app-list" class="app-list"></ul>
+    <button class="refresh-btn" id="refresh-apps">Refresh App List</button>
+</div>
+
+<script>
+(() => {
+    const listEl = document.getElementById('app-list');
+    const loadingEl = document.getElementById('loading-apps');
+    const refreshBtn = document.getElementById('refresh-apps');
+
+    // --- Mock Data for Browser ---
+    const MOCK_APPS = [
+        { label: 'Settings', packageName: 'com.android.settings' },
+        { label: 'Chrome', packageName: 'com.android.chrome' },
+        { label: 'Camera', packageName: 'com.android.camera' },
+        { label: 'Maps', packageName: 'com.google.android.apps.maps' }
+    ];
+
+    async function loadApps() {
+        listEl.innerHTML = '';
+        loadingEl.style.display = 'block';
+
+        let apps = [];
+
+        try {
+            // 1. Try Bridge API first
+            if (window.Bridge && window.Bridge.getAppsURL) {
+                const url = window.Bridge.getAppsURL();
+                const res = await fetch(url);
+                const data = await res.json();
+                apps = data.apps;
+                
+                // Sort A-Z
+                apps.sort((a, b) => a.label.localeCompare(b.label));
+            } else {
+                // 2. Fallback to Mock
+                console.log("Bridge not found, using mock apps.");
+                await new Promise(r => setTimeout(r, 500)); // Simulate delay
+                apps = MOCK_APPS;
+            }
+
+            renderApps(apps);
+
+        } catch (e) {
+            console.error(e);
+            loadingEl.textContent = "Error loading apps.";
+        }
+    }
+
+    function renderApps(apps) {
+        loadingEl.style.display = 'none';
+        
+        if (apps.length === 0) {
+            loadingEl.textContent = "No apps found.";
+            loadingEl.style.display = 'block';
+            return;
+        }
+
+        apps.forEach(app => {
+            const li = document.createElement('li');
+            li.className = 'app-item';
+            
+            // Icon logic
+            let iconSrc = '';
+            if (window.Bridge && window.Bridge.getDefaultAppIconURL) {
+                iconSrc = window.Bridge.getDefaultAppIconURL(app.packageName);
+            } else {
+                iconSrc = 'https://via.placeholder.com/40'; // Mock icon
+            }
+
+            li.innerHTML = `
+                <img src="${iconSrc}" class="app-icon" alt="icon" onerror="this.src='https://via.placeholder.com/40'">
+                <div class="app-info">
+                    <span class="app-label">${app.label}</span>
+                    <span class="app-pkg">${app.packageName}</span>
+                </div>
+            `;
+
+            li.onclick = () => {
+                if (window.Bridge && window.Bridge.requestLaunchApp) {
+                    window.Bridge.requestLaunchApp(app.packageName);
+                } else {
+                    alert(`Launching ${app.label} (${app.packageName})`);
+                }
+            };
+
+            listEl.appendChild(li);
+        });
+    }
+
+    refreshBtn.onclick = loadApps;
+
+    // Search Filter Logic (Connecting to shell input)
+    // The input is in the parent shell, specifically in the overlay header
+    const searchInput = document.querySelector('#overlay-launcher .overlay-header input');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+            const items = listEl.querySelectorAll('.app-item');
+            items.forEach(item => {
+                const label = item.querySelector('.app-label').textContent.toLowerCase();
+                if (label.includes(term)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    loadApps();
+})();
+</script>
