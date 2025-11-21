@@ -19,7 +19,7 @@
       {
         "id": "db-utilities",
         "file": "db-utilities.html",
-        "version": "1.0.5",
+        "version": "1.0.7",
         "type": "overlay",
         "targetId": "settings-content"
       },
