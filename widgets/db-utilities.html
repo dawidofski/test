@@ -1,0 +1,135 @@
+<style>
+    .utils-container { padding: 20px; color: var(--text-color); }
+    .utils-section { margin-bottom: 25px; padding: 15px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); }
+    .utils-btn { 
+        display: block; width: 100%; padding: 12px; margin-bottom: 10px; 
+        background: var(--primary-color); color: white; border: none; border-radius: 8px; 
+        font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    .utils-btn.danger { background: var(--danger-color); }
+    .utils-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .log-output { 
+        font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.05); 
+        padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; 
+        margin-top: 10px; color: var(--text-color);
+    }
+</style>
+
+<div class="utils-container">
+    <h2>⚙️ Settings & Data</h2>
+
+    <div class="utils-section">
+        <h3>☁️ Cloud Backup</h3>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Backs up all DexieDB data to your private GitHub Repo.</p>
+        <button id="btnBackupGitHub" class="utils-btn">Backup Now</button>
+        <div id="backupLog" class="log-output">Ready...</div>
+    </div>
+
+    <div class="utils-section">
+        <h3>⚠️ Danger Zone</h3>
+        <button id="btnResetAll" class="utils-btn danger">Factory Reset (Wipe DB)</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Scoped Logic for Settings
+    const outputLog = document.getElementById('backupLog');
+    
+    // --- GITHUB CONFIG ---
+    // WARNING: In a real production app, never expose PAT in client-side code. 
+    // For a personal local PWA, this is acceptable but risky if device is stolen.
+    const GITHUB_PAT = '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'; 
+    const GITHUB_OWNER = 'dawidofski';
+    const GITHUB_REPO = 'backup';
+    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/`;
+
+    function log(msg) {
+        outputLog.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        outputLog.scrollTop = outputLog.scrollHeight;
+    }
+
+    // --- BACKUP LOGIC ---
+    async function extractDbToJson() {
+        log('Reading database...');
+        const data = {};
+        await db.transaction('r', db.tables, async () => {
+            for (const table of db.tables) {
+                // Skip the cache table to save space
+                if (table.name !== 'widgetCache') {
+                    const count = await table.count();
+                    if (count > 0) data[table.name] = await table.toArray();
+                }
+            }
+        });
+        return JSON.stringify(data, null, 2);
+    }
+
+    async function getFileSha(filename) {
+        try {
+            const res = await fetch(GITHUB_API_URL + filename, {
+                headers: { 'Authorization': `token ${GITHUB_PAT}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (res.status === 404) return null;
+            const json = await res.json();
+            return json.sha;
+        } catch (e) { return null; }
+    }
+
+    async function performBackup() {
+        const btn = document.getElementById('btnBackupGitHub');
+        btn.disabled = true;
+        btn.innerText = "Backing up...";
+        
+        try {
+            const jsonContent = await extractDbToJson();
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `life_organizer_backup_${dateStr}.json`;
+            
+            log(`Preparing upload: ${filename}`);
+            
+            const sha = await getFileSha(filename);
+            const contentBase64 = btoa(unescape(encodeURIComponent(jsonContent)));
+            
+            const body = { 
+                message: `Auto-Backup ${new Date().toISOString()}`, 
+                content: contentBase64 
+            };
+            if (sha) body.sha = sha;
+
+            const res = await fetch(GITHUB_API_URL + filename, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${GITHUB_PAT}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
+            
+            log('✅ Backup Successful!');
+            // Update last backup timestamp in Settings table
+            await db.settings.put({ key: 'lastBackup', value: Date.now() });
+
+        } catch (e) {
+            console.error(e);
+            log(`❌ Error: ${e.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Backup Now";
+        }
+    }
+
+    // --- RESET LOGIC ---
+    async function factoryReset() {
+        if(confirm("CRITICAL: This will delete ALL data. Are you sure?")) {
+            if(confirm("Really? This cannot be undone.")) {
+                await db.delete();
+                window.location.reload();
+            }
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('btnBackupGitHub').addEventListener('click', performBackup);
+    document.getElementById('btnResetAll').addEventListener('click', factoryReset);
+})();
+</script>
