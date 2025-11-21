@@ -1,4 +1,3 @@
-<!-- This file is loaded inside the Shell's Overlay div -->
 <style>
     .util-container { font-family: -apple-system, sans-serif; color: var(--text-color); }
     .util-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
@@ -58,6 +57,15 @@
     </div>
 
     <div class="util-section">
+        <h3>🔄 System Updates</h3>
+        <p style="font-size: 0.9em; color: #666;">
+            Fetch latest widget code, styles, and configuration from GitHub.
+        </p>
+        <button id="btn-update-widgets" class="util-btn btn-save">Check for Updates</button>
+        <button id="btn-force-update" class="util-btn" style="background: #666; color: #fff; margin-top: 5px;">Force Re-download</button>
+    </div>
+
+    <div class="util-section">
         <h3>⚠️ Danger Zone</h3>
         <button id="btn-wipe" class="util-btn btn-reset">Wipe Database</button>
     </div>
@@ -81,6 +89,10 @@
         // Config Elements
         const tokenInput = document.getElementById('gh-token-input');
         const btnSaveToken = document.getElementById('btn-save-token');
+
+        // Update Elements
+        const btnUpdate = document.getElementById('btn-update-widgets');
+        const btnForce = document.getElementById('btn-force-update');
 
         // --- CONFIGURATION ---
         const REPO_OWNER = 'dawidofski';
@@ -243,6 +255,37 @@
             if(!confirm("Wipe ALL data? This cannot be undone.")) return;
             await db.delete();
             location.reload();
+        });
+
+        // --- UPDATE LOGIC ---
+        btnUpdate.addEventListener('click', async () => {
+            btnUpdate.disabled = true;
+            btnUpdate.textContent = "Checking...";
+            log('🔄 Checking for updates...');
+            
+            if (window.loader) {
+                await window.loader.checkForUpdates(true); // true = show toasts
+            } else {
+                log('❌ Loader not found. Restart app.');
+            }
+            
+            btnUpdate.disabled = false;
+            btnUpdate.textContent = "Check for Updates";
+        });
+
+        btnForce.addEventListener('click', async () => {
+            if(!confirm("This will re-download ALL widgets regardless of version. Continue?")) return;
+            
+            btnForce.disabled = true;
+            btnForce.textContent = "Downloading...";
+            log('⬇️ Force downloading all...');
+            
+            if (window.loader) {
+                await window.loader.checkForUpdates(true);
+            }
+            
+            btnForce.disabled = false;
+            btnForce.textContent = "Force Re-download";
         });
 
         // --- AUTOMATED BACKUP CHECK ---

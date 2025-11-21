@@ -1,6 +1,6 @@
 <style>
     /* Scoped styles for Habit Widget */
-    #habit-widget-container {
+    .hw-widget {
         width: 100%;
         height: 100%;
         padding: 15px;
@@ -55,7 +55,7 @@
     .hw-streak { font-size: 13px; color: #888; }
 
     .hw-actions { display: flex; gap: 15px; margin-left: 15px; }
-    .hw-btn { cursor: pointer; font-size: 28px; transition: transform 0.1s; user-select: none; }
+    .hw-btn { cursor: pointer; font-size: 36px; transition: transform 0.1s; user-select: none; line-height: 1; }
     .hw-btn:active { transform: scale(0.9); }
     .hw-check { color: #ccc; }
     .hw-check:hover { color: #28a745; }
@@ -63,14 +63,61 @@
     .hw-skip:hover { color: #dc3545; }
 
     .hw-nav { display: flex; justify-content: center; margin-top: 5px; }
-    .hw-nav-btn { font-size: 24px; color: #ccc; cursor: pointer; padding: 0 10px; }
+    .hw-nav-btn { font-size: 24px; color: #ccc; cursor: pointer; padding: 0 10px; user-select: none; }
     .hw-nav-btn:hover { color: var(--accent-color); }
     .hw-nav-btn.disabled { opacity: 0.3; cursor: default; }
 
     .hw-msg { font-size: 16px; color: #28a745; font-weight: 600; }
+    
+    .hw-add-btn {
+        width: 100%;
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(0,0,0,0.05);
+        border: none;
+        border-radius: 8px;
+        color: var(--text-color);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .hw-add-btn:hover { background: rgba(0,0,0,0.1); }
+
+    /* --- Overlay Styles --- */
+    #hw-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.6); z-index: 1000; 
+        display: none; justify-content: center; align-items: center; 
+    }
+    .hw-overlay-content { 
+        background: var(--card-bg); padding: 25px; border-radius: 10px; 
+        max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: var(--text-color);
+    }
+    .hw-overlay-content h2 { margin-top: 0; }
+    
+    .hw-form-field { margin-bottom: 15px; }
+    .hw-form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .hw-form-field input[type="text"], .hw-form-field select {
+        width: 100%; padding: 10px; font-size: 16px; 
+        border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+    }
+    
+    /* Day Selector */
+    .hw-day-selector { display: flex; justify-content: space-between; gap: 5px; }
+    .hw-day-selector button { 
+        flex: 1; padding: 10px 0; margin: 0; border: 1px solid #ccc; 
+        background: #f0f0f0; cursor: pointer; font-size: 14px; text-align: center;
+    }
+    .hw-day-selector button.selected { background: var(--accent-color); color: white; font-weight: bold; border-color: var(--accent-color); }
+    
+    .hw-form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+    .hw-form-actions button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .hw-btn-save { background-color: var(--accent-color); color: white; }
+    .hw-btn-cancel { background-color: #6c757d; color: white; }
+
 </style>
 
-<div id="habit-widget-container">
+<div class="hw-widget">
     <div class="hw-header">
         <div class="hw-title">Habits</div>
         <div class="hw-counter" id="hw-counter">0/0</div>
@@ -84,19 +131,63 @@
         <span class="hw-nav-btn disabled" id="hw-prev">❮</span>
         <span class="hw-nav-btn disabled" id="hw-next">❯</span>
     </div>
+    
+    <button class="hw-add-btn" id="hw-add-btn">+ Add Habit</button>
+</div>
+
+<!-- Habit Overlay -->
+<div id="hw-overlay">
+    <div class="hw-overlay-content">
+        <h2 id="hw-overlay-title">Add New Habit</h2>
+        <form id="hw-form">
+            <div class="hw-form-field">
+                <label for="hw-name">Name:</label>
+                <input type="text" id="hw-name" required>
+            </div>
+            <div class="hw-form-field">
+                <label for="hw-category">Category:</label>
+                <input type="text" id="hw-category">
+            </div>
+            <div class="hw-form-field">
+                <label>Recurrence Days:</label>
+                <div class="hw-day-selector" id="hw-recurrence-days">
+                    <button type="button" data-day="0">S</button>
+                    <button type="button" data-day="1">M</button>
+                    <button type="button" data-day="2">T</button>
+                    <button type="button" data-day="3">W</button>
+                    <button type="button" data-day="4">T</button>
+                    <button type="button" data-day="5">F</button>
+                    <button type="button" data-day="6">S</button>
+                </div>
+            </div>
+            <div class="hw-form-actions">
+                <button type="button" id="hw-close-btn" class="hw-btn-cancel">Cancel</button>
+                <button type="submit" class="hw-btn-save">Save Habit</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
 (() => {
+    // --- Scoped Variables ---
     const slideArea = document.getElementById('hw-slide-area');
     const counterEl = document.getElementById('hw-counter');
     const prevBtn = document.getElementById('hw-prev');
     const nextBtn = document.getElementById('hw-next');
+    
+    // Overlay Elements
+    const overlay = document.getElementById('hw-overlay');
+    const form = document.getElementById('hw-form');
+    const addBtn = document.getElementById('hw-add-btn');
+    const closeBtn = document.getElementById('hw-close-btn');
+    const dayButtons = document.querySelectorAll('#hw-recurrence-days button');
 
     let currentSlide = 0;
     let remainingHabits = [];
     const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split("T")[0];
 
+    // --- Logic ---
     function isScheduled(habit) {
         if (!habit.recurrenceDays) return false;
         const todayIndex = new Date().getDay();
@@ -106,16 +197,12 @@
     async function loadData() {
         try {
             const habits = await window.db.habits.where('status').equals('Active').toArray();
-            const history = await window.db.habitHistory.toArray(); // Optimization: Index this later
+            const history = await window.db.habitHistory.toArray(); 
 
-            // Filter for today's history
             const doneToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
             const doneIds = new Set(doneToday.map(h => h.habitId));
 
-            // Habits scheduled today
             const dueToday = habits.filter(isScheduled);
-            
-            // Remaining
             remainingHabits = dueToday.filter(h => !doneIds.has(h.id));
 
             counterEl.textContent = `${doneToday.length}/${dueToday.length}`;
@@ -178,6 +265,39 @@
             loadData();
         } catch(e) { console.error(e); }
     }
+
+    // --- Overlay & Form Logic ---
+    function resetForm() {
+        form.reset();
+        dayButtons.forEach(btn => btn.classList.remove('selected'));
+    }
+
+    addBtn.onclick = () => { resetForm(); overlay.style.display = 'flex'; };
+    closeBtn.onclick = () => { overlay.style.display = 'none'; };
+
+    dayButtons.forEach(btn => {
+        btn.onclick = () => btn.classList.toggle('selected');
+    });
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const recurrenceDays = Array.from(document.querySelectorAll('#hw-recurrence-days .selected'))
+            .map(btn => parseInt(btn.dataset.day));
+
+        const data = {
+            name: document.getElementById('hw-name').value,
+            category: document.getElementById('hw-category').value,
+            status: 'Active',
+            recurrenceDays: recurrenceDays,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            await window.db.habits.add(data);
+            overlay.style.display = 'none';
+            loadData();
+        } catch (err) { alert("Error saving habit"); }
+    };
 
     prevBtn.onclick = () => { if(remainingHabits.length > 1) { currentSlide--; renderSlide(); }};
     nextBtn.onclick = () => { if(remainingHabits.length > 1) { currentSlide++; renderSlide(); }};

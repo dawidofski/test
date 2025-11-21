@@ -5,7 +5,6 @@
     <title>Homescreen Shell</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- Dexie & Database -->
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="database.js"></script>
 
@@ -146,17 +145,14 @@
 </head>
 <body>
 
-    <!-- Widget Areas -->
     <div id="widget-container-tasks" class="widget-placeholder loading"></div>
     <div id="widget-container-habits" class="widget-placeholder loading"></div>
 
-    <!-- Bottom Dock -->
     <div class="bottom-dock">
         <div class="search-trigger" id="search-trigger">Search apps...</div>
         <div class="settings-trigger" id="settings-trigger">⚙️</div>
     </div>
 
-    <!-- Settings Overlay -->
     <div id="overlay-settings" class="overlay">
         <div class="overlay-header">
             <h2>Settings & Backup</h2>
@@ -167,7 +163,6 @@
         </div>
     </div>
 
-    <!-- Launcher Overlay -->
     <div id="overlay-launcher" class="overlay">
         <div class="overlay-header">
             <input type="text" placeholder="Search..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
@@ -209,64 +204,84 @@
 
             async init() {
                 console.log("[Loader] Initializing...");
-                // 1. Load whatever is in Cache immediately (Offline First)
+                // 1. Load Cache (Offline First)
                 await this.loadFromCache();
                 
-                // 2. Fetch remote config to check for updates
+                // 2. Check for updates silently on boot
                 this.checkForUpdates();
             }
 
             async loadFromCache() {
                 try {
                     const cachedWidgets = await db.widgetCache.toArray();
-                    if (cachedWidgets.length === 0) return;
-
-                    console.log(`[Loader] Found ${cachedWidgets.length} cached widgets.`);
                     cachedWidgets.forEach(w => this.renderWidget(w));
                 } catch (e) {
-                    console.error("Error loading cache (Check DB version):", e);
+                    console.error("Error loading cache:", e);
                 }
             }
 
-            async checkForUpdates() {
+            // force = true will ignore version numbers and redownload everything
+            async checkForUpdates(force = false) {
+                if (window.Bridge && force) window.Bridge.showToast("Checking for updates...");
+                
                 try {
                     console.log(`[Loader] Checking config at: ${CONFIG_URL}`);
-                    const response = await fetch(CONFIG_URL + '?t=' + Date.now()); // Bust browser cache
+                    const response = await fetch(CONFIG_URL + '?t=' + Date.now()); // Anti-cache
                     
                     if (!response.ok) throw new Error(`Config fetch failed: ${response.status}`);
                     
                     const data = await response.json();
                     const baseUrl = data.config.baseUrl;
+                    const remoteWidgets = data.widgets;
+                    const remoteIds = new Set(remoteWidgets.map(w => w.id));
 
-                    for (const remoteWidget of data.widgets) {
-                        await this.syncWidget(remoteWidget, baseUrl);
+                    // A. SYNC & UPDATE
+                    for (const remoteWidget of remoteWidgets) {
+                        await this.syncWidget(remoteWidget, baseUrl, force);
                     }
+
+                    // B. REMOVE ORPHANED WIDGETS (Clean up widgets removed from JSON)
+                    const cachedWidgets = await db.widgetCache.toArray();
+                    for (const cached of cachedWidgets) {
+                        if (!remoteIds.has(cached.id)) {
+                            console.log(`[Loader] Removing old widget: ${cached.id}`);
+                            
+                            // 1. Remove from DOM
+                            const container = document.getElementById(cached.containerId);
+                            if (container) container.innerHTML = ''; 
+                            
+                            // 2. Remove from DB
+                            await db.widgetCache.delete(cached.id);
+                        }
+                    }
+                    
+                    if (window.Bridge && force) window.Bridge.showToast("Widgets synced successfully!");
+
                 } catch (e) {
-                    console.warn("[Loader] Offline or Config fetch failed:", e);
+                    console.warn("[Loader] Update failed:", e);
+                    if (window.Bridge && force) window.Bridge.showToast("Update failed. Check internet.");
                 }
             }
 
-            async syncWidget(remoteWidget, baseUrl) {
+            async syncWidget(remoteWidget, baseUrl, force) {
                 try {
                     const cached = await db.widgetCache.get(remoteWidget.id);
                     
-                    // If we have it and version matches, ensure it is rendered
-                    if (cached && cached.version === remoteWidget.version) {
+                    // If cached, versions match, and not forcing update -> Skip
+                    if (!force && cached && cached.version === remoteWidget.version) {
                         const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
+                        // Ensure it's actually visible (in case DOM was cleared)
                         if (container && container.innerHTML === "") {
                             this.renderWidget(cached);
                         }
                         return; 
                     }
 
-                    // New version found
+                    // Fetch New
                     console.log(`[Loader] Updating ${remoteWidget.id} to v${remoteWidget.version}`);
                     
-                    // Construct Absolute URL
                     const widgetUrl = baseUrl + remoteWidget.file;
-                    console.log(`[Loader] Fetching widget from: ${widgetUrl}`);
-                    
-                    const htmlResp = await fetch(widgetUrl + '?v=' + remoteWidget.version);
+                    const htmlResp = await fetch(widgetUrl + '?v=' + remoteWidget.version + '&t=' + Date.now());
                     if (!htmlResp.ok) throw new Error(`Widget fetch failed: ${htmlResp.status}`);
                     
                     const htmlCode = await htmlResp.text();
@@ -279,10 +294,8 @@
                         lastUpdated: Date.now()
                     };
 
-                    // Save to Dexie
+                    // Save & Render
                     await db.widgetCache.put(newCacheEntry);
-                    
-                    // Render
                     this.renderWidget(newCacheEntry);
 
                 } catch (e) {
@@ -290,18 +303,11 @@
                 }
             }
 
-            /**
-             * Robust Sanitizer: Removes dangerous tags even if multi-line.
-             */
             sanitizeCode(html) {
                 if (!html) return "";
                 return html
-                    // Remove specific tags completely (including content)
                     .replace(/<title[\s\S]*?<\/title>/gi, "")
-                    // [\s\S]*? matches across newlines, non-greedy
                     .replace(/<meta[\s\S]*?>/gi, "") 
-                    
-                    // Remove wrapper tags but keep content
                     .replace(/<!DOCTYPE[\s\S]*?>/gi, "")
                     .replace(/<html[\s\S]*?>/gi, "")
                     .replace(/<\/html>/gi, "")
@@ -317,21 +323,14 @@
                 if (!container) return;
 
                 container.classList.remove('loading');
-                
-                // 1. Sanitize Code (Remove meta/html tags)
-                // This will clean the data coming from Cache AND Network
                 const cleanCode = this.sanitizeCode(widgetData.code);
-
-                // 2. Safe HTML Injection
                 const range = document.createRange();
                 range.selectNode(document.body); 
                 const fragment = range.createContextualFragment(cleanCode);
 
-                // 3. Clear container and append HTML
                 container.innerHTML = '';
                 container.appendChild(fragment);
 
-                // 4. EXECUTE SCRIPTS
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
@@ -342,10 +341,11 @@
             }
         }
 
-        // Start the engine
+        // --- MAKE IT GLOBAL ---
+        window.loader = new WidgetLoader();
+        
         document.addEventListener('DOMContentLoaded', () => {
-            const loader = new WidgetLoader();
-            loader.init();
+            window.loader.init();
         });
 
     </script>

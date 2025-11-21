@@ -1,6 +1,6 @@
 <style>
     /* Scoped styles for Task Widget */
-    #task-widget-container {
+    .tw-widget {
         width: 100%;
         height: 100%;
         padding: 15px;
@@ -82,7 +82,8 @@
 
     .tw-btn {
         cursor: pointer;
-        font-size: 28px;
+        font-size: 36px;
+        line-height: 1;
         transition: transform 0.1s;
         user-select: none;
     }
@@ -91,6 +92,12 @@
     .tw-check:hover { color: #28a745; }
     .tw-skip { color: #ccc; font-weight: 300; }
     .tw-skip:hover { color: #dc3545; }
+
+    .tw-nav {
+        display: flex;
+        justify-content: center;
+        margin-top: 5px;
+    }
 
     .tw-nav-btn {
         font-size: 24px;
@@ -118,9 +125,49 @@
     }
     .tw-add-btn:hover { background: rgba(0,0,0,0.1); }
 
+    /* --- Overlay Styles --- */
+    #tw-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.6); z-index: 1000; 
+        display: none; justify-content: center; align-items: center; 
+    }
+    .tw-overlay-content { 
+        background: var(--card-bg); padding: 25px; border-radius: 10px; 
+        max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+        max-height: 90vh; overflow-y: auto; 
+        color: var(--text-color);
+    }
+    .tw-overlay-content h2 { margin-top: 0; }
+    
+    .tw-form-field { margin-bottom: 15px; }
+    .tw-form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .tw-form-field input[type="text"], .tw-form-field input[type="date"], 
+    .tw-form-field input[type="number"], .tw-form-field select, .tw-form-field textarea {
+        width: 100%; padding: 10px; font-size: 16px; 
+        border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+    }
+    .tw-form-row { display: flex; gap: 10px; }
+    .tw-form-row .tw-form-field { flex: 1; }
+    
+    /* Day Selector */
+    .tw-day-selector { display: flex; justify-content: space-between; gap: 5px; }
+    .tw-day-selector button { 
+        flex: 1; padding: 10px 0; margin: 0; border: 1px solid #ccc; 
+        background: #f0f0f0; cursor: pointer; font-size: 14px; text-align: center;
+    }
+    .tw-day-selector button.selected { background: var(--accent-color); color: white; font-weight: bold; border-color: var(--accent-color); }
+    
+    .tw-interval-selector { display: flex; gap: 10px; }
+    .tw-interval-selector input { width: 70px; }
+    
+    .tw-form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+    .tw-form-actions button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .tw-btn-save { background-color: var(--accent-color); color: white; }
+    .tw-btn-cancel { background-color: #6c757d; color: white; }
+
 </style>
 
-<div id="task-widget-container">
+<div class="tw-widget">
     <div class="tw-header">
         <div class="tw-title">Tasks Today</div>
         <div class="tw-counter" id="tw-counter">0/0</div>
@@ -130,37 +177,122 @@
         <div class="tw-msg" style="color: #888;">Loading...</div>
     </div>
 
-    <!-- Navigation (Hidden if empty) -->
-    <div style="display: flex; justify-content: center; margin-top: 5px;">
+    <div class="tw-nav">
         <span class="tw-nav-btn disabled" id="tw-prev">❮</span>
         <span class="tw-nav-btn disabled" id="tw-next">❯</span>
     </div>
 
-    <button class="tw-add-btn" id="tw-add-btn">+ Add Task</button>
+    <button class="tw-add-btn" id="tw-add-btn">+ Quick Add Task</button>
+</div>
+
+<!-- Task Overlay -->
+<div id="tw-overlay">
+    <div class="tw-overlay-content">
+        <h2 id="tw-overlay-title">Add New Task</h2>
+        <form id="tw-form">
+            <input type="hidden" id="tw-task-id">
+            
+            <div class="tw-form-field">
+                <label for="tw-name">Name:</label>
+                <input type="text" id="tw-name" required>
+            </div>
+            
+            <div class="tw-form-row">
+                <div class="tw-form-field">
+                    <label for="tw-category">Category:</label>
+                    <input type="text" id="tw-category">
+                </div>
+                <div class="tw-form-field">
+                    <label for="tw-priority">Priority:</label>
+                    <select id="tw-priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="tw-form-field">
+                <label for="tw-due-date">Due Date:</label>
+                <input type="date" id="tw-due-date">
+            </div>
+            
+            <div class="tw-form-field">
+                <label for="tw-recurrence-type">Recurrence:</label>
+                <select id="tw-recurrence-type">
+                    <option value="none" selected>None (One-off)</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="interval">Interval</option>
+                </select>
+            </div>
+            
+            <div class="tw-form-field" id="tw-weekly-recurrence" style="display: none;">
+                <label>Recur on Days:</label>
+                <div class="tw-day-selector" id="tw-recurrence-days">
+                    <button type="button" data-day="0">S</button>
+                    <button type="button" data-day="1">M</button>
+                    <button type="button" data-day="2">T</button>
+                    <button type="button" data-day="3">W</button>
+                    <button type="button" data-day="4">T</button>
+                    <button type="button" data-day="5">F</button>
+                    <button type="button" data-day="6">S</button>
+                </div>
+            </div>
+            
+            <div class="tw-form-field" id="tw-interval-recurrence" style="display: none;">
+                <label>Recur Every:</label>
+                <div class="tw-interval-selector">
+                    <input type="number" id="tw-recurrence-interval" value="1" min="1">
+                    <select id="tw-recurrence-unit">
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="tw-form-field">
+                <label for="tw-notes">Notes:</label>
+                <textarea id="tw-notes" rows="3"></textarea>
+            </div>
+            
+            <div class="tw-form-actions">
+                <button type="button" id="tw-close-btn" class="tw-btn-cancel">Cancel</button>
+                <button type="submit" class="tw-btn-save">Save Task</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
 (() => {
-    // --- Widget Scope Variables ---
-    const container = document.getElementById('task-widget-container');
+    // --- Scoped Variables ---
     const slideArea = document.getElementById('tw-slide-area');
     const counterEl = document.getElementById('tw-counter');
     const prevBtn = document.getElementById('tw-prev');
     const nextBtn = document.getElementById('tw-next');
     
-    let currentSlideIndex = 0;
+    // Overlay Elements
+    const overlay = document.getElementById('tw-overlay');
+    const form = document.getElementById('tw-form');
+    const addBtn = document.getElementById('tw-add-btn');
+    const closeBtn = document.getElementById('tw-close-btn');
+    const recurTypeSelect = document.getElementById('tw-recurrence-type');
+    const weeklyGroup = document.getElementById('tw-weekly-recurrence');
+    const intervalGroup = document.getElementById('tw-interval-recurrence');
+    const dayButtons = document.querySelectorAll('#tw-recurrence-days button');
+
+    let currentSlide = 0;
     let remainingTasks = [];
     const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split("T")[0];
 
     // --- Helpers ---
     function isDue(task, history) {
-        // 1. Filter out completed today
         const completedToday = history.some(h => h.taskId === task.id && h.date === todayStr && h.status === 'Completed');
         if (completedToday) return false;
 
-        // 2. Check Rules
         if (!task.recurrenceType || task.recurrenceType === 'none') {
-            return task.dueDate === todayStr || (task.dueDate && task.dueDate < todayStr); // Due or Overdue
+            return task.dueDate === todayStr || (task.dueDate && task.dueDate < todayStr);
         }
         if (task.recurrenceType === 'weekly') {
             const todayIndex = new Date().getDay();
@@ -168,38 +300,41 @@
             return isDay && (!task.dueDate || task.dueDate <= todayStr);
         }
         if (task.recurrenceType === 'interval') {
-            // Logic simplified for widget: if no history today, assume due if start date passed
-            // (Full logic requires checking last completion date)
-            return true; 
+            return true; // Simplified logic for widget view
         }
         return false;
     }
 
-    // --- Core Logic ---
+    // --- Logic ---
     async function loadData() {
         try {
             const allTasks = await window.db.tasks.where('status').equals('Active').toArray();
-            const history = await window.db.taskHistory.toArray(); // Ideally limit this query in v2
+            const history = await window.db.taskHistory.toArray();
             
             const historyToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
-            const completedCount = historyToday.length;
-
-            // Filter tasks
+            
+            // Filter
             remainingTasks = allTasks.filter(t => isDue(t, history));
             
-            // Sort: High priority first
-            const pMap = { 'High': 1, 'Medium': 2, 'Low': 3 };
-            remainingTasks.sort((a, b) => (pMap[a.priority] || 2) - (pMap[b.priority] || 2));
+            // Sort (Overdue > Priority)
+            remainingTasks.sort((a, b) => {
+                const aOver = (a.dueDate && a.dueDate < todayStr) ? 1 : 0;
+                const bOver = (b.dueDate && b.dueDate < todayStr) ? 1 : 0;
+                if (aOver !== bOver) return bOver - aOver; // Overdue first
+                
+                const pMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                return (pMap[b.priority] || 2) - (pMap[a.priority] || 2);
+            });
 
-            const totalCount = remainingTasks.length + completedCount;
-            counterEl.textContent = `${completedCount}/${totalCount}`;
+            const totalCount = remainingTasks.length + historyToday.length;
+            counterEl.textContent = `${historyToday.length}/${totalCount}`;
 
-            currentSlideIndex = 0;
+            currentSlide = 0;
             renderSlide();
 
         } catch (e) {
             console.error(e);
-            slideArea.innerHTML = `<div class="tw-msg tw-error">Error loading data</div>`;
+            slideArea.innerHTML = `<div class="tw-msg tw-error">Error</div>`;
         }
     }
 
@@ -210,19 +345,19 @@
             return;
         }
 
-        if (currentSlideIndex >= remainingTasks.length) currentSlideIndex = 0;
-        if (currentSlideIndex < 0) currentSlideIndex = remainingTasks.length - 1;
+        if (currentSlide >= remainingTasks.length) currentSlide = 0;
+        if (currentSlide < 0) currentSlide = remainingTasks.length - 1;
 
-        const task = remainingTasks[currentSlideIndex];
+        const task = remainingTasks[currentSlide];
+        const isOverdue = task.dueDate && task.dueDate < todayStr;
         
         slideArea.innerHTML = `
             <div class="tw-slide">
                 <div class="tw-info">
                     <div class="tw-name">${task.name}</div>
                     <div class="tw-details">
-                        <span class="tw-priority-${task.priority ? task.priority.toLowerCase() : 'medium'}">
-                            ${task.priority || 'Medium'}
-                        </span>
+                        ${isOverdue ? '<span class="tw-priority-high">OVERDUE</span>' : 
+                          `<span class="tw-priority-${task.priority.toLowerCase()}">${task.priority}</span>`}
                         ${task.category ? ` • ${task.category}` : ''}
                     </div>
                 </div>
@@ -233,10 +368,8 @@
             </div>
         `;
 
-        // Re-attach listeners to the new dynamic elements
         document.getElementById('tw-btn-complete').onclick = () => completeTask(task);
         document.getElementById('tw-btn-skip').onclick = () => skipTask(task);
-        
         updateNav();
     }
 
@@ -253,61 +386,69 @@
     // --- Actions ---
     async function completeTask(task) {
         try {
-            await window.db.taskHistory.add({
-                taskId: task.id,
-                date: todayStr,
-                status: 'Completed'
-            });
-            // If non-recurring, mark done
+            await window.db.taskHistory.add({ taskId: task.id, date: todayStr, status: 'Completed' });
             if (!task.recurrenceType || task.recurrenceType === 'none') {
                 await window.db.tasks.update(task.id, { status: 'Completed' });
             }
-            loadData(); // Reload
+            loadData();
         } catch(e) { console.error(e); }
     }
 
     async function skipTask(task) {
         try {
-            await window.db.taskHistory.add({
-                taskId: task.id,
-                date: todayStr,
-                status: 'Skipped'
-            });
+            await window.db.taskHistory.add({ taskId: task.id, date: todayStr, status: 'Skipped' });
             loadData();
         } catch(e) { console.error(e); }
     }
 
-    // --- Event Listeners ---
-    prevBtn.onclick = () => {
-        if (remainingTasks.length > 1) {
-            currentSlideIndex--;
-            renderSlide();
-        }
+    // --- Overlay & Form Logic ---
+    function resetForm() {
+        form.reset();
+        document.getElementById('tw-due-date').value = todayStr;
+        recurTypeSelect.value = 'none';
+        toggleRecurInputs();
+        dayButtons.forEach(btn => btn.classList.remove('selected'));
+    }
+
+    function toggleRecurInputs() {
+        weeklyGroup.style.display = (recurTypeSelect.value === 'weekly') ? 'block' : 'none';
+        intervalGroup.style.display = (recurTypeSelect.value === 'interval') ? 'flex' : 'none';
+    }
+
+    addBtn.onclick = () => { resetForm(); overlay.style.display = 'flex'; };
+    closeBtn.onclick = () => { overlay.style.display = 'none'; };
+    recurTypeSelect.onchange = toggleRecurInputs;
+
+    dayButtons.forEach(btn => {
+        btn.onclick = () => btn.classList.toggle('selected');
+    });
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const recType = recurTypeSelect.value;
+        const data = {
+            name: document.getElementById('tw-name').value,
+            category: document.getElementById('tw-category').value,
+            priority: document.getElementById('tw-priority').value,
+            dueDate: document.getElementById('tw-due-date').value,
+            status: 'Active',
+            recurrenceType: recType,
+            recurrenceDays: recType === 'weekly' ? Array.from(document.querySelectorAll('#tw-recurrence-days .selected')).map(b => parseInt(b.dataset.day)) : null,
+            recurrenceInterval: recType === 'interval' ? parseInt(document.getElementById('tw-recurrence-interval').value) : null,
+            recurrenceUnit: recType === 'interval' ? document.getElementById('tw-recurrence-unit').value : null,
+            notes: document.getElementById('tw-notes').value
+        };
+
+        try {
+            await window.db.tasks.add(data);
+            overlay.style.display = 'none';
+            loadData();
+        } catch(err) { alert("Error saving task"); }
     };
 
-    nextBtn.onclick = () => {
-        if (remainingTasks.length > 1) {
-            currentSlideIndex++;
-            renderSlide();
-        }
-    };
+    prevBtn.onclick = () => { if (remainingTasks.length > 1) { currentSlide--; renderSlide(); }};
+    nextBtn.onclick = () => { if (remainingTasks.length > 1) { currentSlide++; renderSlide(); }};
 
-    document.getElementById('tw-add-btn').onclick = () => {
-        // Simple quick add prompt for now, or trigger overlay if implemented
-        const name = prompt("Task Name:");
-        if(name) {
-            window.db.tasks.add({
-                name: name,
-                status: 'Active',
-                priority: 'Medium',
-                dueDate: todayStr,
-                recurrenceType: 'none'
-            }).then(loadData);
-        }
-    };
-
-    // Init
     loadData();
-
 })();
 </script>
