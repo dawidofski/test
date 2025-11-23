@@ -1,0 +1,248 @@
+<style>
+    .dw-widget { width: 100%; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; }
+    .dw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .dw-title { font-size: 18px; font-weight: 700; color: var(--text-color); }
+    
+    .dw-mode-switch { font-size: 12px; display: flex; gap: 8px; }
+    .dw-mode-switch label { cursor: pointer; color: var(--text-color); }
+
+    .dw-card { 
+        background: rgba(0,0,0,0.03); 
+        border-radius: 12px; 
+        padding: 20px; 
+        margin-bottom: 15px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 15px; 
+        text-align: center;
+    }
+
+    /* Play Button */
+    .dw-play-btn {
+        background: var(--accent-color);
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: transform 0.1s;
+    }
+    .dw-play-btn:active { transform: scale(0.95); }
+    .dw-play-btn svg { fill: white; width: 30px; height: 30px; }
+    .dw-play-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* Input */
+    .dw-input {
+        width: 90%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    /* Feedback */
+    .dw-feedback { font-weight: bold; min-height: 20px; }
+    .dw-feedback.correct { color: #28a745; }
+    .dw-feedback.incorrect { color: #dc3545; }
+
+    /* Answer Reveal */
+    .dw-answer { font-size: 14px; color: #555; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; width: 90%; }
+    .dw-answer b { color: var(--text-color); }
+
+    /* Buttons */
+    .dw-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
+    .dw-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; max-width: 120px;}
+    .dw-btn-check { background: #28a745; color: white; }
+    .dw-btn-next { background: var(--accent-color); color: white; }
+
+    .hidden { display: none !important; }
+    .dw-status { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
+</style>
+
+<div class="dw-widget">
+    <div class="dw-header">
+        <div class="dw-title">Dictation</div>
+        <div class="dw-mode-switch" id="dw-mode-container">
+            <label><input type="radio" name="dw-mode" value="words" checked> Words</label>
+            <label><input type="radio" name="dw-mode" value="sentences"> Sentences</label>
+        </div>
+    </div>
+
+    <div class="dw-card">
+        <button id="dw-play-btn" class="dw-play-btn" title="Play Audio">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+
+        <input type="text" id="dw-input" class="dw-input" placeholder="Type what you hear..." autocomplete="off">
+        
+        <div id="dw-feedback" class="dw-feedback"></div>
+
+        <div id="dw-answer-box" class="dw-answer hidden">
+            <div><b>ES:</b> <span id="dw-ans-es"></span></div>
+            <div style="font-size: 12px; margin-top:4px;"><b>EN:</b> <span id="dw-ans-en"></span></div>
+        </div>
+
+        <div class="dw-btn-row">
+            <button id="dw-check-btn" class="dw-btn dw-btn-check">Check</button>
+            <button id="dw-next-btn" class="dw-btn dw-btn-next hidden">Next ➡</button>
+        </div>
+    </div>
+
+    <div id="dw-status" class="dw-status"></div>
+</div>
+
+<script>
+(() => {
+    // --- Scoped Elements ---
+    const playBtn = document.getElementById('dw-play-btn');
+    const inputEl = document.getElementById('dw-input');
+    const feedbackEl = document.getElementById('dw-feedback');
+    const answerBox = document.getElementById('dw-answer-box');
+    const ansEs = document.getElementById('dw-ans-es');
+    const ansEn = document.getElementById('dw-ans-en');
+    const checkBtn = document.getElementById('dw-check-btn');
+    const nextBtn = document.getElementById('dw-next-btn');
+    const statusEl = document.getElementById('dw-status');
+    const modeRadios = document.querySelectorAll('input[name="dw-mode"]');
+
+    // Speech & State
+    const synth = window.speechSynthesis;
+    let spanishVoice = null;
+    let currentItem = null;
+    let queue = [];
+    let currentMode = 'words';
+
+    // --- Voice Loading ---
+    function loadVoice() {
+        const voices = synth.getVoices();
+        spanishVoice = voices.find(v => v.lang.startsWith('es-')) || 
+                       voices.find(v => v.lang.startsWith('es')) || null;
+    }
+    loadVoice();
+    if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoice;
+
+    // --- Logic ---
+    async function startSession() {
+        // Get mode safely
+        const checked = document.querySelector('input[name="dw-mode"]:checked');
+        if(checked) currentMode = checked.value;
+        
+        statusEl.textContent = 'Loading...';
+        playBtn.disabled = true;
+
+        try {
+            let items = [];
+            if (currentMode === 'words') {
+                const words = await window.db.words.toArray();
+                items = words.map(w => ({ ...w, type: 'word' }));
+            } else {
+                const sents = await window.db.sentences.toArray();
+                items = sents.map(s => ({ ...s, english: s.english||"", type: 'sentence' }));
+            }
+
+            if (items.length === 0) {
+                statusEl.textContent = "No items found in DB.";
+                return;
+            }
+
+            queue = items.sort(() => Math.random() - 0.5);
+            loadNext();
+        } catch (e) {
+            console.error(e);
+            statusEl.textContent = "Error loading DB.";
+        }
+    }
+
+    function loadNext() {
+        if (queue.length === 0) { startSession(); return; } // Restart if empty
+        
+        currentItem = queue.pop();
+        
+        // Reset UI
+        inputEl.value = '';
+        inputEl.disabled = false;
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'dw-feedback';
+        answerBox.classList.add('hidden');
+        checkBtn.classList.remove('hidden');
+        nextBtn.classList.add('hidden');
+        playBtn.disabled = false;
+        
+        statusEl.textContent = `${queue.length} left`;
+        
+        // Auto-focus input for desktop, maybe annoying on mobile?
+        // inputEl.focus(); 
+    }
+
+    function speak() {
+        if (!currentItem) return;
+        if (synth.speaking) synth.cancel();
+        
+        const u = new SpeechSynthesisUtterance(currentItem.spanish);
+        if (spanishVoice) u.voice = spanishVoice;
+        else u.lang = 'es-ES';
+        u.rate = 0.9;
+        synth.speak(u);
+    }
+
+    function normalize(t) { return t.toLowerCase().trim().replace(/[.,!¿?¡]/g, ''); }
+
+    async function check() {
+        if (!currentItem) return;
+        
+        const user = normalize(inputEl.value);
+        const correct = normalize(currentItem.spanish);
+        let res = 'incorrect';
+
+        if (user === correct) {
+            feedbackEl.textContent = "¡Correcto!";
+            feedbackEl.className = 'dw-feedback correct';
+            res = 'correct';
+            // Update learned status
+            const table = currentItem.type === 'word' ? window.db.words : window.db.sentences;
+            await table.update(currentItem.id, { learned: 1 });
+        } else {
+            feedbackEl.textContent = "Incorrect";
+            feedbackEl.className = 'dw-feedback incorrect';
+            const table = currentItem.type === 'word' ? window.db.words : window.db.sentences;
+            await table.update(currentItem.id, { learned: 0 });
+        }
+
+        // Log
+        await window.db.activityLog.add({ timestamp: Date.now(), type: 'dictation', result: res });
+
+        // Show Answer
+        ansEs.textContent = currentItem.spanish;
+        ansEn.textContent = currentItem.english;
+        answerBox.classList.remove('hidden');
+
+        // Toggle Buttons
+        inputEl.disabled = true;
+        checkBtn.classList.add('hidden');
+        nextBtn.classList.remove('hidden');
+    }
+
+    // --- Events ---
+    playBtn.onclick = speak;
+    checkBtn.onclick = check;
+    nextBtn.onclick = loadNext;
+    
+    modeRadios.forEach(r => r.onchange = startSession);
+
+    inputEl.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            if (!nextBtn.classList.contains('hidden')) loadNext();
+            else check();
+        }
+    };
+
+    // Init
+    startSession();
+})();
+</script>

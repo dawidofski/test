@@ -7,20 +7,56 @@
     {
       "id": "tasks-today",
       "file": "tasks-today.html",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "containerId": "widget-container-tasks"
     },
     {
       "id": "habits-today",
       "file": "habits-today.html",
-      "version": "1.0.6",
+      "version": "1.1.1",
       "containerId": "widget-container-habits"
+    },
+    {
+      "id": "food-widget",
+      "file": "food-widget.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-food"
+    },
+    {
+      "id": "finance-widget",
+      "file": "finance-widget.html",
+      "version": "1.0.1",
+      "containerId": "widget-container-finance"
+    },
+    {
+      "id": "sobriety-widget",
+      "file": "sobriety-widget.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-sobriety"
+    },
+    {
+      "id": "mood-widget",
+      "file": "mood-widget.html",
+      "version": "1.0.",
+      "containerId": "widget-container-mood"
     },
     {
       "id": "spanish-quiz",
       "file": "spanish-quiz.html",
       "version": "1.0.0",
       "containerId": "widget-container-quiz"
+    },
+    {
+      "id": "spanish-rss",
+      "file": "rss-widget.html",
+      "version": "1.0.4",
+      "containerId": "widget-container-rss"
+    },
+    {
+      "id": "spanish-dictation",
+      "file": "dictation-widget.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-dictation"
     },
     {
       "id": "sentence-trainer",

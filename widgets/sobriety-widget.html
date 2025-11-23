@@ -1,0 +1,454 @@
+<style>
+    /* --- Layout --- */
+    .sw-widget {
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget-swipe-area { touch-action: pan-y; }
+
+    /* --- Header --- */
+    .sw-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        min-height: 30px;
+        flex-shrink: 0;
+    }
+
+    .sw-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .sw-dots { display: flex; gap: 5px; }
+    .sw-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: #ccc;
+        transition: background 0.3s;
+    }
+    .sw-dot.active { background: var(--accent-color); }
+
+    /* --- Carousel --- */
+    .sw-views-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 220px;
+    }
+
+    .sw-view {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateX(20px);
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        z-index: 0;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .sw-view { background: #1e1e1e; }
+    }
+
+    .sw-view.active {
+        opacity: 1; pointer-events: all;
+        transform: translateX(0); z-index: 10;
+    }
+
+    /* --- View 0: Trackers List --- */
+    .sw-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-bottom: 60px; /* Space for FAB */
+    }
+
+    .sw-card {
+        background: rgba(0,0,0,0.03);
+        border-left: 4px solid var(--accent-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        position: relative;
+    }
+
+    .sw-card-header {
+        display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .sw-name { font-weight: 700; font-size: 16px; color: var(--text-color); }
+    .sw-timer { font-family: monospace; font-size: 14px; font-weight: 600; color: #28a745; margin-top: 5px; }
+    
+    .sw-metrics {
+        display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: #666;
+    }
+    
+    .sw-actions {
+        display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;
+    }
+    .sw-btn-sm {
+        padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;
+        background: transparent; font-size: 11px; cursor: pointer; color: var(--text-color);
+    }
+    .sw-btn-log { border-color: #ffc107; color: #d39e00; }
+    .sw-btn-del { border-color: #dc3545; color: #dc3545; }
+
+    .sw-fab {
+        position: absolute; bottom: 10px; right: 10px;
+        width: 45px; height: 45px; border-radius: 50%;
+        background: var(--accent-color); color: white;
+        font-size: 24px; border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        z-index: 20;
+    }
+
+    /* --- View 1: Chart --- */
+    .sw-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+    .sw-select {
+        padding: 5px; font-size: 12px; border-radius: 6px;
+        border: 1px solid #ccc; background: rgba(0,0,0,0.05);
+        color: var(--text-color); flex: 1;
+    }
+    .sw-chart-wrapper { flex-grow: 1; position: relative; width: 100%; min-height: 150px; }
+
+    /* --- Overlays --- */
+    .sw-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.6); z-index: 2000; 
+        display: none; justify-content: center; align-items: center; 
+    }
+    .sw-overlay-content { 
+        background: var(--card-bg); padding: 20px; border-radius: 12px; 
+        max-width: 400px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        color: var(--text-color);
+    }
+    .sw-input { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px;}
+    .sw-label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; }
+    .sw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .sw-close-overlay { position: absolute; top: 10px; right: 10px; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
+
+</style>
+
+<div class="sw-widget widget-swipe-area" id="sw-widget-root">
+    
+    <div class="sw-header-row">
+        <div class="sw-title" id="sw-view-title">Sobriety Trackers</div>
+        <div class="sw-dots">
+            <div class="sw-dot active" data-idx="0"></div>
+            <div class="sw-dot" data-idx="1"></div>
+        </div>
+    </div>
+
+    <div class="sw-views-wrapper">
+        
+        <div class="sw-view active" id="sw-view-0">
+            <div id="sw-list" class="sw-list">
+                <div style="padding:20px; text-align:center; color:#888;">Loading...</div>
+            </div>
+            <button class="sw-fab" id="sw-open-add">+</button>
+        </div>
+
+        <div class="sw-view" id="sw-view-1">
+            <div class="sw-controls">
+                <select id="sw-chart-tracker" class="sw-select"></select>
+                <select id="sw-chart-range" class="sw-select">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                </select>
+            </div>
+            <div class="sw-chart-wrapper">
+                <canvas id="sw-chart-canvas"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="sw-add-overlay" class="sw-overlay">
+    <div class="sw-overlay-content" style="position:relative;">
+        <button class="sw-close-overlay" id="sw-close-add">✕</button>
+        <h3>New Tracker</h3>
+        <form id="sw-add-form">
+            <label class="sw-label">Name</label>
+            <input type="text" id="sw-add-name" class="sw-input" required placeholder="e.g. Alcohol, Caffeine">
+            
+            <label class="sw-label">Start Date</label>
+            <input type="datetime-local" id="sw-add-date" class="sw-input" required>
+            
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1">
+                    <label class="sw-label">Cost/Item ($)</label>
+                    <input type="number" id="sw-add-cost" class="sw-input" step="0.01" value="0">
+                </div>
+                <div style="flex:1">
+                    <label class="sw-label">Time/Item (min)</label>
+                    <input type="number" id="sw-add-time" class="sw-input" value="0">
+                </div>
+            </div>
+
+            <button type="submit" class="sw-btn-save">Start Tracking</button>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    // === DOM & STATE ===
+    const root = document.getElementById('sw-widget-root');
+    const titleEl = document.getElementById('sw-view-title');
+    const dots = root.querySelectorAll('.sw-dot');
+    const views = [document.getElementById('sw-view-0'), document.getElementById('sw-view-1')];
+    const titles = ["Sobriety Trackers", "Craving Analysis"];
+    
+    let currentView = 0;
+    let statsChart = null;
+    let trackersData = [];
+    let tickerInterval = null;
+
+    const isAlive = () => root && root.isConnected;
+
+    // --- Swipe Logic ---
+    let touchStartX = 0, touchStartY = 0;
+    root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
+    root.addEventListener('touchend', e => {
+        if (!isAlive()) return;
+        const diffX = touchStartX - e.changedTouches[0].screenX;
+        const diffY = touchStartY - e.changedTouches[0].screenY;
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
+    }, {passive: true});
+
+    function switchView(dir) {
+        if (!isAlive()) return;
+        views[currentView].classList.remove('active');
+        dots[currentView].classList.remove('active');
+        currentView += dir;
+        if (currentView >= views.length) currentView = 0;
+        if (currentView < 0) currentView = views.length - 1;
+        views[currentView].classList.add('active');
+        dots[currentView].classList.add('active');
+        titleEl.textContent = titles[currentView];
+        
+        if (currentView === 1) initChart();
+    }
+
+    // ==========================
+    // VIEW 0: TRACKERS LIST
+    // ==========================
+    const listEl = document.getElementById('sw-list');
+
+    async function loadTrackers() {
+        if (!isAlive()) { clearInterval(tickerInterval); return; }
+        try {
+            trackersData = await window.db.sobrietyTrackers.toArray();
+            renderList();
+            populateDropdown(); // For chart view
+        } catch(e) { console.error(e); }
+    }
+
+    function renderList() {
+        listEl.innerHTML = '';
+        if (trackersData.length === 0) {
+            listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No trackers active.<br>Tap + to start.</div>`;
+            return;
+        }
+
+        trackersData.forEach(t => {
+            const el = document.createElement('div');
+            el.className = 'sw-card';
+            el.innerHTML = `
+                <div class="sw-card-header">
+                    <div class="sw-name">${t.name}</div>
+                    <button class="sw-btn-sm sw-btn-del" id="del-${t.id}">✕</button>
+                </div>
+                <div class="sw-timer" id="timer-${t.id}">Calculating...</div>
+                <div class="sw-metrics" id="metric-${t.id}"></div>
+                <div class="sw-actions">
+                    <button class="sw-btn-sm" id="rst-${t.id}">Reset</button>
+                    <button class="sw-btn-sm sw-btn-log" id="log-${t.id}">⚡ Log Craving</button>
+                </div>
+            `;
+            
+            el.querySelector(`#rst-${t.id}`).onclick = () => resetTracker(t);
+            el.querySelector(`#log-${t.id}`).onclick = () => logCraving(t);
+            el.querySelector(`#del-${t.id}`).onclick = () => deleteTracker(t);
+            
+            listEl.appendChild(el);
+        });
+
+        startTicker();
+    }
+
+    function startTicker() {
+        if (tickerInterval) clearInterval(tickerInterval);
+        
+        const tick = () => {
+            if (!isAlive()) { clearInterval(tickerInterval); return; }
+            const now = Date.now();
+            
+            trackersData.forEach(t => {
+                const start = new Date(t.startDate).getTime();
+                const diff = now - start;
+                
+                // Time String
+                const d = Math.floor(diff / (1000*60*60*24));
+                const h = Math.floor((diff / (1000*60*60)) % 24);
+                const m = Math.floor((diff / (1000*60)) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                
+                const timerEl = document.getElementById(`timer-${t.id}`);
+                if(timerEl) timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
+
+                // Savings
+                const items = diff / (1000*60*60*24); // Approx 1 per day logic from original
+                const money = (items * (t.costPerItem||0)).toFixed(2);
+                
+                const metricEl = document.getElementById(`metric-${t.id}`);
+                if(metricEl) metricEl.textContent = `💰 $${money} saved`;
+            });
+        };
+        
+        tick();
+        tickerInterval = setInterval(tick, 1000);
+    }
+
+    // Actions
+    async function resetTracker(t) {
+        if(!confirm(`Reset counter for ${t.name}?`)) return;
+        await window.db.sobrietyTrackers.update(t.id, { startDate: new Date().toISOString() });
+        await window.db.sobrietyRelapses.add({ trackerId: t.id, datetime: new Date().toISOString(), amount: 1 });
+        loadTrackers();
+    }
+
+    async function logCraving(t) {
+        await window.db.sobrietyUrges.add({
+            trackerId: t.id,
+            datetime: new Date().toISOString(),
+            intensity: 5,
+            trigger: 'Quick Log'
+        });
+        alert(`Craving logged for ${t.name}. Stay strong!`);
+        // Refresh chart if active
+        if(currentView === 1) updateChart();
+    }
+
+    async function deleteTracker(t) {
+        if(!confirm(`Delete ${t.name}?`)) return;
+        await window.db.sobrietyTrackers.delete(t.id);
+        loadTrackers();
+    }
+
+    // ==========================
+    // VIEW 1: CHART LOGIC
+    // ==========================
+    const chartSelect = document.getElementById('sw-chart-tracker');
+    const rangeSelect = document.getElementById('sw-chart-range');
+
+    function populateDropdown() {
+        chartSelect.innerHTML = '';
+        trackersData.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            chartSelect.appendChild(opt);
+        });
+    }
+
+    function initChart() {
+        if (!isAlive()) return;
+        const ctx = document.getElementById('sw-chart-canvas');
+        if (!ctx) return;
+
+        // Fix Zombie Chart
+        if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+
+        statsChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Intensity', data: [], borderColor: '#ffc107', tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 10 } } }
+        });
+        
+        chartSelect.onchange = updateChart;
+        rangeSelect.onchange = updateChart;
+        updateChart();
+    }
+
+    async function updateChart() {
+        if (!isAlive() || !statsChart?.canvas?.isConnected) return;
+        
+        const id = parseInt(chartSelect.value);
+        const days = parseInt(rangeSelect.value);
+        if (!id) return;
+
+        const start = new Date();
+        start.setDate(start.getDate() - days);
+        const startStr = start.toISOString();
+
+        try {
+            const urges = await window.db.sobrietyUrges
+                .where('trackerId').equals(id)
+                .filter(u => u.datetime >= startStr)
+                .toArray();
+
+            // Aggregate by day
+            const dataMap = {};
+            urges.forEach(u => {
+                const day = u.datetime.split('T')[0];
+                if(!dataMap[day]) dataMap[day] = {sum:0, count:0};
+                dataMap[day].sum += u.intensity;
+                dataMap[day].count++;
+            });
+
+            const labels = Object.keys(dataMap).sort().map(d => d.slice(5)); // MM-DD
+            const data = Object.keys(dataMap).sort().map(d => dataMap[d].sum / dataMap[d].count);
+
+            statsChart.data.labels = labels;
+            statsChart.data.datasets[0].data = data;
+            statsChart.update();
+
+        } catch(e) { console.error(e); }
+    }
+
+    // ==========================
+    // ADD OVERLAY
+    // ==========================
+    const addOverlay = document.getElementById('sw-add-overlay');
+    const addForm = document.getElementById('sw-add-form');
+
+    document.getElementById('sw-open-add').onclick = () => {
+        addForm.reset();
+        // Set default datetime to now
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('sw-add-date').value = now.toISOString().slice(0,16);
+        addOverlay.style.display = 'flex';
+    };
+    document.getElementById('sw-close-add').onclick = () => addOverlay.style.display = 'none';
+
+    addForm.onsubmit = async (e) => {
+        e.preventDefault();
+        await window.db.sobrietyTrackers.add({
+            name: document.getElementById('sw-add-name').value,
+            startDate: new Date(document.getElementById('sw-add-date').value).toISOString(),
+            costPerItem: parseFloat(document.getElementById('sw-add-cost').value),
+            timePerItemMinutes: parseInt(document.getElementById('sw-add-time').value),
+            resetDate: null
+        });
+        addOverlay.style.display = 'none';
+        loadTrackers();
+    };
+
+    // Init
+    loadTrackers();
+
+})();
+</script>

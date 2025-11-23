@@ -1,0 +1,492 @@
+<style>
+    /* --- Layout --- */
+    .fw-widget {
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget-swipe-area { touch-action: pan-y; }
+
+    /* --- Header --- */
+    .fw-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        min-height: 30px;
+    }
+
+    .fw-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+        cursor: pointer; /* Hint for settings */
+    }
+
+    .fw-dots { display: flex; gap: 5px; }
+    .fw-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: #ccc;
+        transition: background 0.3s;
+    }
+    .fw-dot.active { background: var(--accent-color); }
+
+    /* --- Carousel --- */
+    .fw-views-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 220px;
+    }
+
+    .fw-view {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateX(20px);
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        z-index: 0;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .fw-view { background: #1e1e1e; }
+    }
+
+    .fw-view.active {
+        opacity: 1; pointer-events: all;
+        transform: translateX(0); z-index: 10;
+    }
+
+    /* --- View 0: Budget --- */
+    .fw-budget-container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .fw-amount-big { font-size: 32px; font-weight: 700; color: #28a745; margin: 10px 0; }
+    .fw-amount-big.over { color: #dc3545; }
+    .fw-details { font-size: 14px; color: #888; }
+    
+    .fw-add-btn {
+        width: 100%; padding: 10px; margin-top: auto;
+        background: rgba(0,0,0,0.05); border: none; border-radius: 8px;
+        color: var(--text-color); font-weight: 600; cursor: pointer;
+    }
+
+    /* --- View 1 & 2: Charts/Stats --- */
+    .fw-controls { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .fw-select {
+        padding: 5px; font-size: 12px; border-radius: 6px;
+        border: 1px solid #ccc; background: rgba(0,0,0,0.05);
+        color: var(--text-color);
+    }
+    .fw-chart-wrapper { flex-grow: 1; position: relative; width: 100%; min-height: 150px; }
+    
+    /* --- Overlays --- */
+    .fw-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.6); z-index: 2000; 
+        display: none; justify-content: center; align-items: center; 
+    }
+    .fw-overlay-content { 
+        background: var(--card-bg); padding: 25px; border-radius: 10px; 
+        max-width: 400px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        color: var(--text-color);
+    }
+    .fw-form-group { margin-bottom: 15px; }
+    .fw-form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
+    .fw-input { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    .fw-row { display: flex; gap: 10px; }
+    .fw-btn-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    .fw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+    .fw-btn-cancel { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+
+</style>
+
+<div class="fw-widget widget-swipe-area" id="fw-widget-root">
+    
+    <div class="fw-header-row">
+        <div class="fw-title" id="fw-view-title">Budget Today ⚙️</div>
+        <div class="fw-dots">
+            <div class="fw-dot active" data-idx="0"></div>
+            <div class="fw-dot" data-idx="1"></div>
+            <div class="fw-dot" data-idx="2"></div>
+        </div>
+    </div>
+
+    <div class="fw-views-wrapper">
+        
+        <div class="fw-view active" id="fw-view-0">
+            <div class="fw-budget-container">
+                <div id="fw-budget-left" class="fw-amount-big">$0.00</div>
+                <div id="fw-budget-desc" class="fw-details">Loading...</div>
+            </div>
+            <button class="fw-add-btn" id="fw-open-add-btn">+ Quick Expense</button>
+        </div>
+
+        <div class="fw-view" id="fw-view-1">
+            <div class="fw-controls">
+                <select id="fw-avg-range" class="fw-select">
+                    <option value="week">This Week</option>
+                    <option value="month" selected>This Month</option>
+                </select>
+            </div>
+            <div class="fw-budget-container">
+                <div style="font-size:14px; color:#888;">Average Daily Spend</div>
+                <div id="fw-avg-amount" class="fw-amount-big" style="color: #dc3545;">$0.00</div>
+            </div>
+        </div>
+
+        <div class="fw-view" id="fw-view-2">
+            <div class="fw-controls">
+                <select id="fw-chart-range" class="fw-select">
+                    <option value="week">This Week</option>
+                    <option value="month" selected>This Month</option>
+                </select>
+            </div>
+            <div class="fw-chart-wrapper">
+                <canvas id="fw-chart-canvas"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="fw-add-overlay" class="fw-overlay">
+    <div class="fw-overlay-content">
+        <h3>Add Expense</h3>
+        <form id="fw-add-form">
+            <div class="fw-row">
+                <div class="fw-form-group" style="flex:1">
+                    <label>Amount</label>
+                    <input type="number" id="fw-add-amount" class="fw-input" step="0.01" required>
+                </div>
+                <div class="fw-form-group" style="flex:1">
+                    <label>Date</label>
+                    <input type="date" id="fw-add-date" class="fw-input" required>
+                </div>
+            </div>
+            <div class="fw-form-group">
+                <label>Category</label>
+                <input type="text" id="fw-add-cat" class="fw-input" placeholder="Food, Transport...">
+            </div>
+            <div class="fw-form-group">
+                <label>Notes</label>
+                <input type="text" id="fw-add-note" class="fw-input">
+            </div>
+            <div class="fw-btn-row">
+                <button type="button" id="fw-add-cancel" class="fw-btn-cancel">Cancel</button>
+                <button type="submit" class="fw-btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="fw-settings-overlay" class="fw-overlay">
+    <div class="fw-overlay-content">
+        <h3>Budget Settings</h3>
+        <form id="fw-settings-form">
+            <div class="fw-form-group">
+                <label>Weekday Budget</label>
+                <input type="number" id="fw-set-weekday" class="fw-input" step="0.01">
+            </div>
+            <div class="fw-form-group">
+                <label>Weekend Budget</label>
+                <input type="number" id="fw-set-weekend" class="fw-input" step="0.01">
+            </div>
+            <div class="fw-btn-row">
+                <button type="button" id="fw-set-cancel" class="fw-btn-cancel">Cancel</button>
+                <button type="submit" class="fw-btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    // === DOM & STATE ===
+    const root = document.getElementById('fw-widget-root');
+    const titleEl = document.getElementById('fw-view-title');
+    const dots = root.querySelectorAll('.fw-dot');
+    const views = [
+        document.getElementById('fw-view-0'),
+        document.getElementById('fw-view-1'),
+        document.getElementById('fw-view-2')
+    ];
+    const titles = ["Budget Today ⚙️", "Average Spend", "Spending Trend"];
+    
+    let currentView = 0;
+    let spendingChart = null;
+    
+    // Helper to format dates exactly as stored in DB (YYYY-MM-DD) locally
+    function getLocalISODate(d) {
+        const date = new Date(d);
+        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+            .toISOString()
+            .split("T")[0];
+    }
+    
+    const todayStr = getLocalISODate(new Date());
+
+    // Is Widget Alive? (Prevent Zombie Script Errors)
+    const isAlive = () => root && root.isConnected;
+
+    // --- Swipe Logic ---
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    root.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, {passive: true});
+
+    root.addEventListener('touchend', e => {
+        if (!isAlive()) return;
+        const diffX = touchStartX - e.changedTouches[0].screenX;
+        const diffY = touchStartY - e.changedTouches[0].screenY;
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+            switchView(diffX > 0 ? 1 : -1);
+        }
+    }, {passive: true});
+
+    function switchView(dir) {
+        if (!isAlive()) return;
+        views[currentView].classList.remove('active');
+        dots[currentView].classList.remove('active');
+        
+        currentView += dir;
+        if (currentView >= views.length) currentView = 0;
+        if (currentView < 0) currentView = views.length - 1;
+        
+        views[currentView].classList.add('active');
+        dots[currentView].classList.add('active');
+        titleEl.textContent = titles[currentView];
+        
+        refreshAll();
+    }
+
+    // ==========================
+    // VIEW 0: BUDGET LOGIC
+    // ==========================
+    const budgetLeftEl = document.getElementById('fw-budget-left');
+    const budgetDescEl = document.getElementById('fw-budget-desc');
+
+    async function loadBudget() {
+        if (!isAlive()) return;
+        try {
+            // Settings
+            const wd = await window.db.settings.get('dailyBudgetWeekday');
+            const we = await window.db.settings.get('dailyBudgetWeekend');
+            const weekday = wd ? wd.value : 50;
+            const weekend = we ? we.value : 100;
+            
+            const day = new Date().getDay();
+            const limit = (day === 0 || day === 6) ? weekend : weekday;
+
+            // Spent Today
+            const txs = await window.db.financeTransactions
+                .where('date').equals(todayStr)
+                .and(tx => tx.type === 'Expense')
+                .toArray();
+            
+            const spent = txs.reduce((sum, t) => sum + t.amount, 0);
+            const left = limit - spent;
+
+            budgetLeftEl.textContent = `${left < 0 ? '-' : ''}$${Math.abs(left).toFixed(2)}`;
+            budgetLeftEl.classList.toggle('over', left < 0);
+            budgetDescEl.textContent = `Spent $${spent.toFixed(2)} of $${limit.toFixed(2)}`;
+
+        } catch(e) { console.error(e); }
+    }
+
+    // ==========================
+    // VIEW 1: AVERAGE LOGIC
+    // ==========================
+    const avgSelect = document.getElementById('fw-avg-range');
+    const avgEl = document.getElementById('fw-avg-amount');
+
+    async function loadAverage() {
+        if (!isAlive()) return;
+        try {
+            const range = avgSelect.value;
+            const end = new Date();
+            const start = new Date();
+            
+            // Use simple day subtraction for ranges
+            if (range === 'week') start.setDate(end.getDate() - 6); // 7 days inc today
+            else start.setDate(end.getDate() - 29); // 30 days inc today
+
+            // Convert to safe ISO strings
+            const startStr = getLocalISODate(start);
+            const endStr = getLocalISODate(end);
+
+            // Query using strings (inclusive)
+            const txs = await window.db.financeTransactions
+                .where('date').between(startStr, endStr, true, true)
+                .and(tx => tx.type === 'Expense')
+                .toArray();
+
+            if(txs.length === 0) {
+                avgEl.textContent = "$0.00";
+                return;
+            }
+
+            const total = txs.reduce((sum, t) => sum + t.amount, 0);
+            
+            // Calculate days difference accurately
+            const diffTime = Math.abs(end - start);
+            const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            
+            const avg = total / days;
+            avgEl.textContent = `$${avg.toFixed(2)}`;
+
+        } catch(e) { console.error(e); }
+    }
+    
+    avgSelect.onchange = loadAverage;
+
+    // ==========================
+    // VIEW 2: CHART LOGIC
+    // ==========================
+    const chartSelect = document.getElementById('fw-chart-range');
+
+    function initChart() {
+        if (!isAlive()) return;
+        const ctx = document.getElementById('fw-chart-canvas');
+        if (!ctx) return;
+
+        // Fix Zombie Chart
+        const existing = Chart.getChart(ctx);
+        if (existing) existing.destroy();
+
+        spendingChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Daily Spend', data: [], borderColor: '#dc3545', backgroundColor: '#dc354530', fill: true, tension: 0.1 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+        
+        chartSelect.onchange = updateChart;
+        updateChart();
+    }
+
+    async function updateChart() {
+        if (!isAlive() || !spendingChart?.canvas?.isConnected) return;
+
+        try {
+            const range = chartSelect.value;
+            const end = new Date();
+            const start = new Date();
+            if (range === 'week') start.setDate(end.getDate() - 6);
+            else start.setDate(end.getDate() - 29);
+
+            const startStr = getLocalISODate(start);
+            const endStr = getLocalISODate(end);
+
+            const txs = await window.db.financeTransactions
+                .where('date').between(startStr, endStr, true, true)
+                .and(tx => tx.type === 'Expense')
+                .toArray();
+
+            // Group by day
+            const daily = {};
+            // Create empty entries for every day in range
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                daily[getLocalISODate(d)] = 0;
+            }
+            
+            // Fill actuals
+            txs.forEach(t => {
+                if(daily[t.date] !== undefined) daily[t.date] += t.amount;
+            });
+
+            const labels = Object.keys(daily).map(d => d.slice(5)); // MM-DD
+            const data = Object.values(daily);
+
+            if (spendingChart && spendingChart.data) {
+                spendingChart.data.labels = labels;
+                spendingChart.data.datasets[0].data = data;
+                spendingChart.update();
+            }
+
+        } catch(e) { console.error(e); }
+    }
+
+    // ==========================
+    // OVERLAYS & ACTIONS
+    // ==========================
+    
+    // Add Transaction
+    const addOverlay = document.getElementById('fw-add-overlay');
+    const addForm = document.getElementById('fw-add-form');
+    
+    document.getElementById('fw-open-add-btn').onclick = () => {
+        addForm.reset();
+        document.getElementById('fw-add-date').value = todayStr;
+        addOverlay.style.display = 'flex';
+    };
+    document.getElementById('fw-add-cancel').onclick = () => addOverlay.style.display = 'none';
+
+    addForm.onsubmit = async (e) => {
+        e.preventDefault();
+        await window.db.financeTransactions.add({
+            type: 'Expense',
+            amount: parseFloat(document.getElementById('fw-add-amount').value),
+            category: document.getElementById('fw-add-cat').value || 'General',
+            date: document.getElementById('fw-add-date').value,
+            notes: document.getElementById('fw-add-note').value
+        });
+        addOverlay.style.display = 'none';
+        refreshAll();
+    };
+
+    // Settings
+    const setOverlay = document.getElementById('fw-settings-overlay');
+    const setForm = document.getElementById('fw-settings-form');
+
+    // Click title to open settings
+    titleEl.onclick = async () => {
+        if (currentView !== 0) return; // Only on Budget view
+        const wd = await window.db.settings.get('dailyBudgetWeekday');
+        const we = await window.db.settings.get('dailyBudgetWeekend');
+        document.getElementById('fw-set-weekday').value = wd ? wd.value : 50;
+        document.getElementById('fw-set-weekend').value = we ? we.value : 100;
+        setOverlay.style.display = 'flex';
+    };
+    document.getElementById('fw-set-cancel').onclick = () => setOverlay.style.display = 'none';
+
+    setForm.onsubmit = async (e) => {
+        e.preventDefault();
+        await window.db.settings.bulkPut([
+            { key: 'dailyBudgetWeekday', value: parseFloat(document.getElementById('fw-set-weekday').value) || 0 },
+            { key: 'dailyBudgetWeekend', value: parseFloat(document.getElementById('fw-set-weekend').value) || 0 }
+        ]);
+        setOverlay.style.display = 'none';
+        refreshAll();
+    };
+
+    function refreshAll() {
+        loadBudget();
+        if (currentView === 1) loadAverage();
+        if (currentView === 2) {
+            // If view 2 is active, chart might not be init yet if we just switched
+            if (!spendingChart) initChart();
+            else updateChart();
+        }
+    }
+
+    // Init
+    loadBudget();
+})();
+</script>
