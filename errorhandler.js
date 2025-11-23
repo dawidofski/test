@@ -4,11 +4,12 @@ window.ErrorHandler = {
         // Catch synchronous errors
         window.onerror = (message, source, lineno, colno, error) => {
             this.logError('Global Crash', message, error, source);
-            return false; // Let default handler run too (console log)
+            return false; 
         };
 
         // Catch Promise rejections (Async errors)
         window.onunhandledrejection = (event) => {
+            // event.reason is usually the error object
             this.logError('Unhandled Promise', event.reason);
         };
 
@@ -17,30 +18,47 @@ window.ErrorHandler = {
 
     /**
      * Logs error to Console, UI (Toast), and Database
+     * Supports: logError(context, messageString, errorObj)
+     * Supports: logError(context, errorObj)
      */
-    async logError(context, message, errorObj = null, source = null) {
+    async logError(context, messageOrError, errorObj = null, source = null) {
         const timestamp = Date.now();
         
-        // Format message
-        let fullMessage = message;
-        if (errorObj && errorObj.message) fullMessage = errorObj.message;
-        if (typeof fullMessage === 'object') fullMessage = JSON.stringify(fullMessage);
+        let fullMessage = messageOrError;
+        let finalErrorObj = errorObj;
 
-        // 1. Console Log (for debugging)
-        console.error(`[${context}]`, fullMessage, errorObj);
-
-        // 2. UI Notification (Toast)
-        if (window.Bridge && window.Bridge.showToast) {
-            window.Bridge.showToast(`⚠️ ${context}: ${fullMessage.substring(0, 40)}...`);
+        // 1. Intelligent Argument Handling
+        if (messageOrError instanceof Error) {
+            // Called as logError('Ctx', error)
+            fullMessage = messageOrError.message;
+            finalErrorObj = messageOrError;
+        } else if (typeof messageOrError === 'object') {
+            // Called with some other object
+            try {
+                fullMessage = JSON.stringify(messageOrError);
+            } catch (e) {
+                fullMessage = "Non-serializable Object";
+            }
         }
 
-        // 3. Persist to Database
+        // Ensure we have a string for the message
+        if (!fullMessage) fullMessage = "Unknown Error";
+
+        // 2. Console Log (Expanded for debugging)
+        console.error(`[${context}]`, fullMessage, finalErrorObj);
+
+        // 3. UI Notification (Toast)
+        if (window.Bridge && window.Bridge.showToast) {
+            window.Bridge.showToast(`⚠️ ${context}: ${fullMessage}`);
+        }
+
+        // 4. Persist to Database
         try {
             if (window.db && window.db.errorLogs) {
                 await window.db.errorLogs.add({
                     timestamp: timestamp,
                     message: `[${context}] ${fullMessage}`,
-                    stack: errorObj ? errorObj.stack : 'No stack trace',
+                    stack: finalErrorObj ? finalErrorObj.stack : 'No stack trace',
                     source: source || window.location.href
                 });
                 
@@ -52,7 +70,8 @@ window.ErrorHandler = {
                 }
             }
         } catch (dbError) {
-            console.error("CRITICAL: Failed to log error to DB", dbError);
+            // Fallback if DB fails (don't crash the error handler!)
+            console.warn("Failed to log error to DB:", dbError);
         }
     }
 };

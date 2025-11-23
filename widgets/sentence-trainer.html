@@ -1,0 +1,191 @@
+<style>
+    .st-widget {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .st-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .st-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .st-card {
+        background: rgba(0,0,0,0.03);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .st-sentence {
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--text-color);
+        line-height: 1.4;
+    }
+
+    .st-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .st-btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        transition: background 0.2s;
+    }
+
+    .st-btn-copy { background-color: var(--accent-color); color: white; }
+    .st-btn-copy:hover { background-color: #0056b3; }
+    .st-btn-chat { background-color: #10a37f; color: white; } /* OpenAI Green */
+    .st-btn-chat:hover { background-color: #0e8c6d; }
+    
+    .st-status {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+    }
+    
+    .hidden { display: none; }
+</style>
+
+<div class="st-widget">
+    <div class="st-header">
+        <div class="st-title">Sentence Trainer</div>
+        <div style="font-size:12px; color:#888;" id="st-count">0</div>
+    </div>
+
+    <div class="st-card">
+        <div id="st-display" class="st-sentence">Loading...</div>
+    </div>
+
+    <div class="st-controls">
+        <button id="st-btn-copy" class="st-btn st-btn-copy">
+            <span>📋</span> Copy & Next
+        </button>
+        <button id="st-btn-chat" class="st-btn st-btn-chat">
+            <span>🤖</span> Explain
+        </button>
+    </div>
+    
+    <div id="st-status" class="st-status"></div>
+</div>
+
+<script>
+(() => {
+    const displayEl = document.getElementById('st-display');
+    const copyBtn = document.getElementById('st-btn-copy');
+    const chatBtn = document.getElementById('st-btn-chat');
+    const statusEl = document.getElementById('st-status');
+    const countEl = document.getElementById('st-count');
+
+    let currentSentence = null;
+    let queue = [];
+
+    async function init() {
+        try {
+            statusEl.textContent = "Loading sentences...";
+            // Fetch all sentences from DB
+            const sentences = await window.db.sentences.toArray();
+            
+            if (sentences.length === 0) {
+                displayEl.textContent = "No sentences found. Please import data.";
+                copyBtn.classList.add('hidden');
+                chatBtn.classList.add('hidden');
+                statusEl.textContent = "";
+                return;
+            }
+
+            // Shuffle
+            queue = sentences.sort(() => Math.random() - 0.5);
+            loadNext();
+        } catch (e) {
+            console.error(e);
+            displayEl.textContent = "Error loading data.";
+        }
+    }
+
+    function loadNext() {
+        if (queue.length === 0) {
+            init(); // Restart/Reshuffle if empty
+            return;
+        }
+
+        currentSentence = queue.pop();
+        displayEl.textContent = currentSentence.spanish;
+        countEl.textContent = `${queue.length} left`;
+        statusEl.textContent = "";
+        
+        copyBtn.disabled = false;
+        copyBtn.innerHTML = "<span>📋</span> Copy & Next";
+    }
+
+    async function handleCopy() {
+        if (!currentSentence) return;
+
+        try {
+            await navigator.clipboard.writeText(currentSentence.spanish);
+            
+            // Log activity
+            await window.db.activityLog.add({
+                timestamp: Date.now(),
+                type: 'sentence',
+                result: 'completed'
+            });
+
+            // Visual Feedback
+            copyBtn.textContent = "Copied!";
+            copyBtn.disabled = true;
+
+            setTimeout(() => {
+                loadNext();
+            }, 600);
+
+        } catch (err) {
+            console.error('Copy failed', err);
+            statusEl.textContent = "Clipboard permission denied.";
+        }
+    }
+
+    function handleChat() {
+        if (!currentSentence) return;
+        const prompt = `Explain the grammar and vocabulary of this Spanish sentence: "${currentSentence.spanish}"`;
+        const url = `https://chat.openai.com/?q=${encodeURIComponent(prompt)}`;
+        window.open(url, '_blank');
+    }
+
+    copyBtn.onclick = handleCopy;
+    chatBtn.onclick = handleChat;
+
+    init();
+})();
+</script>

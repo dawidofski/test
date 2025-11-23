@@ -23,6 +23,12 @@
       "containerId": "widget-container-quiz"
     },
     {
+      "id": "sentence-trainer",
+      "file": "sentence-trainer.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-sentences"
+    },
+    {
       "id": "db-utilities",
       "file": "db-utilities.html",
       "version": "1.0.7",
