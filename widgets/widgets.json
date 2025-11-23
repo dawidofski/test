@@ -32,7 +32,7 @@
     {
       "id": "app-launcher",
       "file": "app-launcher.html",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "type": "overlay",
       "targetId": "launcher-content"
     }

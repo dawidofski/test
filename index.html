@@ -198,7 +198,12 @@
 
     <div id="overlay-launcher" class="overlay">
         <div class="overlay-header">
-            <input type="text" placeholder="Search..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            <form action="javascript:void(0);" style="width: 100%; display: flex; margin: 0;">
+                <input type="search" 
+                       placeholder="Search apps or Google..." 
+                       autocomplete="off"
+                       style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px;">
+            </form>
             <button class="close-btn" onclick="toggleOverlay('overlay-launcher', false)" style="margin-left: 10px;">✕</button>
         </div>
         <div id="launcher-content" class="overlay-content">Loading Launcher...</div>

@@ -67,112 +67,126 @@
     <button class="refresh-btn" id="refresh-apps">Refresh App List</button>
 </div>
 
+
 <script>
-(() => {
-    const listEl = document.getElementById('app-list');
-    const loadingEl = document.getElementById('loading-apps');
-    const refreshBtn = document.getElementById('refresh-apps');
-
-    // --- Mock Data for Browser ---
-    const MOCK_APPS = [
-        { label: 'Settings', packageName: 'com.android.settings' },
-        { label: 'Chrome', packageName: 'com.android.chrome' },
-        { label: 'Camera', packageName: 'com.android.camera' },
-        { label: 'Maps', packageName: 'com.google.android.apps.maps' }
-    ];
-
-    async function loadApps() {
-        listEl.innerHTML = '';
-        loadingEl.style.display = 'block';
-
-        let apps = [];
-
-        try {
-            // 1. Try Bridge API first
-            if (window.Bridge && window.Bridge.getAppsURL) {
-                const url = window.Bridge.getAppsURL();
-                const res = await fetch(url);
-                const data = await res.json();
-                apps = data.apps;
-                
-                // Sort A-Z
-                apps.sort((a, b) => a.label.localeCompare(b.label));
-            } else {
-                // 2. Fallback to Mock
-                console.log("Bridge not found, using mock apps.");
-                await new Promise(r => setTimeout(r, 500)); // Simulate delay
-                apps = MOCK_APPS;
-            }
-
-            renderApps(apps);
-
-        } catch (e) {
-            console.error(e);
-            loadingEl.textContent = "Error loading apps.";
-        }
-    }
-
-    function renderApps(apps) {
-        loadingEl.style.display = 'none';
-        
-        if (apps.length === 0) {
-            loadingEl.textContent = "No apps found.";
+    (() => {
+        const listEl = document.getElementById('app-list');
+        const loadingEl = document.getElementById('loading-apps');
+        const refreshBtn = document.getElementById('refresh-apps');
+    
+        // --- Mock Data for Browser ---
+        const MOCK_APPS = [
+            { label: 'Settings', packageName: 'com.android.settings' },
+            { label: 'Chrome', packageName: 'com.android.chrome' },
+            { label: 'Camera', packageName: 'com.android.camera' },
+            { label: 'Maps', packageName: 'com.google.android.apps.maps' }
+        ];
+    
+        async function loadApps() {
+            listEl.innerHTML = '';
             loadingEl.style.display = 'block';
-            return;
-        }
-
-        apps.forEach(app => {
-            const li = document.createElement('li');
-            li.className = 'app-item';
-            
-            // Icon logic
-            let iconSrc = '';
-            if (window.Bridge && window.Bridge.getDefaultAppIconURL) {
-                iconSrc = window.Bridge.getDefaultAppIconURL(app.packageName);
-            } else {
-                iconSrc = 'https://via.placeholder.com/40'; // Mock icon
-            }
-
-            li.innerHTML = `
-                <img src="${iconSrc}" class="app-icon" alt="icon" onerror="this.src='https://via.placeholder.com/40'">
-                <div class="app-info">
-                    <span class="app-label">${app.label}</span>
-                    <span class="app-pkg">${app.packageName}</span>
-                </div>
-            `;
-
-            li.onclick = () => {
-                if (window.Bridge && window.Bridge.requestLaunchApp) {
-                    window.Bridge.requestLaunchApp(app.packageName);
+            let apps = [];
+    
+            try {
+                if (window.Bridge && window.Bridge.getAppsURL) {
+                    const url = window.Bridge.getAppsURL();
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    apps = data.apps;
+                    apps.sort((a, b) => a.label.localeCompare(b.label));
                 } else {
-                    alert(`Launching ${app.label} (${app.packageName})`);
+                    console.log("Using mock apps.");
+                    await new Promise(r => setTimeout(r, 500));
+                    apps = MOCK_APPS;
+                }
+                renderApps(apps);
+            } catch (e) {
+                console.error(e);
+                loadingEl.textContent = "Error loading apps.";
+            }
+        }
+    
+        function renderApps(apps) {
+            loadingEl.style.display = 'none';
+            if (apps.length === 0) {
+                loadingEl.textContent = "No apps found.";
+                loadingEl.style.display = 'block';
+                return;
+            }
+    
+            apps.forEach(app => {
+                const li = document.createElement('li');
+                li.className = 'app-item';
+                
+                let iconSrc = window.Bridge && window.Bridge.getDefaultAppIconURL 
+                    ? window.Bridge.getDefaultAppIconURL(app.packageName) 
+                    : 'https://via.placeholder.com/40';
+    
+                li.innerHTML = `
+                    <img src="${iconSrc}" class="app-icon" alt="icon" onerror="this.src='https://via.placeholder.com/40'">
+                    <div class="app-info">
+                        <span class="app-label">${app.label}</span>
+                        <span class="app-pkg">${app.packageName}</span>
+                    </div>
+                `;
+    
+                li.onclick = () => {
+                    if (window.Bridge && window.Bridge.requestLaunchApp) {
+                        window.Bridge.requestLaunchApp(app.packageName);
+                    } else {
+                        alert(`Launching ${app.label}`);
+                    }
+                };
+                listEl.appendChild(li);
+            });
+        }
+    
+        refreshBtn.onclick = loadApps;
+    
+        // --- SEARCH & GOOGLE FALLBACK LOGIC ---
+        const searchInput = document.querySelector('#overlay-launcher .overlay-header input');
+        
+        if (searchInput) {
+            // 1. Live Filtering (Use 'input' event for instant feedback)
+            searchInput.oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const items = listEl.querySelectorAll('.app-item');
+                
+                items.forEach(item => {
+                    const label = item.querySelector('.app-label').textContent.toLowerCase();
+                    item.style.display = label.includes(term) ? 'flex' : 'none';
+                });
+            };
+    
+            // 2. Google Search Action (Use 'keydown' for reliable Enter key)
+            searchInput.onkeydown = (e) => {
+                // Check for Enter key (key 'Enter' or code 13)
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    const term = e.target.value.trim();
+                    if (term.length === 0) return;
+    
+                    // Count currently visible apps
+                    const items = listEl.querySelectorAll('.app-item');
+                    let visibleCount = 0;
+                    items.forEach(item => {
+                        if (item.style.display !== 'none') visibleCount++;
+                    });
+    
+                    // If no apps found, Search Google
+                    if (visibleCount === 0) {
+                        // IMPORTANT: Blur input to close mobile keyboard
+                        searchInput.blur();
+                        
+                        const query = encodeURIComponent(term);
+                        window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                    }
                 }
             };
-
-            listEl.appendChild(li);
-        });
-    }
-
-    refreshBtn.onclick = loadApps;
-
-    // Search Filter Logic (Connecting to shell input)
-    // The input is in the parent shell, specifically in the overlay header
-    const searchInput = document.querySelector('#overlay-launcher .overlay-header input');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', (e) => {
-            const term = e.target.value.toLowerCase();
-            const items = listEl.querySelectorAll('.app-item');
-            items.forEach(item => {
-                const label = item.querySelector('.app-label').textContent.toLowerCase();
-                if (label.includes(term)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    loadApps();
-})();
-</script>
+            
+            // Focus input on load
+            searchInput.focus();
+        }
+    
+        loadApps();
+    })();
+    </script>
