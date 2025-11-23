@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
     <script src="database.js"></script>
-    <script src="errorHandler.js"></script>
+    <script src="errorhandler.js"></script>
 
     <style>
         :root {
@@ -242,11 +245,17 @@
         let touchStartY = 0;
 
         document.addEventListener('touchstart', e => {
+            // *** UPDATED: Ignore touches inside swipeable widgets ***
+            if (e.target.closest('.widget-swipe-area')) return; 
+
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
         }, {passive: true});
 
         document.addEventListener('touchend', e => {
+            // *** UPDATED: Ignore touches inside swipeable widgets ***
+            if (e.target.closest('.widget-swipe-area')) return; 
+
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
             handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
@@ -288,7 +297,8 @@
         }
 
         // --- 3. WIDGET LOADER ENGINE (With Error Boundaries) ---
-        const CONFIG_URL = 'widgets/widgets.json'; // Local Path
+        // Ensure this points to your local folder structure
+        const CONFIG_URL = 'widgets/widgets.json'; 
 
         class WidgetLoader {
             async init() {
@@ -317,7 +327,6 @@
                     const remoteIds = new Set(remoteWidgets.map(w => w.id));
 
                     for (const remoteWidget of remoteWidgets) {
-                        // Wrap sync in try/catch to continue if one widget fails
                         try {
                             await this.syncWidget(remoteWidget, data.config.baseUrl, force);
                         } catch(widgetErr) {
@@ -376,7 +385,6 @@
             }
 
             renderWidget(widgetData) {
-                // Error Boundary for Rendering
                 try {
                     const container = document.getElementById(widgetData.containerId);
                     if (!container) return;

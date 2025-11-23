@@ -60,6 +60,13 @@
     </div>
     
     <div class="util-section">
+        <h3>📥 Data Import</h3>
+        <p style="font-size: 0.9em; color: #666;">Upload JSON (words/sentences) or CSV (verbs).</p>
+        <input type="file" id="import-file-input" class="input-field" accept=".json,.csv">
+        <button id="btn-import-file" class="util-btn btn-save">Import Data</button>
+    </div>
+
+    <div class="util-section">
         <h3>☁️ Unified Cloud Backup</h3>
         <p style="font-size: 0.9em; color: #666;">Backs up <b>BOTH</b> Life Organizer and Spanish Data to GitHub.</p>
         <button id="btn-gh-backup" class="util-btn btn-backup">Backup Everything</button>
@@ -116,8 +123,10 @@
 
         // Inputs
         const tokenInput = document.getElementById('gh-token-input');
+        const fileInput = document.getElementById('import-file-input');
         
         function log(msg) {
+            console.log(msg); // Log to console as well
             const line = document.createElement('div');
             line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
             logEl.prepend(line);
@@ -134,9 +143,184 @@
             }
         };
 
+        // --- IMPORT HANDLERS ---
+        const importBtn = document.getElementById('btn-import-file');
+        if (importBtn) {
+            importBtn.onclick = () => {
+                console.log("Import button clicked");
+                if (!fileInput || !fileInput.files.length) {
+                    log('⚠️ Please select a .json or .csv file first.');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                log(`📖 Reading ${file.name}...`);
+                
+                if (fileExtension === 'json') {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            processJsonUpload(data);
+                        } catch (error) {
+                            log(`❌ Error parsing JSON: ${error.message}`);
+                        }
+                    };
+                    reader.readAsText(file);
+                } else if (fileExtension === 'csv') {
+                    if (typeof Papa === 'undefined') {
+                        log("❌ PapaParse library not loaded. Please refresh.");
+                        return;
+                    }
+                    Papa.parse(file, {
+                        header: true,
+                        skipEmptyLines: true,
+                        transformHeader: (h) => h.toLowerCase(),
+                        complete: (results) => processCsvUpload(results.data),
+                        error: (err) => log(`❌ CSV Error: ${err.message}`)
+                    });
+                } else {
+                    log('❌ Unsupported file type. Use .json or .csv');
+                }
+            };
+        }
+
+        async function processJsonUpload(data) {
+            let wordsAdded = 0, sentencesAdded = 0;
+            let wordsSkipped = 0, sentencesSkipped = 0;
+
+            try {
+                // 1. Standard Object Format { "words": [], "sentences": [] }
+                if (typeof data === 'object' && !Array.isArray(data) && (data.words || data.sentences)) {
+                    if (data.words && Array.isArray(data.words)) {
+                        const res = await importStandardWords(data.words);
+                        wordsAdded = res.added; wordsSkipped = res.skipped;
+                    }
+                    if (data.sentences && Array.isArray(data.sentences)) {
+                        const res = await importStandardSentences(data.sentences);
+                        sentencesAdded = res.added; sentencesSkipped = res.skipped;
+                    }
+                }
+                // 2. Array of Words [ {"a":"eng", "un/una":"spa"} ]
+                else if (Array.isArray(data) && data.length > 0 && data[0].a && data[0]['un/una']) {
+                    const res = await importNewWordFormat(data);
+                    wordsAdded = res.added; wordsSkipped = res.skipped;
+                }
+                // 3. Array of Sentences [ {"topic": "spanish..."} ]
+                else if (Array.isArray(data) && data.length > 0 && data[0].topic) {
+                    const res = await importNewSentenceFormat(data);
+                    sentencesAdded = res.added; sentencesSkipped = res.skipped;
+                } else {
+                    log('❌ Unknown JSON format.');
+                    return;
+                }
+
+                log(`✅ Import Done: +${wordsAdded} Words, +${sentencesAdded} Sentences.`);
+            } catch (e) {
+                log(`❌ Import Failed: ${e.message}`);
+            }
+        }
+
+        async function processCsvUpload(data) {
+            if (!data || data.length === 0) { log('❌ Empty CSV.'); return; }
+            
+            // Check for Verb CSV headers
+            if (data[0].infinitive !== undefined && data[0].form_1s !== undefined) {
+                try {
+                    log('⏳ Processing Verbs...');
+                    const res = await importVerbs(data);
+                    log(`✅ Verbs: +${res.added} added.`);
+                } catch (e) {
+                    log(`❌ Verb Import Failed: ${e.message}`);
+                }
+            } else {
+                log('❌ CSV missing "infinitive" or "form_1s" columns.');
+            }
+        }
+
+        // --- IMPORT HELPERS ---
+        async function importStandardWords(list) {
+            if (!window.db.words) return { added:0, skipped:0 };
+            const existing = new Set(await window.db.words.orderBy('spanish').keys());
+            const toAdd = list.filter(w => w.spanish && !existing.has(w.spanish))
+                .map(w => ({ spanish: w.spanish, english: w.english, learned: 0 }));
+            if(toAdd.length) await window.db.words.bulkAdd(toAdd);
+            return { added: toAdd.length, skipped: list.length - toAdd.length };
+        }
+
+        async function importStandardSentences(list) {
+            if (!window.db.sentences) return { added:0, skipped:0 };
+            const existing = new Set(await window.db.sentences.orderBy('spanish').keys());
+            const toAdd = list.filter(s => s.spanish && !existing.has(s.spanish))
+                .map(s => ({ spanish: s.spanish, english: s.english, learned: 0 }));
+            if(toAdd.length) await window.db.sentences.bulkAdd(toAdd);
+            return { added: toAdd.length, skipped: list.length - toAdd.length };
+        }
+
+        async function importNewWordFormat(list) {
+            if (!window.db.words) return { added:0, skipped:0 };
+            const existing = new Set(await window.db.words.orderBy('spanish').keys());
+            const toAdd = [];
+            for (const item of list) {
+                const spa = item['un/una'];
+                if (spa && !existing.has(spa)) {
+                    toAdd.push({ spanish: spa, english: item.a, learned: 0 });
+                    existing.add(spa);
+                }
+            }
+            if(toAdd.length) await window.db.words.bulkAdd(toAdd);
+            return { added: toAdd.length, skipped: list.length - toAdd.length };
+        }
+
+        async function importNewSentenceFormat(list) {
+            if (!window.db.sentences) return { added:0, skipped:0 };
+            const existing = new Set(await window.db.sentences.orderBy('spanish').keys());
+            const toAdd = [];
+            for (const item of list) {
+                const spa = item.topic;
+                if (spa && !existing.has(spa)) {
+                    toAdd.push({ spanish: spa, english: "", learned: 0 });
+                    existing.add(spa);
+                }
+            }
+            if(toAdd.length) await window.db.sentences.bulkAdd(toAdd);
+            return { added: toAdd.length, skipped: list.length - toAdd.length };
+        }
+
+        async function importVerbs(list) {
+            if (!window.db.verbs) return { added:0, skipped:0 };
+            // Simple check to avoid re-importing same file
+            const count = await window.db.verbs.count();
+            if (count > 0 && !confirm(`Verbs table has ${count} entries. Add anyway?`)) {
+                return { added: 0, skipped: list.length };
+            }
+
+            const toAdd = [];
+            const mapping = { 'form_1s':'1s', 'form_2s':'2s', 'form_3s':'3s', 'form_1p':'1p', 'form_2p':'2p', 'form_3p':'3p' };
+
+            for (const row of list) {
+                for (const key in mapping) {
+                    const person = mapping[key];
+                    const form = row[key];
+                    if (form && form.trim()) {
+                        toAdd.push({
+                            infinitive: row.infinitive,
+                            mood: row.mood,
+                            tense: row.tense,
+                            person: person,
+                            form: form,
+                            learned: 0
+                        });
+                    }
+                }
+            }
+            if(toAdd.length) await window.db.verbs.bulkAdd(toAdd);
+            return { added: toAdd.length, skipped: 0 };
+        }
+
         // --- ERROR & LOGGING HANDLERS ---
         
-        // 1. Trigger Test Error
         document.getElementById('btn-test-error').onclick = () => {
             try {
                 throw new Error("This is a manually triggered test error!");
@@ -146,12 +330,11 @@
             }
         };
 
-        // 2. View Logs
         document.getElementById('btn-view-logs').onclick = async () => {
             logEl.innerHTML = "Loading logs...";
             try {
                 if (!window.db.errorLogs) {
-                    logEl.innerHTML = "ErrorLogs table not found (DB update needed?)";
+                    logEl.innerHTML = "ErrorLogs table not found.";
                     return;
                 }
                 
@@ -174,7 +357,6 @@
             }
         };
 
-        // 3. Clear Logs
         document.getElementById('btn-clear-logs').onclick = async () => {
             if(confirm("Delete all system logs?")) {
                 if (window.db.errorLogs) await window.db.errorLogs.clear();
@@ -217,23 +399,17 @@
             const start = performance.now();
             
             try {
-                // 1. Write Test
                 const ids = await window.db.systemValidation.bulkAdd([
                     { test: 'perf', date: Date.now() },
                     { test: 'perf', date: Date.now() },
                     { test: 'perf', date: Date.now() }
                 ]);
-                
-                // 2. Read Test
                 await window.db.systemValidation.where('id').anyOf(ids).toArray();
-                
-                // 3. Delete Test
                 await window.db.systemValidation.bulkDelete(ids);
                 
                 const end = performance.now();
                 const duration = (end - start).toFixed(2);
                 
-                // Count total records
                 let totalRecords = 0;
                 for(const table of window.db.tables) {
                     totalRecords += await table.count();
@@ -266,7 +442,6 @@
             const token = localStorage.getItem('gh_pat');
             if (!token) throw new Error("No Token Saved");
 
-            // Get SHA
             let sha = null;
             try {
                 const res = await fetch(API_URL, {
@@ -339,7 +514,6 @@
             btn.disabled = false;
         };
         
-        // Widget Update
         document.getElementById('btn-update-widgets').onclick = async () => {
              if (window.loader) {
                 log('Checking for updates...');
