@@ -1,34 +1,40 @@
 {
-    "config": {
-      "baseUrl": "https://dawidofski.github.io/test/widgets/",
-      "updateIntervalMinutes": 15
+  "config": {
+    "baseUrl": "https://dawidofski.github.io/test/widgets/",
+    "updateIntervalMinutes": 15
+  },
+  "widgets": [
+    {
+      "id": "tasks-today",
+      "file": "tasks-today.html",
+      "version": "1.0.4",
+      "containerId": "widget-container-tasks"
     },
-    "widgets": [
-      {
-        "id": "tasks-today",
-        "file": "tasks-today.html",
-        "version": "1.0.4",
-        "containerId": "widget-container-tasks"
-      },
-      {
-        "id": "habits-today",
-        "file": "habits-today.html",
-        "version": "1.0.4",
-        "containerId": "widget-container-habits"
-      },
-      {
-        "id": "db-utilities",
-        "file": "db-utilities.html",
-        "version": "1.0.7",
-        "type": "overlay",
-        "targetId": "settings-content"
-      },
-      {
-        "id": "app-launcher",
-        "file": "app-launcher.html",
-        "version": "1.0.4",
-        "type": "overlay",
-        "targetId": "launcher-content"
-      }
-    ]
-  }
+    {
+      "id": "habits-today",
+      "file": "habits-today.html",
+      "version": "1.0.4",
+      "containerId": "widget-container-habits"
+    },
+    {
+      "id": "spanish-quiz",
+      "file": "spanish-quiz.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-quiz"
+    },
+    {
+      "id": "db-utilities",
+      "file": "db-utilities.html",
+      "version": "1.0.7",
+      "type": "overlay",
+      "targetId": "settings-content"
+    },
+    {
+      "id": "app-launcher",
+      "file": "app-launcher.html",
+      "version": "1.0.4",
+      "type": "overlay",
+      "targetId": "launcher-content"
+    }
+  ]
+}

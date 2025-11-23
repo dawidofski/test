@@ -1,0 +1,149 @@
+<style>
+    .sq-widget { width: 100%; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; }
+    .sq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .sq-title { font-size: 18px; font-weight: 700; color: var(--text-color); }
+    .sq-filter-select { padding: 5px; border-radius: 8px; border: 1px solid #ccc; font-size: 12px; }
+    .sq-card { background: rgba(0,0,0,0.03); border-radius: 12px; padding: 20px; margin-bottom: 15px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .sq-word { font-size: 28px; font-weight: 700; margin-bottom: 10px; color: var(--text-color); }
+    .sq-answer-display { font-size: 16px; color: #555; margin-bottom: 10px; min-height: 20px; }
+    .sq-feedback { font-weight: bold; min-height: 20px; margin-bottom: 10px; }
+    .sq-feedback.correct { color: #28a745; }
+    .sq-feedback.incorrect { color: #dc3545; }
+    .sq-input { width: 80%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; text-align: center; font-size: 16px; }
+    .sq-buttons { display: flex; gap: 10px; justify-content: center; }
+    .sq-btn { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .sq-btn-check { background-color: var(--accent-color); color: white; }
+    .sq-btn-skip { background-color: #6c757d; color: white; }
+    .sq-btn-next { background-color: #28a745; color: white; display: none; }
+    .hidden { display: none !important; }
+</style>
+
+<div class="sq-widget">
+    <div class="sq-header">
+        <div class="sq-title">Vocab Quiz</div>
+        <select id="sq-filter" class="sq-filter-select">
+            <option value="all">All (Weighted)</option>
+            <option value="not-learned">New Only</option>
+            <option value="learned">Review</option>
+        </select>
+    </div>
+    <div class="sq-card">
+        <div id="sq-word" class="sq-word">Loading...</div>
+        <div id="sq-feedback" class="sq-feedback"></div>
+        <div id="sq-answer-display" class="sq-answer-display hidden"></div>
+        <input type="text" id="sq-input" class="sq-input" placeholder="English translation..." autocomplete="off">
+        <div class="sq-buttons">
+            <button id="sq-btn-skip" class="sq-btn sq-btn-skip">Skip</button>
+            <button id="sq-btn-check" class="sq-btn sq-btn-check">Check</button>
+            <button id="sq-btn-next" class="sq-btn sq-btn-next">Next Word ➡</button>
+        </div>
+    </div>
+    <div style="font-size: 12px; color: #888;" id="sq-status"></div>
+</div>
+
+<script>
+(() => {
+    const wordDisplay = document.getElementById('sq-word');
+    const feedbackEl = document.getElementById('sq-feedback');
+    const answerDisplay = document.getElementById('sq-answer-display');
+    const inputEl = document.getElementById('sq-input');
+    const btnCheck = document.getElementById('sq-btn-check');
+    const btnSkip = document.getElementById('sq-btn-skip');
+    const btnNext = document.getElementById('sq-btn-next');
+    const filterSelect = document.getElementById('sq-filter');
+    const statusEl = document.getElementById('sq-status');
+    let currentWord = null;
+    let quizQueue = [];
+
+    async function loadSession() {
+        const mode = filterSelect.value;
+        statusEl.textContent = "Loading words...";
+        try {
+            let words = [];
+            if (mode === 'learned') {
+                words = await window.db.words.where('learned').equals(1).toArray();
+            } else if (mode === 'not-learned') {
+                words = await window.db.words.where('learned').equals(0).toArray();
+            } else {
+                const unlearned = await window.db.words.where('learned').equals(0).toArray();
+                const learned = await window.db.words.where('learned').equals(1).toArray();
+                words = [...unlearned, ...unlearned, ...learned];
+            }
+            if (words.length === 0) {
+                wordDisplay.textContent = "No words found";
+                statusEl.textContent = "Upload a JSON file in settings.";
+                return;
+            }
+            quizQueue = words.sort(() => Math.random() - 0.5);
+            loadNext();
+        } catch (e) {
+            console.error(e);
+            wordDisplay.textContent = "Error";
+        }
+    }
+
+    function loadNext() {
+        if (quizQueue.length === 0) { loadSession(); return; }
+        currentWord = quizQueue.pop();
+        wordDisplay.textContent = currentWord.spanish;
+        inputEl.value = '';
+        inputEl.disabled = false;
+        inputEl.focus();
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'sq-feedback';
+        answerDisplay.classList.add('hidden');
+        btnCheck.classList.remove('hidden');
+        btnSkip.classList.remove('hidden');
+        btnNext.classList.add('hidden');
+        statusEl.textContent = `${quizQueue.length} words remaining`;
+    }
+
+    async function checkAnswer() {
+        if (!currentWord) return;
+        const userVal = inputEl.value.trim().toLowerCase();
+        const correctVals = currentWord.english.toLowerCase().split(/[\/,]+/).map(s => s.trim());
+        if (correctVals.some(ans => ans === userVal)) {
+            feedbackEl.textContent = "Correct! 🎉";
+            feedbackEl.classList.add('correct');
+            await window.db.words.update(currentWord.id, { learned: 1 });
+            await window.db.activityLog.add({ timestamp: Date.now(), type: 'quiz', result: 'correct' });
+        } else {
+            feedbackEl.textContent = "Incorrect";
+            feedbackEl.classList.add('incorrect');
+            answerDisplay.textContent = `Answer: ${currentWord.english}`;
+            answerDisplay.classList.remove('hidden');
+            await window.db.words.update(currentWord.id, { learned: 0 });
+            await window.db.activityLog.add({ timestamp: Date.now(), type: 'quiz', result: 'incorrect' });
+        }
+        inputEl.disabled = true;
+        btnCheck.classList.add('hidden');
+        btnSkip.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+        btnNext.focus();
+    }
+
+    function skipWord() {
+        if (!currentWord) return;
+        feedbackEl.textContent = "Skipped";
+        answerDisplay.textContent = `Answer: ${currentWord.english}`;
+        answerDisplay.classList.remove('hidden');
+        inputEl.disabled = true;
+        btnCheck.classList.add('hidden');
+        btnSkip.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+    }
+
+    btnCheck.onclick = checkAnswer;
+    btnSkip.onclick = skipWord;
+    btnNext.onclick = loadNext;
+    filterSelect.onchange = loadSession;
+    inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            if (!btnNext.classList.contains('hidden')) loadNext();
+            else checkAnswer();
+        }
+    });
+
+    loadSession();
+})();
+</script>
