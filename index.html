@@ -7,6 +7,7 @@
     
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="database.js"></script>
+    <script src="errorHandler.js"></script>
 
     <style>
         :root {
@@ -75,6 +76,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        .widget-error {
+            padding: 20px;
+            color: #dc3545;
+            text-align: center;
+            font-size: 14px;
+            background: rgba(220, 53, 69, 0.1);
+            border-radius: 16px;
         }
 
         /* --- Bottom Dock --- */
@@ -198,7 +208,7 @@
 
     <div id="overlay-launcher" class="overlay">
         <div class="overlay-header">
-            <form action="javascript:void(0);" style="width: 100%; display: flex; margin: 0;">
+            <form onsubmit="return false;" style="width: 100%; display: flex; margin: 0;">
                 <input type="search" 
                        placeholder="Search apps or Google..." 
                        autocomplete="off"
@@ -210,13 +220,22 @@
     </div>
 
     <script>
-        // --- 1. NAVIGATION & SWIPE LOGIC ---
-        let currentPage = 0; // 0 = Life, 1 = Spanish
+        // --- 1. BRIDGE MOCK ---
+        if (!window.Bridge) {
+            window.Bridge = {
+                requestOpenAppInfo: () => console.log("Mock: Open App Info"),
+                showToast: (msg) => console.log("Mock Toast:", msg),
+                getStatusBarsWindowInsets: () => JSON.stringify({top: 20}),
+                getNavigationBarsWindowInsets: () => JSON.stringify({bottom: 0}),
+            };
+        }
+
+        // --- 2. NAVIGATION & UI LOGIC ---
+        let currentPage = 0;
         const pageContainer = document.getElementById('page-container');
         const dotLife = document.getElementById('dot-life');
         const dotSpanish = document.getElementById('dot-spanish');
 
-        // Touch handling
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -232,27 +251,21 @@
         }, {passive: true});
 
         function handleSwipe(sx, sy, ex, ey) {
-            const diffX = sx - ex;
-            const diffY = sy - ey;
-
-            // Ensure horizontal swipe dominates vertical scrolling
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                if (diffX > 0) {
-                    // Swipe Left -> Go Next (To Spanish)
-                    if (currentPage === 0) switchPage(1);
-                } else {
-                    // Swipe Right -> Go Prev (To Life)
-                    if (currentPage === 1) switchPage(0);
+            try {
+                const diffX = sx - ex;
+                const diffY = sy - ey;
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                    if (diffX > 0) { if (currentPage === 0) switchPage(1); } 
+                    else { if (currentPage === 1) switchPage(0); }
                 }
+            } catch(e) {
+                window.ErrorHandler.logError('Swipe Logic', e);
             }
         }
 
         function switchPage(pageIndex) {
             currentPage = pageIndex;
-            // Slide container: 0% for page 0, -100% for page 1
             pageContainer.style.transform = `translateX(-${pageIndex * 100}vw)`;
-            
-            // Update dots
             if (pageIndex === 0) {
                 dotLife.classList.add('active');
                 dotSpanish.classList.remove('active');
@@ -262,25 +275,18 @@
             }
         }
 
-        // --- 2. BRIDGE MOCK ---
-        if (!window.Bridge) {
-            window.Bridge = {
-                requestOpenAppInfo: () => console.log("Mock: Open App Info"),
-                showToast: (msg) => console.log("Mock Toast:", msg),
-                getStatusBarsWindowInsets: () => JSON.stringify({top: 20}),
-                getNavigationBarsWindowInsets: () => JSON.stringify({bottom: 0}),
-            };
-        }
-
-        // --- 3. UI LOGIC ---
         function toggleOverlay(id, show) {
-            const el = document.getElementById(id);
-            if(show) el.classList.add('open');
-            else el.classList.remove('open');
+            try {
+                const el = document.getElementById(id);
+                if(show) el.classList.add('open');
+                else el.classList.remove('open');
+            } catch(e) {
+                window.ErrorHandler.logError('Overlay Toggle', e);
+            }
         }
 
-        // --- 4. WIDGET LOADER ENGINE ---
-        const CONFIG_URL = 'https://dawidofski.github.io/test/widgets/widgets.json';
+        // --- 3. WIDGET LOADER ENGINE (With Error Boundaries) ---
+        const CONFIG_URL = 'widgets/widgets.json'; // Local Path
 
         class WidgetLoader {
             async init() {
@@ -293,7 +299,9 @@
                 try {
                     const cachedWidgets = await db.widgetCache.toArray();
                     cachedWidgets.forEach(w => this.renderWidget(w));
-                } catch (e) { console.error("Error loading cache:", e); }
+                } catch (e) {
+                    window.ErrorHandler.logError('Cache Load', e);
+                }
             }
 
             async checkForUpdates(force = false) {
@@ -307,7 +315,12 @@
                     const remoteIds = new Set(remoteWidgets.map(w => w.id));
 
                     for (const remoteWidget of remoteWidgets) {
-                        await this.syncWidget(remoteWidget, data.config.baseUrl, force);
+                        // Wrap sync in try/catch to continue if one widget fails
+                        try {
+                            await this.syncWidget(remoteWidget, data.config.baseUrl, force);
+                        } catch(widgetErr) {
+                            window.ErrorHandler.logError(`Sync ${remoteWidget.id}`, widgetErr);
+                        }
                     }
 
                     // Cleanup orphans
@@ -320,34 +333,35 @@
                         }
                     }
                     if (window.Bridge && force) window.Bridge.showToast("Widgets synced!");
-                } catch (e) { console.warn("Update failed:", e); }
+                } catch (e) {
+                    console.warn("Update failed:", e);
+                    if (window.Bridge && force) window.Bridge.showToast("Update failed. Check connection.");
+                }
             }
 
             async syncWidget(remoteWidget, baseUrl, force) {
-                try {
-                    const cached = await db.widgetCache.get(remoteWidget.id);
-                    if (!force && cached && cached.version === remoteWidget.version) {
-                        const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
-                        if (container && container.innerHTML.trim() === "") this.renderWidget(cached);
-                        return; 
-                    }
+                const cached = await db.widgetCache.get(remoteWidget.id);
+                if (!force && cached && cached.version === remoteWidget.version) {
+                    const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
+                    if (container && container.innerHTML.trim() === "") this.renderWidget(cached);
+                    return; 
+                }
 
-                    console.log(`[Loader] Updating ${remoteWidget.id}`);
-                    const resp = await fetch(baseUrl + remoteWidget.file + '?v=' + remoteWidget.version + '&t=' + Date.now());
-                    if (!resp.ok) throw new Error("Widget fetch failed");
-                    const html = await resp.text();
+                console.log(`[Loader] Updating ${remoteWidget.id}`);
+                const resp = await fetch(baseUrl + remoteWidget.file + '?v=' + remoteWidget.version + '&t=' + Date.now());
+                if (!resp.ok) throw new Error("Widget fetch failed");
+                const html = await resp.text();
 
-                    const entry = {
-                        id: remoteWidget.id,
-                        version: remoteWidget.version,
-                        code: html,
-                        containerId: remoteWidget.targetId || remoteWidget.containerId, 
-                        lastUpdated: Date.now()
-                    };
+                const entry = {
+                    id: remoteWidget.id,
+                    version: remoteWidget.version,
+                    code: html,
+                    containerId: remoteWidget.targetId || remoteWidget.containerId, 
+                    lastUpdated: Date.now()
+                };
 
-                    await db.widgetCache.put(entry);
-                    this.renderWidget(entry);
-                } catch (e) { console.error(`Failed to update ${remoteWidget.id}`, e); }
+                await db.widgetCache.put(entry);
+                this.renderWidget(entry);
             }
 
             sanitizeCode(html) {
@@ -360,24 +374,33 @@
             }
 
             renderWidget(widgetData) {
-                const container = document.getElementById(widgetData.containerId);
-                if (!container) return;
+                // Error Boundary for Rendering
+                try {
+                    const container = document.getElementById(widgetData.containerId);
+                    if (!container) return;
 
-                container.classList.remove('loading');
-                const cleanCode = this.sanitizeCode(widgetData.code);
-                const range = document.createRange();
-                range.selectNode(document.body); 
-                const fragment = range.createContextualFragment(cleanCode);
+                    container.classList.remove('loading');
+                    const cleanCode = this.sanitizeCode(widgetData.code);
+                    const range = document.createRange();
+                    range.selectNode(document.body); 
+                    const fragment = range.createContextualFragment(cleanCode);
 
-                container.innerHTML = '';
-                container.appendChild(fragment);
+                    container.innerHTML = '';
+                    container.appendChild(fragment);
 
-                container.querySelectorAll('script').forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
+                    container.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                } catch(e) {
+                    window.ErrorHandler.logError(`Render ${widgetData.id}`, e);
+                    const container = document.getElementById(widgetData.containerId);
+                    if(container) {
+                        container.innerHTML = `<div class="widget-error">Failed to load widget.<br>${e.message}</div>`;
+                    }
+                }
             }
         }
 

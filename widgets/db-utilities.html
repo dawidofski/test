@@ -46,6 +46,8 @@
         overflow-y: auto;
         margin-top: 10px;
     }
+    .log-entry { border-bottom: 1px solid #ddd; padding: 5px 0; }
+    .log-entry.error { color: #dc3545; }
 </style>
 
 <div class="util-container">
@@ -80,13 +82,14 @@
     </div>
 
     <div class="util-section">
-        <h3>⚡ Diagnostics</h3>
+        <h3>⚠️ Diagnostics & Logs</h3>
         <button id="btn-perf-check" class="util-btn btn-info">Run Performance Check</button>
         <button id="btn-update-widgets" class="util-btn btn-save">Check for Widget Updates</button>
-    </div>
-
-    <div class="util-section">
-        <h3>Log</h3>
+        <div style="height: 10px;"></div>
+        <button id="btn-test-error" class="util-btn btn-warn">Trigger Test Error</button>
+        <button id="btn-view-logs" class="util-btn btn-info" style="background-color: #17a2b8; color:white;">View System Logs</button>
+        <button id="btn-clear-logs" class="util-btn btn-danger">Clear Logs</button>
+        
         <div id="backup-log" class="status-log">Ready...</div>
     </div>
 
@@ -108,7 +111,7 @@
         // Config
         const REPO_OWNER = 'dawidofski';
         const REPO_NAME = 'backup';
-        const FILE_PATH = 'life_organizer_full_backup.json'; // Updated filename for unified DB
+        const FILE_PATH = 'life_organizer_full_backup.json';
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
 
         // Inputs
@@ -128,6 +131,54 @@
             if (tokenInput.value.trim()) {
                 localStorage.setItem('gh_pat', tokenInput.value.trim());
                 log('✅ Token saved.');
+            }
+        };
+
+        // --- ERROR & LOGGING HANDLERS ---
+        
+        // 1. Trigger Test Error
+        document.getElementById('btn-test-error').onclick = () => {
+            try {
+                throw new Error("This is a manually triggered test error!");
+            } catch(e) {
+                window.ErrorHandler.logError('Manual Test', e);
+                log("⚠️ Error thrown and logged.");
+            }
+        };
+
+        // 2. View Logs
+        document.getElementById('btn-view-logs').onclick = async () => {
+            logEl.innerHTML = "Loading logs...";
+            try {
+                if (!window.db.errorLogs) {
+                    logEl.innerHTML = "ErrorLogs table not found (DB update needed?)";
+                    return;
+                }
+                
+                const logs = await window.db.errorLogs.orderBy('timestamp').reverse().limit(20).toArray();
+                
+                if (logs.length === 0) {
+                    logEl.innerHTML = "No system logs found.";
+                    return;
+                }
+
+                logEl.innerHTML = logs.map(l => `
+                    <div class="log-entry error">
+                        <strong>${new Date(l.timestamp).toLocaleTimeString()}</strong><br>
+                        ${l.message}
+                    </div>
+                `).join('');
+                
+            } catch(e) {
+                logEl.innerText = "Failed to load logs: " + e.message;
+            }
+        };
+
+        // 3. Clear Logs
+        document.getElementById('btn-clear-logs').onclick = async () => {
+            if(confirm("Delete all system logs?")) {
+                if (window.db.errorLogs) await window.db.errorLogs.clear();
+                logEl.innerHTML = "Logs cleared.";
             }
         };
 
@@ -198,7 +249,6 @@
         };
 
         // --- BACKUP LOGIC (Unified) ---
-        // The exportDB function iterates ALL tables in db, so it automatically covers merged schema
         async function exportDB() {
             log('📦 Exporting all tables...');
             const data = {};
