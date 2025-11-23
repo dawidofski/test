@@ -1,0 +1,352 @@
+<style>
+    /* Scoped styles for Verb Manager Widget */
+    .vm-widget {
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .vm-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .vm-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    /* Carousel Navigation */
+    .vm-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 15px;
+    }
+
+    .vm-nav-btn {
+        font-size: 24px;
+        color: #ccc;
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s;
+    }
+    .vm-nav-btn:hover { color: var(--accent-color); }
+    .vm-nav-label { font-size: 14px; font-weight: 600; color: #888; min-width: 80px; text-align: center; }
+
+    /* Slide Container */
+    .vm-slide-container {
+        flex-grow: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .vm-slide {
+        width: 100%;
+        height: 100%;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+    }
+    .vm-slide.active { display: flex; }
+
+    /* --- QUIZ SLIDE STYLES --- */
+    .vm-quiz-card {
+        background: rgba(0,0,0,0.03);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .vm-quiz-prompt { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+    .vm-quiz-meta { font-size: 12px; color: #666; margin-bottom: 10px; }
+    
+    .vm-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .vm-btn-row { display: flex; gap: 5px; }
+    .vm-btn {
+        flex: 1; padding: 8px; border: none; border-radius: 6px;
+        cursor: pointer; font-weight: 600; font-size: 13px;
+    }
+    .vm-btn-primary { background-color: var(--accent-color); color: white; }
+    .vm-btn-sec { background-color: #6c757d; color: white; }
+    
+    .vm-feedback { min-height: 20px; font-size: 13px; margin-top: 5px; }
+    .vm-feedback.correct { color: #28a745; }
+    .vm-feedback.incorrect { color: #dc3545; }
+
+    /* --- LOOKUP SLIDE STYLES --- */
+    .vm-lookup-form { display: flex; gap: 5px; margin-bottom: 10px; }
+    .vm-lookup-input { flex-grow: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+    
+    .vm-results {
+        flex-grow: 1;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.02);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 13px;
+        max-height: 200px;
+    }
+    .vm-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .vm-table th { text-align: left; border-bottom: 1px solid #ccc; font-size: 11px; color: #666; }
+    .vm-table td { border-bottom: 1px solid #eee; padding: 3px 0; }
+    .vm-mood-title { font-weight: bold; color: var(--accent-color); margin-top: 10px; font-size: 14px; }
+    .vm-tense-title { font-weight: bold; margin-top: 5px; font-size: 12px; }
+
+</style>
+
+<div class="vm-widget">
+    <div class="vm-header">
+        <div class="vm-title">Verb Hub</div>
+    </div>
+
+    <div class="vm-nav">
+        <span class="vm-nav-btn" id="vm-prev">❮</span>
+        <span class="vm-nav-label" id="vm-label">Verb Quiz</span>
+        <span class="vm-nav-btn" id="vm-next">❯</span>
+    </div>
+
+    <div class="vm-slide-container">
+        
+        <div class="vm-slide active" id="vm-slide-quiz">
+            <div class="vm-quiz-card">
+                <div id="vm-q-prompt" class="vm-quiz-prompt">Loading...</div>
+                <div id="vm-q-meta" class="vm-quiz-meta"></div>
+                <div id="vm-q-feedback" class="vm-feedback"></div>
+                
+                <input type="text" id="vm-q-input" class="vm-input" placeholder="Answer..." autocomplete="off">
+                
+                <div class="vm-btn-row" id="vm-q-actions">
+                    <button id="vm-btn-skip" class="vm-btn vm-btn-sec">Skip</button>
+                    <button id="vm-btn-check" class="vm-btn vm-btn-primary">Check</button>
+                </div>
+                <button id="vm-btn-next" class="vm-btn vm-btn-primary hidden" style="width:100%">Next &rarr;</button>
+            </div>
+        </div>
+
+        <div class="vm-slide" id="vm-slide-lookup">
+            <div class="vm-lookup-form">
+                <input type="text" id="vm-l-input" class="vm-lookup-input" placeholder="Enter infinitive (e.g. ser)">
+                <button id="vm-l-btn" class="vm-btn vm-btn-primary" style="flex:0 0 auto">🔍</button>
+            </div>
+            <div id="vm-l-results" class="vm-results">
+                Type a verb to see tables.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(() => {
+    // --- DOM Elements ---
+    const prevBtn = document.getElementById('vm-prev');
+    const nextBtn = document.getElementById('vm-next');
+    const labelEl = document.getElementById('vm-label');
+    const slideQuiz = document.getElementById('vm-slide-quiz');
+    const slideLookup = document.getElementById('vm-slide-lookup');
+
+    // Quiz Elements
+    const qPrompt = document.getElementById('vm-q-prompt');
+    const qMeta = document.getElementById('vm-q-meta');
+    const qFeedback = document.getElementById('vm-q-feedback');
+    const qInput = document.getElementById('vm-q-input');
+    const btnCheck = document.getElementById('vm-btn-check');
+    const btnSkip = document.getElementById('vm-btn-skip');
+    const btnNext = document.getElementById('vm-btn-next');
+    const actionRow = document.getElementById('vm-q-actions');
+
+    // Lookup Elements
+    const lInput = document.getElementById('vm-l-input');
+    const lBtn = document.getElementById('vm-l-btn');
+    const lResults = document.getElementById('vm-l-results');
+
+    // State
+    let currentSlideIndex = 0; // 0 = Quiz, 1 = Lookup
+    let currentQuestion = null;
+
+    // --- CAROUSEL LOGIC ---
+    function updateSlide() {
+        if (currentSlideIndex === 0) {
+            labelEl.textContent = "Verb Quiz";
+            slideQuiz.classList.add('active');
+            slideLookup.classList.remove('active');
+            if (!currentQuestion) loadNextQuestion(); // Auto load if empty
+        } else {
+            labelEl.textContent = "Verb Lookup";
+            slideQuiz.classList.remove('active');
+            slideLookup.classList.add('active');
+        }
+    }
+
+    prevBtn.onclick = () => { currentSlideIndex = 0; updateSlide(); };
+    nextBtn.onclick = () => { currentSlideIndex = 1; updateSlide(); };
+
+    // --- QUIZ LOGIC ---
+    async function loadNextQuestion() {
+        try {
+            // Simple filter: get any unlearned verb
+            const count = await window.db.verbs.count();
+            if (count === 0) {
+                qPrompt.textContent = "No verbs found.";
+                qMeta.textContent = "Import CSV in settings.";
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * count);
+            const verb = await window.db.verbs.offset(randomIndex).first();
+            
+            currentQuestion = verb;
+            
+            // Render
+            qPrompt.textContent = verb.infinitive;
+            qMeta.textContent = `${verb.tense} (${verb.mood}) - ${verb.person}`;
+            qInput.value = '';
+            qInput.disabled = false;
+            qFeedback.textContent = '';
+            qFeedback.className = 'vm-feedback';
+            
+            actionRow.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+            qInput.focus();
+
+        } catch (e) {
+            console.error(e);
+            qPrompt.textContent = "Error loading quiz.";
+        }
+    }
+
+    async function checkAnswer() {
+        if (!currentQuestion) return;
+        
+        const userAns = qInput.value.trim().toLowerCase();
+        const correctAns = currentQuestion.form.toLowerCase();
+        let result = 'incorrect';
+
+        if (userAns === correctAns) {
+            qFeedback.textContent = "Correct! 🎉";
+            qFeedback.className = 'vm-feedback correct';
+            result = 'correct';
+            // Mark learned in background
+            window.db.verbs.update(currentQuestion.id, { learned: 1 });
+        } else {
+            qFeedback.innerHTML = `Incorrect.<br>Answer: <b>${currentQuestion.form}</b>`;
+            qFeedback.className = 'vm-feedback incorrect';
+            window.db.verbs.update(currentQuestion.id, { learned: 0 });
+        }
+
+        // Log activity
+        await window.db.activityLog.add({
+            timestamp: Date.now(),
+            type: 'verbQuiz',
+            result: result
+        });
+
+        // Toggle Buttons
+        qInput.disabled = true;
+        actionRow.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+        btnNext.focus();
+    }
+
+    btnCheck.onclick = checkAnswer;
+    
+    btnSkip.onclick = () => {
+        qFeedback.innerHTML = `Skipped.<br>Answer: <b>${currentQuestion.form}</b>`;
+        qInput.disabled = true;
+        actionRow.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+    };
+
+    btnNext.onclick = loadNextQuestion;
+
+    qInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            if (!btnNext.classList.contains('hidden')) loadNextQuestion();
+            else checkAnswer();
+        }
+    });
+
+    // --- LOOKUP LOGIC ---
+    async function searchVerb() {
+        const term = lInput.value.trim().toLowerCase();
+        if (!term) return;
+
+        lResults.innerHTML = "Searching...";
+        
+        try {
+            const verbs = await window.db.verbs.where('infinitive').equalsIgnoreCase(term).toArray();
+            
+            if (verbs.length === 0) {
+                lResults.textContent = "Verb not found in database.";
+                return;
+            }
+
+            // Group by Mood -> Tense
+            const grouped = {};
+            verbs.forEach(v => {
+                if (!grouped[v.mood]) grouped[v.mood] = {};
+                if (!grouped[v.mood][v.tense]) grouped[v.mood][v.tense] = [];
+                grouped[v.mood][v.tense].push(v);
+            });
+
+            let html = "";
+            // Force Specific Order for display if desired, here just looping
+            for (const mood in grouped) {
+                html += `<div class="vm-mood-title">${mood}</div>`;
+                for (const tense in grouped[mood]) {
+                    html += `<div class="vm-tense-title">${tense}</div>`;
+                    html += `<table class="vm-table">`;
+                    
+                    // Sort by person: 1s, 2s, 3s, 1p, 2p, 3p
+                    const order = ['1s', '2s', '3s', '1p', '2p', '3p'];
+                    const forms = grouped[mood][tense];
+                    
+                    order.forEach(p => {
+                        const match = forms.find(f => f.person === p);
+                        if (match) {
+                            html += `<tr><td width="30%">${p}</td><td>${match.form}</td></tr>`;
+                        }
+                    });
+                    html += `</table>`;
+                }
+            }
+            
+            lResults.innerHTML = html;
+            lResults.scrollTop = 0;
+
+            // Log lookup
+            window.db.activityLog.add({ timestamp: Date.now(), type: 'verbLookup', result: 'viewed' });
+
+        } catch (e) {
+            console.error(e);
+            lResults.textContent = "Error searching.";
+        }
+    }
+
+    lBtn.onclick = searchVerb;
+    lInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchVerb(); });
+
+    // Init
+    updateSlide();
+})();
+</script>

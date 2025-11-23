@@ -29,6 +29,12 @@
       "containerId": "widget-container-sentences"
     },
     {
+      "id": "verb-manager",
+      "file": "verb-manager.html",
+      "version": "1.0.0",
+      "containerId": "widget-container-verbs"
+    },
+    {
       "id": "db-utilities",
       "file": "db-utilities.html",
       "version": "1.0.7",
