@@ -8,12 +8,12 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        overflow: hidden; 
+        overflow: hidden;
     }
 
     /* Allows vertical scrolling on the page but captures horizontal swipes */
     .widget-swipe-area {
-        touch-action: pan-y; 
+        touch-action: pan-y;
     }
 
     .hw-header-row {
@@ -34,6 +34,7 @@
         display: flex;
         gap: 5px;
     }
+
     .hw-dot {
         width: 6px;
         height: 6px;
@@ -41,7 +42,10 @@
         background: #ccc;
         transition: background 0.3s;
     }
-    .hw-dot.active { background: var(--accent-color); }
+
+    .hw-dot.active {
+        background: var(--accent-color);
+    }
 
     /* --- Views Carousel --- */
     .hw-views-wrapper {
@@ -49,7 +53,7 @@
         position: relative;
         width: 100%;
         /* Explicit min-height ensures charts have space to render */
-        min-height: 240px; 
+        min-height: 240px;
     }
 
     .hw-view {
@@ -64,13 +68,16 @@
         transform: translateX(20px);
         display: flex;
         flex-direction: column;
-        background: #fff; /* Opaque background to hide other views */
+        background: #fff;
+        /* Opaque background to hide other views */
         z-index: 0;
     }
 
     /* Dark mode support */
     @media (prefers-color-scheme: dark) {
-        .hw-view { background: #1e1e1e; }
+        .hw-view {
+            background: #1e1e1e;
+        }
     }
 
     .hw-view.active {
@@ -102,39 +109,104 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(0,0,0,0.02);
+        background: rgba(0, 0, 0, 0.02);
         padding: 15px;
         border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .hw-info { text-align: left; flex-grow: 1; }
-    .hw-name { font-size: 18px; font-weight: 600; color: var(--text-color); margin-bottom: 4px; }
-    .hw-streak-mini { font-size: 13px; color: #888; }
+    .hw-info {
+        text-align: left;
+        flex-grow: 1;
+    }
 
-    .hw-actions { display: flex; gap: 15px; margin-left: 15px; }
-    .hw-btn { cursor: pointer; font-size: 36px; transition: transform 0.1s; user-select: none; line-height: 1; }
-    .hw-btn:active { transform: scale(0.9); }
-    .hw-check { color: #ccc; }
-    .hw-check:hover { color: #28a745; }
-    .hw-skip { color: #ccc; font-weight: 300; }
-    .hw-skip:hover { color: #dc3545; }
+    .hw-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
 
-    .hw-nav { display: flex; justify-content: center; margin-top: 5px; }
-    .hw-nav-btn { font-size: 24px; color: #ccc; cursor: pointer; padding: 0 10px; user-select: none; }
-    .hw-nav-btn:hover { color: var(--accent-color); }
-    .hw-nav-btn.disabled { opacity: 0.3; cursor: default; }
+    .hw-streak-mini {
+        font-size: 13px;
+        color: #888;
+    }
+
+    .hw-actions {
+        display: flex;
+        gap: 15px;
+        margin-left: 15px;
+    }
+
+    .hw-btn {
+        cursor: pointer;
+        font-size: 36px;
+        transition: transform 0.1s;
+        user-select: none;
+        line-height: 1;
+    }
+
+    .hw-btn:active {
+        transform: scale(0.9);
+    }
+
+    .hw-check {
+        color: #ccc;
+    }
+
+    .hw-check:hover {
+        color: #28a745;
+    }
+
+    .hw-skip {
+        color: #ccc;
+        font-weight: 300;
+    }
+
+    .hw-skip:hover {
+        color: #dc3545;
+    }
+
+    .hw-nav {
+        display: flex;
+        justify-content: center;
+        margin-top: 5px;
+    }
+
+    .hw-nav-btn {
+        font-size: 24px;
+        color: #ccc;
+        cursor: pointer;
+        padding: 0 10px;
+        user-select: none;
+    }
+
+    .hw-nav-btn:hover {
+        color: var(--accent-color);
+    }
+
+    .hw-nav-btn.disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
 
     .hw-add-btn {
-        width: 100%;
-        margin-top: auto;
-        padding: 8px;
-        background: rgba(0,0,0,0.05);
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        color: white;
+        font-size: 24px;
         border: none;
-        border-radius: 8px;
-        color: var(--text-color);
-        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
     }
 
     /* --- View 2 & 3: Charts --- */
@@ -143,17 +215,20 @@
         gap: 5px;
         margin-bottom: 10px;
         font-size: 12px;
-        z-index: 20; /* Ensure controls are clickable */
+        z-index: 20;
+        /* Ensure controls are clickable */
     }
+
     .hw-chart-select {
         padding: 5px;
         border: 1px solid #ccc;
         border-radius: 5px;
         font-size: 12px;
-        background: rgba(0,0,0,0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--text-color);
         max-width: 120px;
     }
+
     .hw-canvas-wrapper {
         flex-grow: 1;
         position: relative;
@@ -163,38 +238,106 @@
     }
 
     /* --- Overlay Styles --- */
-    #hw-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.6); z-index: 1000; 
-        display: none; justify-content: center; align-items: center; 
+    #hw-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    .hw-overlay-content { 
-        background: #fff; padding: 25px; border-radius: 10px; 
-        max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+    .hw-overlay-content {
+        background: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         color: #333;
     }
+
     @media (prefers-color-scheme: dark) {
-        .hw-overlay-content { background: #1e1e1e; color: #e0e0e0; }
+        .hw-overlay-content {
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
     }
-    .hw-form-field { margin-bottom: 15px; }
-    .hw-form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+
+    .hw-form-field {
+        margin-bottom: 15px;
+    }
+
+    .hw-form-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
     .hw-form-field input[type="text"] {
-        width: 100%; padding: 10px; font-size: 16px; 
-        border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
     }
-    .hw-day-selector { display: flex; justify-content: space-between; gap: 5px; }
-    .hw-day-selector button { 
-        flex: 1; padding: 10px 0; margin: 0; border: 1px solid #ccc; 
-        background: #f0f0f0; cursor: pointer; font-size: 14px; text-align: center;
+
+    .hw-day-selector {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
     }
-    .hw-day-selector button.selected { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-    .hw-form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
-    .hw-btn-save { background-color: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;}
-    .hw-btn-cancel { background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;}
+
+    .hw-day-selector button {
+        flex: 1;
+        padding: 10px 0;
+        margin: 0;
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        cursor: pointer;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .hw-day-selector button.selected {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .hw-form-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .hw-btn-save {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .hw-btn-cancel {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 </style>
 
 <div class="hw-widget widget-swipe-area" id="hw-widget-root">
-    
+
     <div class="hw-header-row">
         <div class="hw-title" id="hw-view-title">Habits</div>
         <div class="hw-dots">
@@ -216,7 +359,7 @@
                 <span class="hw-nav-btn disabled" id="hw-prev">❮</span>
                 <span class="hw-nav-btn disabled" id="hw-next">❯</span>
             </div>
-            <button class="hw-add-btn" id="hw-add-btn">+ Add Habit</button>
+            <button class="hw-add-btn" id="hw-add-btn">+</button>
         </div>
 
         <div class="hw-view" id="hw-view-1">
@@ -281,117 +424,117 @@
 </div>
 
 <script>
-(() => {
-    // === ROOT & STATE ===
-    const root = document.getElementById('hw-widget-root');
-    const titleEl = document.getElementById('hw-view-title');
-    const dots = root.querySelectorAll('.hw-dot');
-    const views = [
-        document.getElementById('hw-view-0'),
-        document.getElementById('hw-view-1'),
-        document.getElementById('hw-view-2')
-    ];
-    const viewTitles = ["Today's Habits", "Habit Streaks", "History Timeline"];
+    (() => {
+        // === ROOT & STATE ===
+        const root = document.getElementById('hw-widget-root');
+        const titleEl = document.getElementById('hw-view-title');
+        const dots = root.querySelectorAll('.hw-dot');
+        const views = [
+            document.getElementById('hw-view-0'),
+            document.getElementById('hw-view-1'),
+            document.getElementById('hw-view-2')
+        ];
+        const viewTitles = ["Today's Habits", "Habit Streaks", "History Timeline"];
 
-    let currentViewIndex = 0;
-    let statsChart = null;
-    let timelineChart = null;
+        let currentViewIndex = 0;
+        let statsChart = null;
+        let timelineChart = null;
 
-    // --- HELPER: Is Widget Alive? ---
-    function isWidgetDead() {
-        return !root || !root.isConnected;
-    }
-
-    // --- SWIPE LOGIC ---
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    root.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-    }, {passive: true});
-
-    root.addEventListener('touchend', e => {
-        if (isWidgetDead()) return;
-        const diffX = touchStartX - e.changedTouches[0].screenX;
-        const diffY = touchStartY - e.changedTouches[0].screenY;
-        
-        // Ignore very small swipes or vertical scrolls
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
-            changeView(diffX > 0 ? 1 : -1);
+        // --- HELPER: Is Widget Alive? ---
+        function isWidgetDead() {
+            return !root || !root.isConnected;
         }
-    }, {passive: true});
 
-    function changeView(direction) {
-        if (isWidgetDead()) return;
-        
-        views[currentViewIndex].classList.remove('active');
-        dots[currentViewIndex].classList.remove('active');
+        // --- SWIPE LOGIC ---
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        currentViewIndex += direction;
-        if (currentViewIndex >= views.length) currentViewIndex = 0;
-        if (currentViewIndex < 0) currentViewIndex = views.length - 1;
+        root.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
 
-        views[currentViewIndex].classList.add('active');
-        dots[currentViewIndex].classList.add('active');
-        titleEl.textContent = viewTitles[currentViewIndex];
+        root.addEventListener('touchend', e => {
+            if (isWidgetDead()) return;
+            const diffX = touchStartX - e.changedTouches[0].screenX;
+            const diffY = touchStartY - e.changedTouches[0].screenY;
 
-        // Init charts only when needed
-        if (currentViewIndex === 1) initStatsView();
-        if (currentViewIndex === 2) initTimelineView();
-    }
+            // Ignore very small swipes or vertical scrolls
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                changeView(diffX > 0 ? 1 : -1);
+            }
+        }, { passive: true });
 
-    // ==========================================
-    // VIEW 1: TASKS
-    // ==========================================
-    const slideArea = document.getElementById('hw-slide-area');
-    const counterEl = document.getElementById('hw-counter');
-    const prevHabitBtn = document.getElementById('hw-prev');
-    const nextHabitBtn = document.getElementById('hw-next');
-    let currentHabitSlide = 0;
-    let remainingHabits = [];
-    const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split("T")[0];
-
-    async function loadHabitsData() {
-        if (isWidgetDead()) return;
-        try {
-            const habits = await window.db.habits.where('status').equals('Active').toArray();
-            const history = await window.db.habitHistory.toArray();
-
+        function changeView(direction) {
             if (isWidgetDead()) return;
 
-            const isScheduled = (h) => h.recurrenceDays && h.recurrenceDays.includes(new Date().getDay());
-            const doneToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
-            const doneIds = new Set(doneToday.map(h => h.habitId));
+            views[currentViewIndex].classList.remove('active');
+            dots[currentViewIndex].classList.remove('active');
 
-            const dueToday = habits.filter(isScheduled);
-            remainingHabits = dueToday.filter(h => !doneIds.has(h.id));
+            currentViewIndex += direction;
+            if (currentViewIndex >= views.length) currentViewIndex = 0;
+            if (currentViewIndex < 0) currentViewIndex = views.length - 1;
 
-            counterEl.textContent = `${doneToday.length}/${dueToday.length}`;
-            currentHabitSlide = 0;
-            renderHabitSlide();
-            populateTimelineFilter(habits); // Ensure new habits appear in filter
+            views[currentViewIndex].classList.add('active');
+            dots[currentViewIndex].classList.add('active');
+            titleEl.textContent = viewTitles[currentViewIndex];
 
-        } catch (e) {
-            console.error(e);
-            if (slideArea) slideArea.innerHTML = `<div style="color:red">Error</div>`;
-        }
-    }
-
-    function renderHabitSlide() {
-        if (isWidgetDead()) return;
-        if (remainingHabits.length === 0) {
-            slideArea.innerHTML = `<div style="color:#28a745; font-weight:bold;">All habits done! 🎉</div>`;
-            prevHabitBtn.classList.add('disabled');
-            nextHabitBtn.classList.add('disabled');
-            return;
+            // Init charts only when needed
+            if (currentViewIndex === 1) initStatsView();
+            if (currentViewIndex === 2) initTimelineView();
         }
 
-        if (currentHabitSlide >= remainingHabits.length) currentHabitSlide = 0;
-        if (currentHabitSlide < 0) currentHabitSlide = remainingHabits.length - 1;
+        // ==========================================
+        // VIEW 1: TASKS
+        // ==========================================
+        const slideArea = document.getElementById('hw-slide-area');
+        const counterEl = document.getElementById('hw-counter');
+        const prevHabitBtn = document.getElementById('hw-prev');
+        const nextHabitBtn = document.getElementById('hw-next');
+        let currentHabitSlide = 0;
+        let remainingHabits = [];
+        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split("T")[0];
 
-        const habit = remainingHabits[currentHabitSlide];
-        slideArea.innerHTML = `
+        async function loadHabitsData() {
+            if (isWidgetDead()) return;
+            try {
+                const habits = await window.db.habits.where('status').equals('Active').toArray();
+                const history = await window.db.habitHistory.toArray();
+
+                if (isWidgetDead()) return;
+
+                const isScheduled = (h) => h.recurrenceDays && h.recurrenceDays.includes(new Date().getDay());
+                const doneToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
+                const doneIds = new Set(doneToday.map(h => h.habitId));
+
+                const dueToday = habits.filter(isScheduled);
+                remainingHabits = dueToday.filter(h => !doneIds.has(h.id));
+
+                counterEl.textContent = `${doneToday.length}/${dueToday.length}`;
+                currentHabitSlide = 0;
+                renderHabitSlide();
+                populateTimelineFilter(habits); // Ensure new habits appear in filter
+
+            } catch (e) {
+                console.error(e);
+                if (slideArea) slideArea.innerHTML = `<div style="color:red">Error</div>`;
+            }
+        }
+
+        function renderHabitSlide() {
+            if (isWidgetDead()) return;
+            if (remainingHabits.length === 0) {
+                slideArea.innerHTML = `<div style="color:#28a745; font-weight:bold;">All habits done! 🎉</div>`;
+                prevHabitBtn.classList.add('disabled');
+                nextHabitBtn.classList.add('disabled');
+                return;
+            }
+
+            if (currentHabitSlide >= remainingHabits.length) currentHabitSlide = 0;
+            if (currentHabitSlide < 0) currentHabitSlide = remainingHabits.length - 1;
+
+            const habit = remainingHabits[currentHabitSlide];
+            slideArea.innerHTML = `
             <div class="hw-task-card">
                 <div class="hw-info">
                     <div class="hw-name">${habit.name}</div>
@@ -404,223 +547,223 @@
             </div>
         `;
 
-        document.getElementById(`hw-btn-check-${habit.id}`).onclick = () => logHabitAction(habit, 'Completed');
-        document.getElementById(`hw-btn-skip-${habit.id}`).onclick = () => logHabitAction(habit, 'Skipped');
-        
-        prevHabitBtn.classList.toggle('disabled', remainingHabits.length <= 1);
-        nextHabitBtn.classList.toggle('disabled', remainingHabits.length <= 1);
-    }
+            document.getElementById(`hw-btn-check-${habit.id}`).onclick = () => logHabitAction(habit, 'Completed');
+            document.getElementById(`hw-btn-skip-${habit.id}`).onclick = () => logHabitAction(habit, 'Skipped');
 
-    async function logHabitAction(habit, status) {
-        if (isWidgetDead()) return;
-        try {
-            await window.db.habitHistory.add({ habitId: habit.id, date: todayStr, status: status });
-            loadHabitsData();
-            // If we are looking at graphs, refresh them
+            prevHabitBtn.classList.toggle('disabled', remainingHabits.length <= 1);
+            nextHabitBtn.classList.toggle('disabled', remainingHabits.length <= 1);
+        }
+
+        async function logHabitAction(habit, status) {
+            if (isWidgetDead()) return;
+            try {
+                await window.db.habitHistory.add({ habitId: habit.id, date: todayStr, status: status });
+                loadHabitsData();
+                // If we are looking at graphs, refresh them
+                if (currentViewIndex === 1) updateStatsChart();
+                if (currentViewIndex === 2) updateTimelineChart();
+            } catch (e) { console.error(e); }
+        }
+
+        prevHabitBtn.onclick = () => { if (remainingHabits.length > 1) { currentHabitSlide--; renderHabitSlide(); } };
+        nextHabitBtn.onclick = () => { if (remainingHabits.length > 1) { currentHabitSlide++; renderHabitSlide(); } };
+
+
+        // ==========================================
+        // VIEW 2: STATISTICS
+        // ==========================================
+        const statsSelect = document.getElementById('hw-stats-mode');
+
+        function initStatsView() {
+            if (isWidgetDead()) return;
+            const ctx = document.getElementById('hw-chart-stats');
+
+            // --- SAFE INITIALIZATION ---
+            if (!ctx) return;
+
+            // Destroy existing chart (Zombie protection)
+            const existing = Chart.getChart(ctx);
+            if (existing) existing.destroy();
+
+            statsChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Streak', data: [], backgroundColor: '#007bff' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            // Remove old listener to avoid dupes? No, this script runs once per load.
+            statsSelect.onchange = updateStatsChart;
+            updateStatsChart();
+        }
+
+        async function updateStatsChart() {
+            if (isWidgetDead()) return;
+
+            // --- KEY FIX: Optional Chaining to prevent crash on null canvas ---
+            if (!statsChart?.canvas?.isConnected) {
+                return;
+            }
+
+            try {
+                const allHabits = await window.db.habits.where('status').equals('Active').toArray();
+                const allHistory = await window.db.habitHistory.toArray();
+                if (isWidgetDead()) return;
+
+                const mode = statsSelect.value;
+                const labels = [];
+                const data = [];
+
+                for (const habit of allHabits) {
+                    const hHistory = allHistory.filter(h => h.habitId === habit.id);
+                    let streak = calculateStreak(habit, hHistory, mode === 'currentStreak');
+                    labels.push(habit.name);
+                    data.push(streak);
+                }
+
+                if (statsChart && statsChart.data) {
+                    statsChart.data.labels = labels;
+                    statsChart.data.datasets[0].data = data;
+                    statsChart.update();
+                }
+            } catch (e) { console.error("Stats Error", e); }
+        }
+
+        // Simple Streak Logic
+        function calculateStreak(habit, history, isCurrent) {
+            if (!habit.recurrenceDays || !habit.recurrenceDays.length) return 0;
+            const dates = new Set(history.filter(h => h.status === 'Completed').map(h => h.date));
+            let streak = 0, maxStreak = 0;
+            let date = new Date();
+            for (let i = 0; i < 100; i++) {
+                const dStr = date.toISOString().split('T')[0];
+                const day = date.getDay();
+                if (habit.recurrenceDays.includes(day)) {
+                    if (dates.has(dStr)) streak++;
+                    else {
+                        if (isCurrent) { if (i > 0) break; }
+                        else { maxStreak = Math.max(maxStreak, streak); streak = 0; }
+                    }
+                }
+                date.setDate(date.getDate() - 1);
+            }
+            return isCurrent ? streak : Math.max(maxStreak, streak);
+        }
+
+
+        // ==========================================
+        // VIEW 3: TIMELINE
+        // ==========================================
+        const timeRangeSelect = document.getElementById('hw-time-range');
+        const habitFilterSelect = document.getElementById('hw-timeline-habit');
+
+        function initTimelineView() {
+            if (isWidgetDead()) return;
+            const ctx = document.getElementById('hw-chart-timeline');
+
+            if (!ctx) return;
+
+            // Destroy existing chart (Zombie protection)
+            const existing = Chart.getChart(ctx);
+            if (existing) existing.destroy();
+
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Completions', data: [], borderColor: '#28a745', tension: 0.1, fill: true, backgroundColor: 'rgba(40, 167, 69, 0.1)' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            timeRangeSelect.onchange = updateTimelineChart;
+            habitFilterSelect.onchange = updateTimelineChart;
+
+            updateTimelineChart();
+        }
+
+        async function updateTimelineChart() {
+            if (isWidgetDead()) return;
+
+            // --- KEY FIX: Optional Chaining to prevent crash on null canvas ---
+            if (!timelineChart?.canvas?.isConnected) {
+                return;
+            }
+
+            const range = timeRangeSelect.value === 'week' ? 7 : 30;
+            const habitId = habitFilterSelect.value;
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - range + 1);
+
+            try {
+                let history = await window.db.habitHistory.toArray();
+                if (isWidgetDead()) return;
+
+                if (habitId !== 'all') history = history.filter(h => h.habitId == habitId);
+                const dateCounts = {};
+                history.forEach(h => { if (h.status === 'Completed') dateCounts[h.date] = (dateCounts[h.date] || 0) + 1; });
+
+                const labels = [], dataPoints = [];
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    labels.push(dateStr.slice(5));
+                    dataPoints.push(dateCounts[dateStr] || 0);
+                }
+
+                if (timelineChart && timelineChart.data) {
+                    timelineChart.data.labels = labels;
+                    timelineChart.data.datasets[0].data = dataPoints;
+                    timelineChart.update();
+                }
+            } catch (e) { console.error("Timeline Error", e); }
+        }
+
+        function populateTimelineFilter(habits) {
+            if (isWidgetDead()) return;
+            // Keep "All Habits" (index 0) and remove others
+            while (habitFilterSelect.options.length > 1) habitFilterSelect.remove(1);
+
+            habits.forEach(h => {
+                const opt = document.createElement('option');
+                opt.value = h.id;
+                opt.textContent = h.name;
+                habitFilterSelect.appendChild(opt);
+            });
+        }
+
+
+        // ==========================================
+        // OVERLAY LOGIC
+        // ==========================================
+        const overlay = document.getElementById('hw-overlay');
+        const form = document.getElementById('hw-form');
+        const dayBtns = document.querySelectorAll('#hw-recurrence-days button');
+
+        document.getElementById('hw-add-btn').onclick = () => {
+            form.reset();
+            dayBtns.forEach(b => b.classList.remove('selected'));
+            overlay.style.display = 'flex';
+        };
+        document.getElementById('hw-close-btn').onclick = () => overlay.style.display = 'none';
+        dayBtns.forEach(btn => btn.onclick = () => btn.classList.toggle('selected'));
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const days = Array.from(document.querySelectorAll('#hw-recurrence-days .selected')).map(b => parseInt(b.dataset.day));
+            await window.db.habits.add({
+                name: document.getElementById('hw-name').value,
+                category: document.getElementById('hw-category').value,
+                status: 'Active',
+                recurrenceDays: days,
+                createdAt: new Date().toISOString()
+            });
+            overlay.style.display = 'none';
+
+            // --- REFRESH EVERYTHING ---
+            await loadHabitsData();
             if (currentViewIndex === 1) updateStatsChart();
             if (currentViewIndex === 2) updateTimelineChart();
-        } catch(e) { console.error(e); }
-    }
+        };
 
-    prevHabitBtn.onclick = () => { if(remainingHabits.length > 1) { currentHabitSlide--; renderHabitSlide(); }};
-    nextHabitBtn.onclick = () => { if(remainingHabits.length > 1) { currentHabitSlide++; renderHabitSlide(); }};
+        // Init
+        loadHabitsData();
 
-
-    // ==========================================
-    // VIEW 2: STATISTICS
-    // ==========================================
-    const statsSelect = document.getElementById('hw-stats-mode');
-
-    function initStatsView() {
-        if (isWidgetDead()) return;
-        const ctx = document.getElementById('hw-chart-stats');
-        
-        // --- SAFE INITIALIZATION ---
-        if (!ctx) return;
-        
-        // Destroy existing chart (Zombie protection)
-        const existing = Chart.getChart(ctx);
-        if (existing) existing.destroy();
-
-        statsChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: [], datasets: [{ label: 'Streak', data: [], backgroundColor: '#007bff' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
-        
-        // Remove old listener to avoid dupes? No, this script runs once per load.
-        statsSelect.onchange = updateStatsChart;
-        updateStatsChart();
-    }
-
-    async function updateStatsChart() {
-        if (isWidgetDead()) return;
-
-        // --- KEY FIX: Optional Chaining to prevent crash on null canvas ---
-        if (!statsChart?.canvas?.isConnected) {
-            return; 
-        }
-
-        try {
-            const allHabits = await window.db.habits.where('status').equals('Active').toArray();
-            const allHistory = await window.db.habitHistory.toArray();
-            if (isWidgetDead()) return;
-
-            const mode = statsSelect.value;
-            const labels = [];
-            const data = [];
-
-            for (const habit of allHabits) {
-                const hHistory = allHistory.filter(h => h.habitId === habit.id);
-                let streak = calculateStreak(habit, hHistory, mode === 'currentStreak');
-                labels.push(habit.name);
-                data.push(streak);
-            }
-            
-            if (statsChart && statsChart.data) {
-                statsChart.data.labels = labels;
-                statsChart.data.datasets[0].data = data;
-                statsChart.update();
-            }
-        } catch(e) { console.error("Stats Error", e); }
-    }
-    
-    // Simple Streak Logic
-    function calculateStreak(habit, history, isCurrent) {
-        if (!habit.recurrenceDays || !habit.recurrenceDays.length) return 0;
-        const dates = new Set(history.filter(h => h.status==='Completed').map(h => h.date));
-        let streak = 0, maxStreak = 0;
-        let date = new Date();
-        for (let i=0; i<100; i++) {
-            const dStr = date.toISOString().split('T')[0];
-            const day = date.getDay();
-            if (habit.recurrenceDays.includes(day)) {
-                if (dates.has(dStr)) streak++;
-                else {
-                    if (isCurrent) { if (i > 0) break; }
-                    else { maxStreak = Math.max(maxStreak, streak); streak = 0; }
-                }
-            }
-            date.setDate(date.getDate()-1);
-        }
-        return isCurrent ? streak : Math.max(maxStreak, streak);
-    }
-
-
-    // ==========================================
-    // VIEW 3: TIMELINE
-    // ==========================================
-    const timeRangeSelect = document.getElementById('hw-time-range');
-    const habitFilterSelect = document.getElementById('hw-timeline-habit');
-
-    function initTimelineView() {
-        if (isWidgetDead()) return;
-        const ctx = document.getElementById('hw-chart-timeline');
-        
-        if (!ctx) return;
-
-        // Destroy existing chart (Zombie protection)
-        const existing = Chart.getChart(ctx);
-        if (existing) existing.destroy();
-
-        timelineChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Completions', data: [], borderColor: '#28a745', tension: 0.1, fill: true, backgroundColor: 'rgba(40, 167, 69, 0.1)' }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
-        
-        timeRangeSelect.onchange = updateTimelineChart;
-        habitFilterSelect.onchange = updateTimelineChart;
-        
-        updateTimelineChart();
-    }
-
-    async function updateTimelineChart() {
-        if (isWidgetDead()) return;
-        
-        // --- KEY FIX: Optional Chaining to prevent crash on null canvas ---
-        if (!timelineChart?.canvas?.isConnected) {
-            return;
-        }
-
-        const range = timeRangeSelect.value === 'week' ? 7 : 30;
-        const habitId = habitFilterSelect.value;
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - range + 1);
-        
-        try {
-            let history = await window.db.habitHistory.toArray();
-            if (isWidgetDead()) return;
-
-            if (habitId !== 'all') history = history.filter(h => h.habitId == habitId);
-            const dateCounts = {};
-            history.forEach(h => { if (h.status === 'Completed') dateCounts[h.date] = (dateCounts[h.date] || 0) + 1; });
-
-            const labels = [], dataPoints = [];
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dateStr = d.toISOString().split('T')[0];
-                labels.push(dateStr.slice(5)); 
-                dataPoints.push(dateCounts[dateStr] || 0);
-            }
-            
-            if (timelineChart && timelineChart.data) {
-                timelineChart.data.labels = labels;
-                timelineChart.data.datasets[0].data = dataPoints;
-                timelineChart.update();
-            }
-        } catch(e) { console.error("Timeline Error", e); }
-    }
-
-    function populateTimelineFilter(habits) {
-        if (isWidgetDead()) return;
-        // Keep "All Habits" (index 0) and remove others
-        while (habitFilterSelect.options.length > 1) habitFilterSelect.remove(1);
-        
-        habits.forEach(h => {
-            const opt = document.createElement('option');
-            opt.value = h.id;
-            opt.textContent = h.name;
-            habitFilterSelect.appendChild(opt);
-        });
-    }
-
-
-    // ==========================================
-    // OVERLAY LOGIC
-    // ==========================================
-    const overlay = document.getElementById('hw-overlay');
-    const form = document.getElementById('hw-form');
-    const dayBtns = document.querySelectorAll('#hw-recurrence-days button');
-
-    document.getElementById('hw-add-btn').onclick = () => {
-        form.reset();
-        dayBtns.forEach(b => b.classList.remove('selected'));
-        overlay.style.display = 'flex';
-    };
-    document.getElementById('hw-close-btn').onclick = () => overlay.style.display = 'none';
-    dayBtns.forEach(btn => btn.onclick = () => btn.classList.toggle('selected'));
-
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const days = Array.from(document.querySelectorAll('#hw-recurrence-days .selected')).map(b => parseInt(b.dataset.day));
-        await window.db.habits.add({
-            name: document.getElementById('hw-name').value,
-            category: document.getElementById('hw-category').value,
-            status: 'Active',
-            recurrenceDays: days,
-            createdAt: new Date().toISOString()
-        });
-        overlay.style.display = 'none';
-        
-        // --- REFRESH EVERYTHING ---
-        await loadHabitsData(); 
-        if (currentViewIndex === 1) updateStatsChart();
-        if (currentViewIndex === 2) updateTimelineChart();
-    };
-
-    // Init
-    loadHabitsData();
-
-})();
+    })();
 </script>

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-g">
+    <title>Correlation Plotter</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="database.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f7f6; 
+            color: #333;
+        }
+        h1 { color: #333; }
+        
+        /* --- Control Section --- */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .control-group label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        select, button, input[type="date"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box; /* Important for grid */
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+        button:hover { background-color: #0056b3; }
+        
+        /* Date Range Specifics */
+        .date-range-group {
+            grid-column: 1 / -1; /* Span full width */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .date-range-group label {
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        .date-range-group button {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            flex-grow: 1;
+            width: auto;
+        }
+        .date-range-group button:hover { background-color: #5a6268; }
+        .date-range-group .custom-date {
+            display: flex;
+            gap: 5px;
+            flex-grow: 2;
+            min-width: 280px;
+        }
+        
+        /* Plot Button */
+        #plot-btn {
+            grid-column: 1 / -1; /* Span full width */
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        #plot-btn:hover { background-color: #218838; }
+        
+        /* --- Status & Chart --- */
+        #status-message {
+            margin: 15px 0;
+            font-style: italic;
+            color: #555;
+        }
+        #r-value-display {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .explanation-text {
+            font-size: 14px;
+            color: #555;
+            margin-top: -10px; 
+            margin-bottom: 15px;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        .explanation-text ul {
+            margin: 5px 0 0 20px;
+            padding: 0;
+        }
+        
+        .chart-container {
+            position: relative; 
+            height: 60vh; 
+            width: 90vw;
+            max-width: 1000px;
+            margin-top: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>Correlation Plotter</h1>
+
+    <div class="controls-grid">
+        <div class="control-group">
+            <label for="select-x">Metric 1 (X-Axis / Line 1):</label>
+            <select id="select-x"></select>
+        </div>
+        
+        <div class="control-group">
+            <label for="select-y">Metric 2 (Y-Axis / Line 2):</label>
+            <select id="select-y"></select>
+        </div>
+
+        <div class="control-group">
+            <label for="chart-type">Chart Type:</label>
+            <select id="chart-type">
+                <option value="scatter">Scatter Plot (Correlation)</option>
+                <option value="line">Line Chart (Trend)</option>
+            </select>
+        </div>
+
+        <div class="date-range-group">
+            <label>Date Range:</label>
+            <button id="range-week">This Week</button>
+            <button id="range-month">This Month</button>
+            <button id="range-all">All Time</button>
+            <div class="custom-date">
+                <input type="date" id="date-start" aria-label="Start Date">
+                <input type="date" id="date-end" aria-label="End Date">
+            </div>
+        </div>
+        
+        <button id="plot-btn">Plot Chart</button>
+    </div>
+
+    <div id="status-message">Select two metrics, a date range, and click "Plot Chart".</div>
+    
+    <div id="r-value-display"></div>
+    <div id="r-value-explanation" class="explanation-text" style="display: none;"></div>
+
+    <div class="chart-container">
+        <canvas id="correlation-chart"></canvas>
+    </div>
+    
+    <script>
+        // === GLOBALS & DOM REFERENCES ===
+        const selectX = document.getElementById('select-x');
+        const selectY = document.getElementById('select-y');
+        const chartTypeSelect = document.getElementById('chart-type');
+        const plotBtn = document.getElementById('plot-btn');
+        const statusMsg = document.getElementById('status-message');
+        const rValueDisplay = document.getElementById('r-value-display');
+        const rValueExplanation = document.getElementById('r-value-explanation');
+        const chartCtx = document.getElementById('correlation-chart').getContext('2d');
+        
+        const dateStartInput = document.getElementById('date-start');
+        const dateEndInput = document.getElementById('date-end');
+        
+        let chartInstance = null;
+        let currentStartDate = null;
+        let currentEndDate = null;
+
+        // --- ADDED ---
+        // 1. Define the Spanish Learner DB
+        const spanishDb = new Dexie('spanishLearningDB');
+
+        // 2. Define the Spanish Learner DB Schema (copied from your all.md -> db.js)
+        spanishDb.version(4).stores({
+            words: '++id, &spanish, english, learned',
+            sentences: '++id, &spanish, english, learned',
+            myVocabulary: '++id, &[spanish+source], english, source',
+            verbs: '++id, infinitive, mood, tense, learned',
+            activityLog: '++id, timestamp, type, result' // This is the table we need
+        });
+        // --- END ADDED ---
+        
+        // Date Range Buttons
+        document.getElementById('range-week').addEventListener('click', () => setDateRange('week'));
+        document.getElementById('range-month').addEventListener('click', () => setDateRange('month'));
+        document.getElementById('range-all').addEventListener('click', () => setDateRange('all'));
+
+        // === DATE HELPERS ===
+        
+        function getYYYYMMDD(dateInput) {
+            if (!dateInput) return null;
+            try {
+                if (typeof dateInput === 'string' && dateInput.length === 10 && dateInput.includes('-')) {
+                    return dateInput;
+                }
+                // This will correctly handle Date objects AND numeric timestamps
+                const date = new Date(dateInput);
+                const tzOffset = date.getTimezoneOffset() * 60000;
+                const localDate = new Date(date.getTime() - tzOffset);
+                return localDate.toISOString().split('T')[0];
+            } catch (e) {
+                console.warn("Could not parse date:", dateInput);
+                return null;
+            }
+        }
+        
+        const today = new Date();
+        const todayStr = getYYYYMMDD(today);
+        dateEndInput.value = todayStr; // Default end date to today
+
+        function setDateRange(rangeType) {
+            const today = new Date();
+            currentEndDate = getYYYYMMDD(today);
+            dateEndInput.value = currentEndDate;
+
+            if (rangeType === 'week') {
+                const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                currentStartDate = getYYYYMMDD(weekStart);
+            } else if (rangeType === 'month') {
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                currentStartDate = getYYYYMMDD(monthStart);
+            } else if (rangeType === 'all') {
+                currentStartDate = "1970-01-01"; // Dexie min date
+            }
+            
+            dateStartInput.value = currentStartDate;
+            handlePlot(true); // ***MODIFICATION: Pass 'true' to suppress warnings***
+        }
+        
+        function getDatesArray(start, end) {
+            const arr = [];
+            const endDate = new Date(end);
+            let dt = new Date(start + 'T00:00:00'); // Ensure start date is treated as local
+            for(dt; dt <= endDate; dt.setDate(dt.getDate() + 1)){
+                arr.push(getYYYYMMDD(new Date(dt)));
+            }
+            return arr;
+        }
+
+        // === DATA POPULATION ===
+
+        function createOption(groupName, value, text) {
+            const optGroupX = selectX.querySelector(`optgroup[label="${groupName}"]`) || document.createElement('optgroup');
+            optGroupX.label = groupName;
+            const optGroupY = selectY.querySelector(`optgroup[label="${groupName}"]`) || document.createElement('optgroup');
+            optGroupY.label = groupName;
+            
+            const optionX = document.createElement('option');
+            optionX.value = value;
+            optionX.textContent = text;
+            optGroupX.appendChild(optionX);
+
+            const optionY = document.createElement('option');
+            optionY.value = value;
+            optionY.textContent = text;
+            optGroupY.appendChild(optionY);
+            
+            if (!selectX.contains(optGroupX)) selectX.appendChild(optGroupX);
+            if (!selectY.contains(optGroupY)) selectY.appendChild(optGroupY);
+        }
+
+        async function populateDropdowns() {
+            try {
+                // --- Habits ---
+                createOption("Habits", "habits_all", "All Habits (Count)");
+                const habits = await db.habits.toArray();
+                habits.forEach(habit => {
+                    createOption("Habits", `habit_${habit.id}`, `Habit: ${habit.name}`);
+                });
+
+                // --- Tasks ---
+                createOption("Tasks", "tasks_all", "All Tasks (Count)");
+                
+                // --- Mood ---
+                createOption("Mood", "mood_avg", "Mood (Average)");
+                
+                // --- Nutrition (Totals) ---
+                createOption("Nutrition", "calories_total", "Calories (Total)");
+                createOption("Nutrition", "protein_total", "Protein (g)");
+                createOption("Nutrition", "fat_total", "Fat (g)");
+                createOption("Nutrition", "carbs_total", "Carbs (g)");
+                
+                // --- Nutrition (Specific Foods) ---
+                const allFoods = await db.nutritionLogs.orderBy('foodName').uniqueKeys('foodName');
+                allFoods.forEach(foodName => {
+                    if (!foodName) return; // Skip empty food names
+                    createOption("Food (Calories)", `food_cal_${foodName}`, `${foodName} (Cals)`);
+                    createOption("Food (Protein)", `food_pro_${foodName}`, `${foodName} (Protein)`);
+                    createOption("Food (Fat)", `food_fat_${foodName}`, `${foodName} (Fat)`);
+                    createOption("Food (Carbs)", `food_car_${foodName}`, `${foodName} (Carbs)`);
+                });
+
+                // --- Health ---
+                createOption("Health", "sleep_duration", "Sleep (Hours)");
+                createOption("Health", "heart_rate_avg", "Heart Rate (Avg)");
+                createOption("Health", "steps_total", "Steps (Total)"); 
+                
+                // --- Sobriety ---
+                createOption("Sobriety", "sober_urges", "Sobriety Urges (Count)");
+                createOption("Sobriety", "sober_relapses", "Sobriety Relapses (Count)");
+
+                // --- ADDED: Spanish Metrics ---
+                createOption("Spanish", "spanish_total", "Spanish (Total Correct)");
+                createOption("Spanish", "spanish_vocab", "Spanish: Vocab (Correct)");
+                createOption("Spanish", "spanish_grammar", "Spanish: Grammar (Correct)");
+                createOption("Spanish", "spanish_dictation", "Spanish: Dictation (Correct)");
+                createOption("Spanish", "spanish_sentences", "Spanish: Sentences (Viewed)");
+                // --- END ADDED ---
+                
+            } catch (e) {
+                console.error("Error populating dropdowns:", e);
+                statusMsg.textContent = "Error loading data for dropdowns. Check console.";
+            }
+        }
+
+        // === DATA FETCHING & PROCESSING ===
+
+        async function getMetricData(metricId, startDate, endDate) {
+            const dataMap = new Map();
+            // Use numeric timestamps for 'between' queries on datetime fields
+            const startOfDay = new Date(startDate + 'T00:00:00').getTime();
+            const endOfDay = new Date(endDate + 'T23:59:59').getTime();
+            
+            // --- HABITS ---
+            if (metricId === 'habits_all') {
+                const history = await db.habitHistory
+                    .where('date').between(startDate, endDate, true, true)
+                    .and(entry => entry.status === 'Completed')
+                    .toArray();
+                for (const entry of history) {
+                    const date = getYYYYMMDD(entry.date);
+                    dataMap.set(date, (dataMap.get(date) || 0) + 1);
+                }
+            } 
+            else if (metricId.startsWith('habit_')) {
+                const habitId = parseInt(metricId.split('_')[1]);
+                const history = await db.habitHistory
+                    .where('[habitId+date]').between([habitId, startDate], [habitId, endDate], true, true)
+                    .and(entry => entry.status === 'Completed')
+                    .toArray();
+                for (const entry of history) {
+                    dataMap.set(getYYYYMMDD(entry.date), 1);
+                }
+            }
+            
+            // --- TASKS ---
+            else if (metricId === 'tasks_all') {
+                const history = await db.taskHistory
+                    .where('date').between(startDate, endDate, true, true)
+                    .and(entry => entry.status === 'Completed')
+                    .toArray();
+                for (const entry of history) {
+                    const date = getYYYYMMDD(entry.date);
+                    dataMap.set(date, (dataMap.get(date) || 0) + 1);
+                }
+            }
+            
+            // --- MOOD ---
+            else if (metricId === 'mood_avg') {
+                const moodData = await db.mood
+                    .where('datetime').between(startOfDay, endOfDay, true, true)
+                    .toArray();
+                const dailySums = new Map();
+                for (const entry of moodData) {
+                    // Use the entry's timestamp to get the date
+                    const date = getYYYYMMDD(entry.datetime); 
+                    const current = dailySums.get(date) || { sum: 0, count: 0 };
+                    dailySums.set(date, { sum: current.sum + entry.value, count: current.count + 1 });
+                }
+                for (const [date, data] of dailySums.entries()) {
+                    dataMap.set(date, data.sum / data.count);
+                }
+            }
+            
+            // --- NUTRITION (Totals) ---
+            else if (metricId.endsWith('_total')) {
+                const logs = await db.nutritionLogs.where('date').between(startDate, endDate, true, true).toArray();
+                let fieldToSum;
+                if (metricId === 'calories_total') fieldToSum = 'calories';
+                else if (metricId === 'protein_total') fieldToSum = 'protein';
+                else if (metricId === 'fat_total') fieldToSum = 'fat';
+                else if (metricId === 'carbs_total') fieldToSum = 'carbs';
+                
+                if (fieldToSum) {
+                    for (const entry of logs) {
+                        const date = getYYYYMMDD(entry.date);
+                        const value = parseFloat(entry[fieldToSum]) || 0;
+                        dataMap.set(date, (dataMap.get(date) || 0) + value);
+                    }
+                }
+            }
+            
+            // --- NUTRITION (Specific Foods) ---
+            else if (metricId.startsWith('food_')) {
+                const parts = metricId.split('_');
+                const type = parts[1]; // cal, pro, fat, car
+                const foodName = parts.slice(2).join('_'); // Re-join food names
+                
+                let fieldToSum;
+                if (type === 'cal') fieldToSum = 'calories';
+                else if (type === 'pro') fieldToSum = 'protein';
+                else if (type === 'fat') fieldToSum = 'fat';
+                else if (type === 'car') fieldToSum = 'carbs';
+                
+                const logs = await db.nutritionLogs
+                    .where('date').between(startDate, endDate, true, true)
+                    .and(entry => entry.foodName === foodName)
+                    .toArray();
+                    
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.date);
+                    const value = parseFloat(entry[fieldToSum]) || 0;
+                    dataMap.set(date, (dataMap.get(date) || 0) + value);
+                }
+            }
+            
+            // --- HEALTH ---
+            else if (metricId === 'sleep_duration') {
+                const logs = await db.sleepLogs.where('date').between(startDate, endDate, true, true).toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.date);
+                    const hours = (parseFloat(entry.durationSeconds) || 0) / 3600;
+                    dataMap.set(date, (dataMap.get(date) || 0) + hours);
+                }
+            }
+            else if (metricId === 'heart_rate_avg') {
+                const logs = await db.healthTimeSeries
+                    .where('[type+datetime]').between(['heartrate', startOfDay], ['heartrate', endOfDay], true, true)
+                    .toArray();
+                const dailySums = new Map();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    const current = dailySums.get(date) || { sum: 0, count: 0 };
+                    dailySums.set(date, { sum: current.sum + entry.value, count: current.count + 1 });
+                }
+                for (const [date, data] of dailySums.entries()) {
+                    dataMap.set(date, data.sum / data.count);
+                }
+            }
+            else if (metricId === 'steps_total') {
+                const logs = await db.healthTimeSeries
+                    .where('[type+datetime]').between(['steps', startOfDay], ['steps', endOfDay], true, true)
+                    .toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    dataMap.set(date, entry.value);
+                }
+            }
+            
+            // --- SOBRIETY ---
+            else if (metricId === 'sober_urges') {
+                const logs = await db.sobrietyUrges
+                    .where('datetime').between(startOfDay, endOfDay, true, true)
+                    .toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    dataMap.set(date, (dataMap.get(date) || 0) + 1);
+                }
+            }
+            else if (metricId === 'sober_relapses') {
+                const logs = await db.sobrietyRelapses
+                    .where('datetime').between(startOfDay, endOfDay, true, true)
+                    .toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    dataMap.set(date, (dataMap.get(date) || 0) + 1);
+                }
+            }
+
+            // --- ADDED: Spanish Metrics ---
+            else if (metricId.startsWith('spanish_')) {
+                let query = spanishDb.activityLog
+                    .where('timestamp').between(startOfDay, endOfDay, true, true);
+                
+                // Apply specific filters
+                if (metricId === 'spanish_total') {
+                    query = query.and(entry => entry.result === 'correct' || entry.result === 'completed');
+                } else if (metricId === 'spanish_vocab') {
+                    query = query.and(entry => entry.type === 'quiz' && entry.result === 'correct');
+                } else if (metricId === 'spanish_grammar') {
+                    query = query.and(entry => entry.type === 'verbQuiz' && entry.result === 'correct');
+                } else if (metricId === 'spanish_dictation') {
+                    query = query.and(entry => entry.type === 'dictation' && entry.result === 'correct');
+                } else if (metricId === 'spanish_sentences') {
+                    query = query.and(entry => entry.type === 'sentence' && entry.result === 'completed');
+                }
+
+                const logs = await query.toArray();
+                for (const entry of logs) {
+                    // Use the entry's numeric timestamp to get the date
+                    const date = getYYYYMMDD(entry.timestamp); 
+                    dataMap.set(date, (dataMap.get(date) || 0) + 1);
+                }
+            }
+            // --- END ADDED ---
+
+            return dataMap;
+        }
+
+        /**
+         * Aligns two data maps for scatter plot.
+         */
+        function alignData(mapX, mapY) {
+            const alignedPoints = [];
+            const allDates = new Set([...mapX.keys(), ...mapY.keys()]);
+
+            for (const date of allDates) {
+                if (mapX.has(date) && mapY.has(date)) {
+                    alignedPoints.push({
+                        x: mapX.get(date),
+                        y: mapY.get(date)
+                    });
+                }
+            }
+            return alignedPoints;
+        }
+        
+        /**
+         * Calculates Pearson correlation coefficient
+         */
+        function calculatePearson(points) {
+            if (points.length < 2) return 0;
+            let sumX = 0, sumY = 0, sumX2 = 0, sumY2 = 0, sumXY = 0;
+            const n = points.length;
+            
+            for (const p of points) {
+                sumX += p.x;
+                sumY += p.y;
+                sumX2 += p.x * p.x;
+                sumY2 += p.y * p.y;
+                sumXY += p.x * p.y;
+            }
+            
+            const numerator = (n * sumXY) - (sumX * sumY);
+            const denominator = Math.sqrt( ((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)) );
+            
+            if (denominator === 0) return 0;
+            return numerator / denominator;
+        }
+        
+        /**
+         * Generates the explanation text for the r-value
+         */
+        function getPearsonExplanation(r) {
+            let strength = "weak";
+            let direction = "no";
+            if (Math.abs(r) > 0.7) strength = "very strong";
+            else if (Math.abs(r) > 0.5) strength = "strong";
+            else if (Math.abs(r) > 0.3) strength = "moderate";
+
+            if (r > 0.1) direction = "positive";
+            else if (r < -0.1) direction = "negative";
+            
+            let summary = `This indicates a <strong>${strength} ${direction} correlation</strong>.`;
+            if (direction === "no") summary = "This indicates <strong>no meaningful correlation</strong>.";
+
+            return `
+                <p>The r-value measures the strength of a linear relationship. ${summary}</p>
+                <ul>
+                    <li><strong>+1.0:</strong> Perfect positive correlation (as one goes up, the other goes up).</li>
+                    <li><strong>-1.0:</strong> Perfect negative correlation (as one goes up, the other goes down).</li>
+                    <li><strong>0.0:</strong> No correlation.</li>
+                </ul>
+            `;
+        }
+
+
+        // === PLOTTING ===
+
+        /**
+         * Draws the chart based on type and data
+         */
+        function drawChart(chartType, data, labelX, labelY) {
+            if (chartInstance) {
+                chartInstance.destroy(); // Clear old chart
+            }
+            
+            let config;
+            
+            if (chartType === 'scatter') {
+                config = {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: `Correlation: ${labelX} vs. ${labelY}`,
+                            data: data.points,
+                            backgroundColor: 'rgba(0, 123, 255, 0.6)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: labelX } },
+                            y: { title: { display: true, text: labelY } }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `(${ctx.raw.x.toFixed(2)}, ${ctx.raw.y.toFixed(2)})`
+                                }
+                            }
+                        }
+                    }
+                };
+            } 
+            else if (chartType === 'line') {
+                config = {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            {
+                                label: labelX,
+                                data: data.seriesX,
+                                borderColor: 'rgb(0, 123, 255)',
+                                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                                yAxisID: 'y',
+                                spanGaps: true, // Connect lines over null points
+                            },
+                            {
+                                label: labelY,
+                                data: data.seriesY,
+                                borderColor: 'rgb(220, 53, 69)',
+                                backgroundColor: 'rgba(220, 53, 69, 0.5)',
+                                yAxisID: 'y1',
+                                spanGaps: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' },
+                                title: { display: true, text: 'Date' }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: labelX }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: labelY },
+                                grid: { drawOnChartArea: false } // only show grid for left axis
+                            }
+                        },
+                        plugins: {
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                };
+            }
+
+            chartInstance = new Chart(chartCtx, config);
+        }
+
+        // === MAIN EXECUTION ===
+
+        /**
+         * Main function called on button click
+         */
+        async function handlePlot(isAutoPlot = false) {
+            // 1. Get plot parameters
+            const chartType = chartTypeSelect.value;
+            const metricIdX = selectX.value;
+            const metricIdY = selectY.value;
+            const labelX = selectX.options[selectX.selectedIndex].text;
+            const labelY = selectY.options[selectY.selectedIndex].text;
+            
+            // 2. Get and validate date range
+            currentStartDate = dateStartInput.value;
+            currentEndDate = dateEndInput.value;
+            
+            if (!isAutoPlot) {
+                if (!currentStartDate || !currentEndDate) {
+                    alert("Please select a valid start and end date.");
+                    return;
+                }
+                if (currentStartDate > currentEndDate) {
+                    alert("Start date must be before end date.");
+                    return;
+                }
+            } else if (!currentStartDate || !currentEndDate) {
+                return;
+            }
+
+            if (metricIdX === metricIdY) {
+                if (!isAutoPlot) { 
+                    alert('Please select two different metrics.');
+                }
+                return; 
+            }
+
+            statusMsg.textContent = `Loading data for ${labelX} and ${labelY}...`;
+            rValueDisplay.textContent = '';
+            rValueExplanation.style.display = 'none';
+            rValueExplanation.innerHTML = '';
+
+            try {
+                // 3. Fetch data in parallel
+                const [dataMapX, dataMapY] = await Promise.all([
+                    getMetricData(metricIdX, currentStartDate, currentEndDate),
+                    getMetricData(metricIdY, currentStartDate, currentEndDate)
+                ]);
+                
+                if (dataMapX.size === 0 && dataMapY.size === 0) {
+                     statusMsg.textContent = `No data found for either metric in the selected date range.`;
+                     if(chartInstance) chartInstance.destroy();
+                     return;
+                }
+
+                // 4. Process based on chart type
+                if (chartType === 'scatter') {
+                    const alignedPoints = alignData(dataMapX, dataMapY);
+                    if (alignedPoints.length === 0) {
+                        statusMsg.textContent = `No *overlapping* data found. (Data exists for ${labelX} on ${dataMapX.size} days and ${labelY} on ${dataMapY.size} days, but on no common days in this range).`;
+                        if(chartInstance) chartInstance.destroy();
+                        return;
+                    }
+                    
+                    const rValue = calculatePearson(alignedPoints);
+                    rValueDisplay.textContent = `Pearson Correlation (r): ${rValue.toFixed(4)}`;
+                    
+                    rValueExplanation.innerHTML = getPearsonExplanation(rValue);
+                    rValueExplanation.style.display = 'block';
+                    
+                    drawChart(chartType, { points: alignedPoints }, labelX, labelY);
+                    statusMsg.textContent = `Showing ${alignedPoints.length} data points where both metrics were recorded on the same day.`;
+
+                } 
+                else if (chartType === 'line') {
+                    const dateLabels = getDatesArray(currentStartDate, currentEndDate);
+                    const lineDataX = dateLabels.map(date => ({ x: date, y: dataMapX.get(date) ?? null }));
+                    const lineDataY = dateLabels.map(date => ({ x: date, y: dataMapY.get(date) ?? null }));
+                    
+                    drawChart(chartType, { seriesX: lineDataX, seriesY: lineDataY }, labelX, labelY);
+                    statusMsg.textContent = `Showing trends from ${currentStartDate} to ${currentEndDate}.`;
+                }
+
+            } catch (e) {
+                console.error("Error during plotting:", e);
+                statusMsg.textContent = `Error: ${e.message}. See console for details.`;
+            }
+        }
+
+        // --- INITIALIZE ---
+        
+        // --- MODIFIED ---
+        // Open BOTH databases before populating dropdowns
+        Promise.all([db.open(), spanishDb.open()]).then(() => {
+            console.log("Plotter DB (LifeOrganizingDB_TEST) is ready.");
+            console.log("Spanish Learner DB (spanishLearningDB) is ready.");
+            statusMsg.textContent = "Databases opened. Loading metrics...";
+            
+            populateDropdowns().then(() => {
+                 statusMsg.textContent = 'Select two metrics, a date range, and click "Plot Chart".';
+                 setDateRange('month'); // Default to "This Month" on load
+            });
+            
+            plotBtn.addEventListener('click', () => handlePlot(false));
+            
+        }).catch(e => {
+            console.error("Could not open databases:", e);
+            statusMsg.textContent = 'Fatal Error: Could not open one or more databases. See console.';
+        });
+        // --- END MODIFIED ---
+
+    </script>
+</body>
+</html>

@@ -11,7 +11,9 @@
         overflow: hidden;
     }
 
-    .widget-swipe-area { touch-action: pan-y; }
+    .widget-swipe-area {
+        touch-action: pan-y;
+    }
 
     /* --- Header --- */
     .sw-header-row {
@@ -29,12 +31,22 @@
         color: var(--text-color);
     }
 
-    .sw-dots { display: flex; gap: 5px; }
+    .sw-dots {
+        display: flex;
+        gap: 5px;
+    }
+
     .sw-dot {
-        width: 6px; height: 6px; border-radius: 50%; background: #ccc;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ccc;
         transition: background 0.3s;
     }
-    .sw-dot.active { background: var(--accent-color); }
+
+    .sw-dot.active {
+        background: var(--accent-color);
+    }
 
     /* --- Carousel --- */
     .sw-views-wrapper {
@@ -46,7 +58,10 @@
 
     .sw-view {
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease, transform 0.3s ease;
@@ -56,25 +71,30 @@
         background: var(--card-bg);
         z-index: 0;
     }
-    
+
     @media (prefers-color-scheme: dark) {
-        .sw-view { background: #1e1e1e; }
+        .sw-view {
+            background: #1e1e1e;
+        }
     }
 
     .sw-view.active {
-        opacity: 1; pointer-events: all;
-        transform: translateX(0); z-index: 10;
+        opacity: 1;
+        pointer-events: all;
+        transform: translateX(0);
+        z-index: 10;
     }
 
     /* --- View 0: Trackers List --- */
     .sw-list {
         flex-grow: 1;
         overflow-y: auto;
-        padding-bottom: 60px; /* Space for FAB */
+        padding-bottom: 60px;
+        /* Space for FAB */
     }
 
     .sw-card {
-        background: rgba(0,0,0,0.03);
+        background: rgba(0, 0, 0, 0.03);
         border-left: 4px solid var(--accent-color);
         border-radius: 8px;
         padding: 12px;
@@ -83,64 +103,273 @@
     }
 
     .sw-card-header {
-        display: flex; justify-content: space-between; align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
     }
-    .sw-name { font-weight: 700; font-size: 16px; color: var(--text-color); }
-    .sw-timer { font-family: monospace; font-size: 14px; font-weight: 600; color: #28a745; margin-top: 5px; }
-    
+
+    .sw-name {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text-color);
+    }
+
+    .sw-timer {
+        font-family: monospace;
+        font-size: 14px;
+        font-weight: 600;
+        color: #28a745;
+        margin-top: 5px;
+    }
+
     .sw-metrics {
-        display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: #666;
+        display: flex;
+        gap: 15px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #666;
     }
-    
+
     .sw-actions {
-        display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
     }
+
     .sw-btn-sm {
-        padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;
-        background: transparent; font-size: 11px; cursor: pointer; color: var(--text-color);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background: transparent;
+        font-size: 11px;
+        cursor: pointer;
+        color: var(--text-color);
     }
-    .sw-btn-log { border-color: #ffc107; color: #d39e00; }
-    .sw-btn-del { border-color: #dc3545; color: #dc3545; }
+
+    .sw-btn-log {
+        border-color: #ffc107;
+        color: #d39e00;
+    }
+
+    .sw-btn-del {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
 
     .sw-fab {
-        position: absolute; bottom: 10px; right: 10px;
-        width: 45px; height: 45px; border-radius: 50%;
-        background: var(--accent-color); color: white;
-        font-size: 24px; border: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        color: white;
+        font-size: 24px;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         z-index: 20;
     }
 
-    /* --- View 1: Chart --- */
-    .sw-controls { display: flex; gap: 10px; margin-bottom: 10px; }
-    .sw-select {
-        padding: 5px; font-size: 12px; border-radius: 6px;
-        border: 1px solid #ccc; background: rgba(0,0,0,0.05);
-        color: var(--text-color); flex: 1;
+    /* --- View 1: Chart/List --- */
+    .sw-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
     }
-    .sw-chart-wrapper { flex-grow: 1; position: relative; width: 100%; min-height: 150px; }
+
+    .sw-controls-row {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sw-select {
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--text-color);
+        flex: 1;
+    }
+
+    .sw-chart-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 150px;
+    }
+
+    /* --- Toggle Switch --- */
+    .sw-toggle-container {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        padding: 2px;
+        align-self: flex-end;
+    }
+
+    .sw-toggle-btn {
+        padding: 4px 12px;
+        font-size: 11px;
+        border-radius: 15px;
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        cursor: pointer;
+        opacity: 0.6;
+    }
+
+    .sw-toggle-btn.active {
+        background: var(--card-bg);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- List View (CRUD) --- */
+    .sw-list-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .sw-date-group {
+        margin-bottom: 15px;
+    }
+
+    .sw-date-header {
+        font-size: 12px;
+        font-weight: 700;
+        color: #888;
+        margin-bottom: 5px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 2px;
+    }
+
+    .sw-log-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        font-size: 13px;
+    }
+
+    .sw-log-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex-grow: 1;
+    }
+
+    .sw-log-name {
+        font-weight: 600;
+    }
+
+    .sw-log-meta {
+        font-size: 11px;
+        color: #888;
+    }
+
+    .sw-log-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sw-log-val {
+        font-weight: 600;
+        color: #ffc107;
+    }
+
+    .sw-log-del {
+        color: #dc3545;
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 0 5px;
+        opacity: 0.5;
+    }
+
+    .sw-log-del:hover {
+        opacity: 1;
+    }
 
     /* --- Overlays --- */
-    .sw-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.6); z-index: 2000; 
-        display: none; justify-content: center; align-items: center; 
+    .sw-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    .sw-overlay-content { 
-        background: var(--card-bg); padding: 20px; border-radius: 12px; 
-        max-width: 400px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+
+    .sw-overlay-content {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         color: var(--text-color);
     }
-    .sw-input { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-bottom: 10px;}
-    .sw-label { font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px; }
-    .sw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .sw-close-overlay { position: absolute; top: 10px; right: 10px; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
 
+    .sw-input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    .sw-label {
+        font-weight: bold;
+        font-size: 12px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .sw-btn-save {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .sw-close-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #888;
+    }
 </style>
 
 <div class="sw-widget widget-swipe-area" id="sw-widget-root">
-    
+
     <div class="sw-header-row">
         <div class="sw-title" id="sw-view-title">Sobriety Trackers</div>
         <div class="sw-dots">
@@ -150,7 +379,7 @@
     </div>
 
     <div class="sw-views-wrapper">
-        
+
         <div class="sw-view active" id="sw-view-0">
             <div id="sw-list" class="sw-list">
                 <div style="padding:20px; text-align:center; color:#888;">Loading...</div>
@@ -160,14 +389,27 @@
 
         <div class="sw-view" id="sw-view-1">
             <div class="sw-controls">
-                <select id="sw-chart-tracker" class="sw-select"></select>
-                <select id="sw-chart-range" class="sw-select">
-                    <option value="7">Last 7 Days</option>
-                    <option value="30">Last 30 Days</option>
-                </select>
+                <div class="sw-controls-row">
+                    <select id="sw-chart-tracker" class="sw-select"></select>
+                    <select id="sw-chart-range" class="sw-select">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="sw-toggle-container">
+                    <button class="sw-toggle-btn active" id="sw-mode-chart">Chart</button>
+                    <button class="sw-toggle-btn" id="sw-mode-list">List</button>
+                </div>
             </div>
-            <div class="sw-chart-wrapper">
+
+            <!-- Chart Container -->
+            <div class="sw-chart-wrapper" id="sw-chart-container">
                 <canvas id="sw-chart-canvas"></canvas>
+            </div>
+
+            <!-- List Container -->
+            <div class="sw-list-container" id="sw-list-container" style="display: none;">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -181,10 +423,10 @@
         <form id="sw-add-form">
             <label class="sw-label">Name</label>
             <input type="text" id="sw-add-name" class="sw-input" required placeholder="e.g. Alcohol, Caffeine">
-            
+
             <label class="sw-label">Start Date</label>
             <input type="datetime-local" id="sw-add-date" class="sw-input" required>
-            
+
             <div style="display:flex; gap:10px;">
                 <div style="flex:1">
                     <label class="sw-label">Cost/Item ($)</label>
@@ -201,71 +443,94 @@
     </div>
 </div>
 
+<div id="sw-log-overlay" class="sw-overlay">
+    <div class="sw-overlay-content" style="position:relative;">
+        <button class="sw-close-overlay" id="sw-close-log">✕</button>
+        <h3 id="sw-log-title">Log Craving</h3>
+        <form id="sw-log-form">
+            <input type="hidden" id="sw-log-id">
+            <input type="hidden" id="sw-log-tracker-id">
+
+            <label class="sw-label">Date & Time</label>
+            <input type="datetime-local" id="sw-log-date" class="sw-input" required>
+
+            <label class="sw-label">Intensity (1-10)</label>
+            <input type="number" id="sw-log-intensity" class="sw-input" min="1" max="10" value="5" required>
+
+            <label class="sw-label">Trigger / Note</label>
+            <input type="text" id="sw-log-trigger" class="sw-input" placeholder="e.g. Stress, Boredom">
+
+            <button type="submit" class="sw-btn-save">Save Log</button>
+        </form>
+    </div>
+</div>
+
 <script>
-(() => {
-    // === DOM & STATE ===
-    const root = document.getElementById('sw-widget-root');
-    const titleEl = document.getElementById('sw-view-title');
-    const dots = root.querySelectorAll('.sw-dot');
-    const views = [document.getElementById('sw-view-0'), document.getElementById('sw-view-1')];
-    const titles = ["Sobriety Trackers", "Craving Analysis"];
-    
-    let currentView = 0;
-    let statsChart = null;
-    let trackersData = [];
-    let tickerInterval = null;
+    (() => {
+        // === DOM & STATE ===
+        const root = document.getElementById('sw-widget-root');
+        const titleEl = document.getElementById('sw-view-title');
+        const dots = root.querySelectorAll('.sw-dot');
+        const views = [document.getElementById('sw-view-0'), document.getElementById('sw-view-1')];
+        const titles = ["Sobriety Trackers", "Craving Analysis"];
 
-    const isAlive = () => root && root.isConnected;
+        let currentView = 0;
+        let statsChart = null;
+        let trackersData = [];
+        let tickerInterval = null;
+        let view1Mode = 'chart'; // 'chart' or 'list'
 
-    // --- Swipe Logic ---
-    let touchStartX = 0, touchStartY = 0;
-    root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
-    root.addEventListener('touchend', e => {
-        if (!isAlive()) return;
-        const diffX = touchStartX - e.changedTouches[0].screenX;
-        const diffY = touchStartY - e.changedTouches[0].screenY;
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
-    }, {passive: true});
+        const isAlive = () => root && root.isConnected;
 
-    function switchView(dir) {
-        if (!isAlive()) return;
-        views[currentView].classList.remove('active');
-        dots[currentView].classList.remove('active');
-        currentView += dir;
-        if (currentView >= views.length) currentView = 0;
-        if (currentView < 0) currentView = views.length - 1;
-        views[currentView].classList.add('active');
-        dots[currentView].classList.add('active');
-        titleEl.textContent = titles[currentView];
-        
-        if (currentView === 1) initChart();
-    }
+        // --- Swipe Logic ---
+        let touchStartX = 0, touchStartY = 0;
+        root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+        root.addEventListener('touchend', e => {
+            if (!isAlive()) return;
+            const diffX = touchStartX - e.changedTouches[0].screenX;
+            const diffY = touchStartY - e.changedTouches[0].screenY;
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
+        }, { passive: true });
 
-    // ==========================
-    // VIEW 0: TRACKERS LIST
-    // ==========================
-    const listEl = document.getElementById('sw-list');
+        function switchView(dir) {
+            if (!isAlive()) return;
+            views[currentView].classList.remove('active');
+            dots[currentView].classList.remove('active');
+            currentView += dir;
+            if (currentView >= views.length) currentView = 0;
+            if (currentView < 0) currentView = views.length - 1;
+            views[currentView].classList.add('active');
+            dots[currentView].classList.add('active');
+            titleEl.textContent = titles[currentView];
 
-    async function loadTrackers() {
-        if (!isAlive()) { clearInterval(tickerInterval); return; }
-        try {
-            trackersData = await window.db.sobrietyTrackers.toArray();
-            renderList();
-            populateDropdown(); // For chart view
-        } catch(e) { console.error(e); }
-    }
-
-    function renderList() {
-        listEl.innerHTML = '';
-        if (trackersData.length === 0) {
-            listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No trackers active.<br>Tap + to start.</div>`;
-            return;
+            if (currentView === 1) updateView1();
         }
 
-        trackersData.forEach(t => {
-            const el = document.createElement('div');
-            el.className = 'sw-card';
-            el.innerHTML = `
+        // ==========================
+        // VIEW 0: TRACKERS LIST
+        // ==========================
+        const listEl = document.getElementById('sw-list');
+
+        async function loadTrackers() {
+            if (!isAlive()) { clearInterval(tickerInterval); return; }
+            try {
+                trackersData = await window.db.sobrietyTrackers.toArray();
+                renderList();
+                populateDropdown(); // For chart view
+            } catch (e) { console.error(e); }
+        }
+
+        function renderList() {
+            listEl.innerHTML = '';
+            if (trackersData.length === 0) {
+                listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No trackers active.<br>Tap + to start.</div>`;
+                return;
+            }
+
+            trackersData.forEach(t => {
+                const el = document.createElement('div');
+                el.className = 'sw-card';
+                el.innerHTML = `
                 <div class="sw-card-header">
                     <div class="sw-name">${t.name}</div>
                     <button class="sw-btn-sm sw-btn-del" id="del-${t.id}">✕</button>
@@ -277,133 +542,139 @@
                     <button class="sw-btn-sm sw-btn-log" id="log-${t.id}">⚡ Log Craving</button>
                 </div>
             `;
-            
-            el.querySelector(`#rst-${t.id}`).onclick = () => resetTracker(t);
-            el.querySelector(`#log-${t.id}`).onclick = () => logCraving(t);
-            el.querySelector(`#del-${t.id}`).onclick = () => deleteTracker(t);
-            
-            listEl.appendChild(el);
-        });
 
-        startTicker();
-    }
+                el.querySelector(`#rst-${t.id}`).onclick = () => resetTracker(t);
+                el.querySelector(`#log-${t.id}`).onclick = () => openLogModal(t);
+                el.querySelector(`#del-${t.id}`).onclick = () => deleteTracker(t);
 
-    function startTicker() {
-        if (tickerInterval) clearInterval(tickerInterval);
-        
-        const tick = () => {
-            if (!isAlive()) { clearInterval(tickerInterval); return; }
-            const now = Date.now();
-            
-            trackersData.forEach(t => {
-                const start = new Date(t.startDate).getTime();
-                const diff = now - start;
-                
-                // Time String
-                const d = Math.floor(diff / (1000*60*60*24));
-                const h = Math.floor((diff / (1000*60*60)) % 24);
-                const m = Math.floor((diff / (1000*60)) % 60);
-                const s = Math.floor((diff / 1000) % 60);
-                
-                const timerEl = document.getElementById(`timer-${t.id}`);
-                if(timerEl) timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
-
-                // Savings
-                const items = diff / (1000*60*60*24); // Approx 1 per day logic from original
-                const money = (items * (t.costPerItem||0)).toFixed(2);
-                
-                const metricEl = document.getElementById(`metric-${t.id}`);
-                if(metricEl) metricEl.textContent = `💰 $${money} saved`;
+                listEl.appendChild(el);
             });
-        };
-        
-        tick();
-        tickerInterval = setInterval(tick, 1000);
-    }
 
-    // Actions
-    async function resetTracker(t) {
-        if(!confirm(`Reset counter for ${t.name}?`)) return;
-        await window.db.sobrietyTrackers.update(t.id, { startDate: new Date().toISOString() });
-        await window.db.sobrietyRelapses.add({ trackerId: t.id, datetime: new Date().toISOString(), amount: 1 });
-        loadTrackers();
-    }
+            startTicker();
+        }
 
-    async function logCraving(t) {
-        await window.db.sobrietyUrges.add({
-            trackerId: t.id,
-            datetime: new Date().toISOString(),
-            intensity: 5,
-            trigger: 'Quick Log'
-        });
-        alert(`Craving logged for ${t.name}. Stay strong!`);
-        // Refresh chart if active
-        if(currentView === 1) updateChart();
-    }
+        function startTicker() {
+            if (tickerInterval) clearInterval(tickerInterval);
 
-    async function deleteTracker(t) {
-        if(!confirm(`Delete ${t.name}?`)) return;
-        await window.db.sobrietyTrackers.delete(t.id);
-        loadTrackers();
-    }
+            const tick = () => {
+                if (!isAlive()) { clearInterval(tickerInterval); return; }
+                const now = Date.now();
 
-    // ==========================
-    // VIEW 1: CHART LOGIC
-    // ==========================
-    const chartSelect = document.getElementById('sw-chart-tracker');
-    const rangeSelect = document.getElementById('sw-chart-range');
+                trackersData.forEach(t => {
+                    const start = new Date(t.startDate).getTime();
+                    const diff = now - start;
 
-    function populateDropdown() {
-        chartSelect.innerHTML = '';
-        trackersData.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.name;
-            chartSelect.appendChild(opt);
-        });
-    }
+                    // Time String
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                    const m = Math.floor((diff / (1000 * 60)) % 60);
+                    const s = Math.floor((diff / 1000) % 60);
 
-    function initChart() {
-        if (!isAlive()) return;
-        const ctx = document.getElementById('sw-chart-canvas');
-        if (!ctx) return;
+                    const timerEl = document.getElementById(`timer-${t.id}`);
+                    if (timerEl) timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
 
-        // Fix Zombie Chart
-        if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+                    // Savings
+                    const items = diff / (1000 * 60 * 60 * 24); // Approx 1 per day logic from original
+                    const money = (items * (t.costPerItem || 0)).toFixed(2);
 
-        statsChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Intensity', data: [], borderColor: '#ffc107', tension: 0.4 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 10 } } }
-        });
-        
-        chartSelect.onchange = updateChart;
-        rangeSelect.onchange = updateChart;
-        updateChart();
-    }
+                    const metricEl = document.getElementById(`metric-${t.id}`);
+                    if (metricEl) metricEl.textContent = `💰 $${money} saved`;
+                });
+            };
 
-    async function updateChart() {
-        if (!isAlive() || !statsChart?.canvas?.isConnected) return;
-        
-        const id = parseInt(chartSelect.value);
-        const days = parseInt(rangeSelect.value);
-        if (!id) return;
+            tick();
+            tickerInterval = setInterval(tick, 1000);
+        }
 
-        const start = new Date();
-        start.setDate(start.getDate() - days);
-        const startStr = start.toISOString();
+        // Actions
+        async function resetTracker(t) {
+            if (!confirm(`Reset counter for ${t.name}?`)) return;
+            await window.db.sobrietyTrackers.update(t.id, { startDate: new Date().toISOString() });
+            await window.db.sobrietyRelapses.add({ trackerId: t.id, datetime: new Date().toISOString(), amount: 1 });
+            loadTrackers();
+        }
 
-        try {
+        async function deleteTracker(t) {
+            if (!confirm(`Delete ${t.name}?`)) return;
+            await window.db.sobrietyTrackers.delete(t.id);
+            loadTrackers();
+        }
+
+        // ==========================
+        // VIEW 1: CHART/LIST LOGIC
+        // ==========================
+        const chartSelect = document.getElementById('sw-chart-tracker');
+        const rangeSelect = document.getElementById('sw-chart-range');
+        const chartContainer = document.getElementById('sw-chart-container');
+        const listContainer = document.getElementById('sw-list-container');
+        const btnChart = document.getElementById('sw-mode-chart');
+        const btnList = document.getElementById('sw-mode-list');
+
+        // Toggle Logic
+        btnChart.onclick = () => setView1Mode('chart');
+        btnList.onclick = () => setView1Mode('list');
+
+        function setView1Mode(mode) {
+            view1Mode = mode;
+            btnChart.classList.toggle('active', mode === 'chart');
+            btnList.classList.toggle('active', mode === 'list');
+
+            chartContainer.style.display = mode === 'chart' ? 'block' : 'none';
+            listContainer.style.display = mode === 'list' ? 'block' : 'none';
+
+            updateView1();
+        }
+
+        function populateDropdown() {
+            const currentVal = chartSelect.value;
+            chartSelect.innerHTML = '';
+            trackersData.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.name;
+                chartSelect.appendChild(opt);
+            });
+            if (currentVal) chartSelect.value = currentVal;
+        }
+
+        chartSelect.onchange = updateView1;
+        rangeSelect.onchange = updateView1;
+
+        async function updateView1() {
+            if (!isAlive() || currentView !== 1) return;
+
+            const id = parseInt(chartSelect.value);
+            const days = parseInt(rangeSelect.value);
+            if (!id) return;
+
+            const start = new Date();
+            start.setDate(start.getDate() - days);
+            const startStr = start.toISOString();
+
             const urges = await window.db.sobrietyUrges
                 .where('trackerId').equals(id)
                 .filter(u => u.datetime >= startStr)
-                .toArray();
+                .reverse()
+                .sortBy('datetime');
+
+            if (view1Mode === 'chart') {
+                renderChart(urges);
+            } else {
+                renderListLog(urges);
+            }
+        }
+
+        function renderChart(urges) {
+            const ctx = document.getElementById('sw-chart-canvas');
+            if (!ctx) return;
+
+            if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
 
             // Aggregate by day
             const dataMap = {};
             urges.forEach(u => {
                 const day = u.datetime.split('T')[0];
-                if(!dataMap[day]) dataMap[day] = {sum:0, count:0};
+                if (!dataMap[day]) dataMap[day] = { sum: 0, count: 0 };
                 dataMap[day].sum += u.intensity;
                 dataMap[day].count++;
             });
@@ -411,44 +682,174 @@
             const labels = Object.keys(dataMap).sort().map(d => d.slice(5)); // MM-DD
             const data = Object.keys(dataMap).sort().map(d => dataMap[d].sum / dataMap[d].count);
 
-            statsChart.data.labels = labels;
-            statsChart.data.datasets[0].data = data;
-            statsChart.update();
+            statsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Avg Intensity',
+                        data: data,
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 10 } }
+                }
+            });
+        }
 
-        } catch(e) { console.error(e); }
-    }
+        function renderListLog(urges) {
+            listContainer.innerHTML = '';
+            if (urges.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No cravings logged in this period.</div>';
+                return;
+            }
 
-    // ==========================
-    // ADD OVERLAY
-    // ==========================
-    const addOverlay = document.getElementById('sw-add-overlay');
-    const addForm = document.getElementById('sw-add-form');
+            // Group by Date
+            const groups = {};
+            urges.forEach(u => {
+                const date = u.datetime.split('T')[0];
+                if (!groups[date]) groups[date] = [];
+                groups[date].push(u);
+            });
 
-    document.getElementById('sw-open-add').onclick = () => {
-        addForm.reset();
-        // Set default datetime to now
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('sw-add-date').value = now.toISOString().slice(0,16);
-        addOverlay.style.display = 'flex';
-    };
-    document.getElementById('sw-close-add').onclick = () => addOverlay.style.display = 'none';
+            const dates = Object.keys(groups).sort().reverse();
 
-    addForm.onsubmit = async (e) => {
-        e.preventDefault();
-        await window.db.sobrietyTrackers.add({
-            name: document.getElementById('sw-add-name').value,
-            startDate: new Date(document.getElementById('sw-add-date').value).toISOString(),
-            costPerItem: parseFloat(document.getElementById('sw-add-cost').value),
-            timePerItemMinutes: parseInt(document.getElementById('sw-add-time').value),
-            resetDate: null
-        });
-        addOverlay.style.display = 'none';
+            dates.forEach(date => {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'sw-date-group';
+
+                const header = document.createElement('div');
+                header.className = 'sw-date-header';
+                header.textContent = new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                groupEl.appendChild(header);
+
+                groups[date].forEach(u => {
+                    const item = document.createElement('div');
+                    item.className = 'sw-log-item';
+                    item.innerHTML = `
+                    <div class="sw-log-left" onclick="editLog(${u.id})">
+                        <div class="sw-log-name">${new Date(u.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        <div class="sw-log-meta">${u.trigger || 'No trigger'}</div>
+                    </div>
+                    <div class="sw-log-right">
+                        <div class="sw-log-val">Lv ${u.intensity}</div>
+                        <button class="sw-log-del" onclick="deleteLog(${u.id})">×</button>
+                    </div>
+                `;
+                    groupEl.appendChild(item);
+                });
+
+                listContainer.appendChild(groupEl);
+            });
+        }
+
+        // ==========================
+        // ADD OVERLAY
+        // ==========================
+        const addOverlay = document.getElementById('sw-add-overlay');
+        const addForm = document.getElementById('sw-add-form');
+
+        document.getElementById('sw-open-add').onclick = () => {
+            addForm.reset();
+            // Set default datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('sw-add-date').value = now.toISOString().slice(0, 16);
+            addOverlay.style.display = 'flex';
+        };
+        document.getElementById('sw-close-add').onclick = () => addOverlay.style.display = 'none';
+
+        addForm.onsubmit = async (e) => {
+            e.preventDefault();
+            await window.db.sobrietyTrackers.add({
+                name: document.getElementById('sw-add-name').value,
+                startDate: new Date(document.getElementById('sw-add-date').value).toISOString(),
+                costPerItem: parseFloat(document.getElementById('sw-add-cost').value),
+                timePerItemMinutes: parseInt(document.getElementById('sw-add-time').value),
+                resetDate: null
+            });
+            addOverlay.style.display = 'none';
+            loadTrackers();
+        };
+
+        // ==========================
+        // LOG OVERLAY (Add/Edit)
+        // ==========================
+        const logOverlay = document.getElementById('sw-log-overlay');
+        const logForm = document.getElementById('sw-log-form');
+
+        function openLogModal(tracker) {
+            logForm.reset();
+            document.getElementById('sw-log-title').textContent = `Log Craving: ${tracker.name}`;
+            document.getElementById('sw-log-id').value = '';
+            document.getElementById('sw-log-tracker-id').value = tracker.id;
+
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('sw-log-date').value = now.toISOString().slice(0, 16);
+
+            logOverlay.style.display = 'flex';
+        }
+
+        window.editLog = async (id) => {
+            const log = await window.db.sobrietyUrges.get(id);
+            if (log) {
+                document.getElementById('sw-log-title').textContent = 'Edit Craving';
+                document.getElementById('sw-log-id').value = log.id;
+                document.getElementById('sw-log-tracker-id').value = log.trackerId;
+
+                // Format datetime for input
+                const d = new Date(log.datetime);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                document.getElementById('sw-log-date').value = d.toISOString().slice(0, 16);
+
+                document.getElementById('sw-log-intensity').value = log.intensity;
+                document.getElementById('sw-log-trigger').value = log.trigger;
+
+                logOverlay.style.display = 'flex';
+            }
+        };
+
+        window.deleteLog = async (id) => {
+            if (confirm('Delete this log?')) {
+                await window.db.sobrietyUrges.delete(id);
+                if (currentView === 1) updateView1();
+            }
+        };
+
+        document.getElementById('sw-close-log').onclick = () => logOverlay.style.display = 'none';
+
+        logForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('sw-log-id').value;
+            const trackerId = parseInt(document.getElementById('sw-log-tracker-id').value);
+
+            const data = {
+                trackerId: trackerId,
+                datetime: new Date(document.getElementById('sw-log-date').value).toISOString(),
+                intensity: parseInt(document.getElementById('sw-log-intensity').value),
+                trigger: document.getElementById('sw-log-trigger').value
+            };
+
+            if (id) {
+                await window.db.sobrietyUrges.update(parseInt(id), data);
+            } else {
+                await window.db.sobrietyUrges.add(data);
+            }
+
+            logOverlay.style.display = 'none';
+            if (currentView === 1) updateView1();
+            else alert('Craving logged. Stay strong!');
+        };
+
+        // Init
         loadTrackers();
-    };
 
-    // Init
-    loadTrackers();
-
-})();
+    })();
 </script>

@@ -1,6 +1,6 @@
 /* === database.js === */
 // Merged Database: LifeOrganizingDB + SpanishLearningDB
-// Updated to Version 10
+// Updated to Version 12
 
 const DB_NAME = 'LifeOrganizingDB_TEST';
 const db = new Dexie(DB_NAME);
@@ -11,7 +11,7 @@ db.version(1).stores({
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',
     tasks: '++id, name, category, priority, dueDate, status, notes, *recurrenceDays, recurrenceInterval, recurrenceUnit',
-    taskHistory: '++id, [taskId+date], taskId, date, status',
+    taskHistory: '++id, [habitId+date], taskId, date, status',
     goals: '++id, name, category, type, status, endDate, [type+status], notes',
     mood: '++id, value, datetime, *tags, notes',
     sobrietyTrackers: '++id, &name, startDate, notes',
@@ -29,9 +29,9 @@ db.version(1).stores({
 // (Versions 2-6 assumed implicit)
 
 db.version(7).stores({
-    healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
+    healthTimeSeries: '++id, type, datetime, value, [type+datetime]',
     sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
-    settings: 'key', 
+    settings: 'key',
     goals: '++id, name, category, status, dueDate, notes, parentId, targetAmount, isComplete',
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',
@@ -52,10 +52,10 @@ db.version(7).stores({
 
 // Version 9 (Current Life Schema)
 db.version(9).stores({
-    widgetCache: 'id, version, lastUpdated', 
-    healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
+    widgetCache: 'id, version, lastUpdated',
+    healthTimeSeries: '++id, type, datetime, value, [type+datetime]',
     sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
-    settings: 'key', 
+    settings: 'key',
     goals: '++id, name, category, status, dueDate, notes, parentId, targetAmount, isComplete',
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',
@@ -78,10 +78,10 @@ db.version(9).stores({
 // Adds Spanish Learning tables to the existing Life Organizer tables
 db.version(10).stores({
     // 1. Life Organizer Tables (Preserved)
-    widgetCache: 'id, version, lastUpdated', 
-    healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
+    widgetCache: 'id, version, lastUpdated',
+    healthTimeSeries: '++id, type, datetime, value, [type+datetime]',
     sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
-    settings: 'key', 
+    settings: 'key',
     goals: '++id, name, category, status, dueDate, notes, parentId, targetAmount, isComplete',
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',
@@ -114,10 +114,44 @@ db.version(11).stores({
     errorLogs: '++id, timestamp, message, source',
 
     // ... Repeat ALL previous tables to keep them ...
-    widgetCache: 'id, version, lastUpdated', 
-    healthTimeSeries: '++id, type, datetime, value, [type+datetime]', 
+    widgetCache: 'id, version, lastUpdated',
+    healthTimeSeries: '++id, type, datetime, value, [type+datetime]',
     sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
-    settings: 'key', 
+    settings: 'key',
+    goals: '++id, name, category, status, dueDate, notes, parentId, targetAmount, isComplete',
+    habits: '++id, name, category, status, createdAt, *recurrenceDays',
+    habitHistory: '++id, [habitId+date], habitId, date, status',
+    tasks: '++id, name, category, priority, dueDate, status, notes, *recurrenceDays, recurrenceInterval, recurrenceUnit',
+    taskHistory: '++id, [taskId+date], taskId, date, status',
+    mood: '++id, value, datetime, *tags, notes',
+    sobrietyTrackers: '++id, &name, startDate, notes, costPerItem, timePerItemMinutes, resetDate',
+    sobrietyRelapses: '++id, trackerId, datetime, [trackerId+datetime], amount, notes',
+    sobrietyUrges: '++id, trackerId, datetime, intensity, trigger, notes',
+    financeTransactions: '++id, type, category, date, [type+date], [category+date], amount, notes',
+    financeCategories: '++id, &name, color',
+    healthMetrics: '++id, type, date, value, [type+date]',
+    nutritionLogs: '++id, date, mealType, foodName, calories, protein, fat, carbs, servingSizeG, notes, [date+mealType]',
+    waterLogs: '++id, date, amountMl',
+    history: '++id, timestamp, action, table, recordId, [table+recordId]',
+    systemValidation: '++id',
+    words: '++id, &spanish, english, learned',
+    sentences: '++id, &spanish, english, learned',
+    myVocabulary: '++id, &[spanish+source], english, source',
+    verbs: '++id, infinitive, mood, tense, learned',
+    activityLog: '++id, timestamp, type, result'
+});
+
+// --- NEW VERSION 12: Weight Tracking ---
+db.version(12).stores({
+    // New Table for Weight Logs
+    weightLogs: '++id, date, weight, notes',
+
+    // ... Repeat ALL previous tables to keep them ...
+    errorLogs: '++id, timestamp, message, source',
+    widgetCache: 'id, version, lastUpdated',
+    healthTimeSeries: '++id, type, datetime, value, [type+datetime]',
+    sleepLogs: '++id, date, time, durationSeconds, stage, [date+time]',
+    settings: 'key',
     goals: '++id, name, category, status, dueDate, notes, parentId, targetAmount, isComplete',
     habits: '++id, name, category, status, createdAt, *recurrenceDays',
     habitHistory: '++id, [habitId+date], habitId, date, status',

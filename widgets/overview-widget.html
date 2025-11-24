@@ -1,0 +1,1214 @@
+<style>
+    /* --- Widget Container --- */
+    .ow-widget {
+        width: 100%;
+        height: 100%;
+        min-height: 160px;
+        box-sizing: border-box;
+        display: flex;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        user-select: none;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* --- Water Animation (Parallax) --- */
+    .ow-water-container {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+        border-radius: 16px;
+    }
+
+    .ow-water-level {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.7));
+        transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+    }
+
+    .ow-water-wave {
+        position: absolute;
+        top: -20px;
+        left: 0;
+        width: 200%;
+        height: 40px;
+        background: repeat-x url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(59, 130, 246, 0.4)'%3E%3C/path%3E%3C/svg%3E");
+        background-size: 50% 100%;
+        animation: ow-wave-anim linear infinite;
+    }
+
+    .ow-w1 {
+        z-index: 3;
+        opacity: 0.7;
+        animation-duration: 10s;
+    }
+
+    .ow-w2 {
+        z-index: 2;
+        opacity: 0.5;
+        animation-duration: 15s;
+        top: -25px;
+        left: -50px;
+        animation-direction: reverse;
+    }
+
+    .ow-w3 {
+        z-index: 1;
+        opacity: 0.3;
+        animation-duration: 20s;
+        top: -30px;
+        left: -100px;
+    }
+
+    @keyframes ow-wave-anim {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    /* --- Content --- */
+    .ow-content {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 20px;
+        flex-wrap: nowrap;
+        /* Keep side-by-side */
+        gap: 20px;
+    }
+
+    /* Score Area */
+    .ow-score-area {
+        cursor: pointer;
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    .ow-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.7;
+    }
+
+    .ow-score-val {
+        font-size: 56px;
+        font-weight: 900;
+        line-height: 1;
+        color: var(--text-color);
+        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .ow-score-sub {
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 5px;
+        opacity: 0.8;
+    }
+
+    /* Metrics */
+    .ow-metrics {
+        display: flex;
+        gap: 12px;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    .ow-metric-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(4px);
+        padding: 10px 15px;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        min-width: 60px;
+        flex: 1 1 auto;
+        max-width: 100px;
+    }
+
+    .ow-metric-card:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .ow-mc-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .ow-mc-val {
+        font-size: 20px;
+        font-weight: 800;
+        color: #333;
+    }
+
+    .ow-mc-sub {
+        font-size: 10px;
+        color: #888;
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 480px) {
+        .ow-content {
+            padding: 15px;
+            gap: 10px;
+        }
+
+        .ow-score-val {
+            font-size: 42px;
+        }
+
+        .ow-metrics {
+            gap: 8px;
+        }
+
+        .ow-metric-card {
+            min-width: 50px;
+            padding: 8px 4px;
+        }
+
+        .ow-mc-val {
+            font-size: 18px;
+        }
+
+        .ow-mc-label {
+            font-size: 9px;
+        }
+
+        .ow-mc-sub {
+            font-size: 9px;
+        }
+    }
+
+    /* --- Overlays --- */
+    .ow-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-color);
+        z-index: 5000;
+        display: none;
+        flex-direction: column;
+        animation: ow-fade 0.2s ease-out;
+    }
+
+    .ow-overlay.open {
+        display: flex;
+    }
+
+    @keyframes ow-fade {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ow-overlay-header {
+        padding: 15px 20px;
+        background: var(--card-bg);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: calc(var(--status-bar-height, 20px) + 15px);
+    }
+
+    .ow-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--text-color);
+    }
+
+    .ow-overlay-body {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    /* --- Lists & Forms (General) --- */
+    .ow-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .ow-item {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .ow-item.completed {
+        opacity: 0.6;
+    }
+
+    .ow-item.completed span {
+        text-decoration: line-through;
+    }
+
+    .ow-btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .ow-btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .ow-btn-success {
+        background: #22c55e;
+        color: white;
+    }
+
+    .ow-btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .ow-btn-check {
+        background: #dcfce7;
+        color: #166534;
+        margin-right: 5px;
+    }
+
+    .ow-btn-del {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .ow-input-group {
+        margin-bottom: 15px;
+    }
+
+    .ow-input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .ow-input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    .ow-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* --- Analysis Stats --- */
+    .ow-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+    }
+
+    .ow-stat-card {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .ow-stat-head {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+
+    .ow-stat-val {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .ow-stat-trend {
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-left: 5px;
+    }
+
+    .t-up {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .t-down {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .t-neutral {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    /* --- Calendar List --- */
+    .ow-cal-item {
+        padding: 12px;
+        border-left: 4px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+        margin-bottom: 8px;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .ow-cal-item:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .ow-cal-time {
+        font-size: 12px;
+        font-weight: bold;
+        color: #3b82f6;
+        margin-bottom: 2px;
+    }
+
+    /* --- Day Selector (Recurrence) --- */
+    .ow-day-selector {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+    .ow-day-btn {
+        flex: 1;
+        padding: 10px 0;
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .ow-day-btn.selected {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    /* --- Correlation Section --- */
+    .ow-corr-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .ow-corr-res {
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+</style>
+
+<!-- MAIN WIDGET -->
+<div class="ow-widget" id="ow-widget">
+    <div class="ow-water-container">
+        <div class="ow-water-level" id="ow-water-level">
+            <div class="ow-water-wave ow-w1"></div>
+            <div class="ow-water-wave ow-w2"></div>
+            <div class="ow-water-wave ow-w3"></div>
+        </div>
+    </div>
+
+    <div class="ow-content">
+        <!-- Left: Score -->
+        <div class="ow-score-area" id="ow-open-analysis">
+            <div class="ow-label">Daily Score</div>
+            <div class="ow-score-val" id="ow-score">--</div>
+            <div class="ow-score-sub" id="ow-score-msg">Calculating...</div>
+        </div>
+
+        <!-- Right: Metrics -->
+        <div class="ow-metrics">
+            <div class="ow-metric-card" id="ow-open-habits">
+                <div class="ow-mc-label">Habits</div>
+                <div class="ow-mc-val" id="ow-h-val">-</div>
+                <div class="ow-mc-sub">Left</div>
+            </div>
+            <div class="ow-metric-card" id="ow-open-tasks">
+                <div class="ow-mc-label">Tasks</div>
+                <div class="ow-mc-val" id="ow-t-val">-</div>
+                <div class="ow-mc-sub">Left</div>
+            </div>
+            <div class="ow-metric-card" id="ow-open-calendar">
+                <div class="ow-mc-label">Events</div>
+                <div class="ow-mc-val" id="ow-e-val">-</div>
+                <div class="ow-mc-sub">Today</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OVERLAY 1: ANALYSIS REPORT -->
+<div class="ow-overlay" id="overlay-analysis">
+    <div class="ow-overlay-header">
+        <h2>📊 Daily Analysis</h2>
+        <button class="ow-close" onclick="closeOverlay('analysis')">✕</button>
+    </div>
+    <div class="ow-overlay-body">
+
+        <!-- End of Day Review Controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0">Overview</h3>
+            <select id="ow-analysis-period" class="ow-input" style="width:auto; padding:5px;">
+                <option value="day">Vs Yesterday</option>
+                <option value="week">Vs Last Week</option>
+            </select>
+        </div>
+
+        <div class="ow-stat-grid" id="ow-analysis-grid">
+            <!-- Filled by JS -->
+        </div>
+
+        <h3 style="margin-top:30px;">🔗 Correlation Calculator</h3>
+        <div class="ow-corr-controls">
+            <div class="ow-row">
+                <div style="flex:1">
+                    <label style="font-size:12px; font-weight:bold;">Metric 1</label>
+                    <select id="ow-corr-x" class="ow-input"></select>
+                </div>
+                <div style="flex:1">
+                    <label style="font-size:12px; font-weight:bold;">Metric 2</label>
+                    <select id="ow-corr-y" class="ow-input"></select>
+                </div>
+            </div>
+            <button class="ow-btn ow-btn-primary" onclick="calcCorrelation()">Calculate Correlation</button>
+        </div>
+        <div id="ow-corr-result" class="ow-corr-res" style="display:none;"></div>
+
+    </div>
+</div>
+
+<!-- OVERLAY 2: TASKS MANAGER (FULL CRUD) -->
+<div class="ow-overlay" id="overlay-tasks">
+    <div class="ow-overlay-header">
+        <h2>📝 Manage Tasks</h2>
+        <button class="ow-close" onclick="closeOverlay('tasks')">✕</button>
+    </div>
+    <div class="ow-overlay-body">
+        <button class="ow-btn ow-btn-primary" style="width:100%; margin-bottom:20px;" onclick="openTaskForm()">+ Add New
+            Task</button>
+
+        <h3>Due Today / Overdue</h3>
+        <ul class="ow-list" id="ow-task-list-due"></ul>
+
+        <h3 style="margin-top:20px;">Upcoming</h3>
+        <ul class="ow-list" id="ow-task-list-upcoming"></ul>
+    </div>
+</div>
+
+<!-- OVERLAY 3: HABITS MANAGER (FULL CRUD) -->
+<div class="ow-overlay" id="overlay-habits">
+    <div class="ow-overlay-header">
+        <h2>✅ Manage Habits</h2>
+        <button class="ow-close" onclick="closeOverlay('habits')">✕</button>
+    </div>
+    <div class="ow-overlay-body">
+        <button class="ow-btn ow-btn-primary" style="width:100%; margin-bottom:20px;" onclick="openHabitForm()">+ Add
+            New Habit</button>
+
+        <h3>All Habits</h3>
+        <ul class="ow-list" id="ow-habit-list"></ul>
+    </div>
+</div>
+
+<!-- OVERLAY 4: CALENDAR -->
+<div class="ow-overlay" id="overlay-calendar">
+    <div class="ow-overlay-header">
+        <h2>📅 Calendar Events</h2>
+        <button class="ow-close" onclick="closeOverlay('calendar')">✕</button>
+    </div>
+    <div class="ow-overlay-body" id="ow-calendar-list">
+        <p>Loading events...</p>
+    </div>
+</div>
+
+<!-- SUB-OVERLAY: TASK FORM -->
+<div class="ow-overlay" id="overlay-task-form" style="z-index: 6000;">
+    <div class="ow-overlay-header">
+        <h2 id="ow-tf-title">Add Task</h2>
+        <button class="ow-close"
+            onclick="document.getElementById('overlay-task-form').classList.remove('open')">✕</button>
+    </div>
+    <div class="ow-overlay-body">
+        <form id="ow-task-form-el">
+            <input type="hidden" id="ow-tf-id">
+            <div class="ow-input-group">
+                <label>Name</label>
+                <input type="text" id="ow-tf-name" class="ow-input" required>
+            </div>
+            <div class="ow-row">
+                <div class="ow-input-group" style="flex:1">
+                    <label>Category</label>
+                    <input type="text" id="ow-tf-cat" class="ow-input">
+                </div>
+                <div class="ow-input-group" style="flex:1">
+                    <label>Priority</label>
+                    <select id="ow-tf-prio" class="ow-input">
+                        <option>Low</option>
+                        <option selected>Medium</option>
+                        <option>High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="ow-input-group">
+                <label>Due Date</label>
+                <input type="date" id="ow-tf-date" class="ow-input">
+            </div>
+            <div class="ow-input-group">
+                <label>Recurrence</label>
+                <select id="ow-tf-rec" class="ow-input" onchange="toggleTaskRecurrence()">
+                    <option value="none">None</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+            <div class="ow-input-group" id="ow-tf-days-group" style="display:none;">
+                <label>Days</label>
+                <div class="ow-day-selector" id="ow-tf-days">
+                    <button type="button" class="ow-day-btn" data-d="0">S</button>
+                    <button type="button" class="ow-day-btn" data-d="1">M</button>
+                    <button type="button" class="ow-day-btn" data-d="2">T</button>
+                    <button type="button" class="ow-day-btn" data-d="3">W</button>
+                    <button type="button" class="ow-day-btn" data-d="4">T</button>
+                    <button type="button" class="ow-day-btn" data-d="5">F</button>
+                    <button type="button" class="ow-day-btn" data-d="6">S</button>
+                </div>
+            </div>
+            <button type="submit" class="ow-btn ow-btn-success" style="width:100%">Save Task</button>
+        </form>
+    </div>
+</div>
+
+<!-- SUB-OVERLAY: HABIT FORM -->
+<div class="ow-overlay" id="overlay-habit-form" style="z-index: 6000;">
+    <div class="ow-overlay-header">
+        <h2 id="ow-hf-title">Add Habit</h2>
+        <button class="ow-close"
+            onclick="document.getElementById('overlay-habit-form').classList.remove('open')">✕</button>
+    </div>
+    <div class="ow-overlay-body">
+        <form id="ow-habit-form-el">
+            <input type="hidden" id="ow-hf-id">
+            <div class="ow-input-group">
+                <label>Name</label>
+                <input type="text" id="ow-hf-name" class="ow-input" required>
+            </div>
+            <div class="ow-input-group">
+                <label>Category</label>
+                <input type="text" id="ow-hf-cat" class="ow-input">
+            </div>
+            <div class="ow-input-group">
+                <label>Recurrence Days</label>
+                <div class="ow-day-selector" id="ow-hf-days">
+                    <button type="button" class="ow-day-btn" data-d="0">S</button>
+                    <button type="button" class="ow-day-btn" data-d="1">M</button>
+                    <button type="button" class="ow-day-btn" data-d="2">T</button>
+                    <button type="button" class="ow-day-btn" data-d="3">W</button>
+                    <button type="button" class="ow-day-btn" data-d="4">T</button>
+                    <button type="button" class="ow-day-btn" data-d="5">F</button>
+                    <button type="button" class="ow-day-btn" data-d="6">S</button>
+                </div>
+            </div>
+            <button type="submit" class="ow-btn ow-btn-success" style="width:100%">Save Habit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // === CONFIG & DB ===
+        const CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbzi1K0y2Q8PPNdnQuPcmj-mBxNfzB0Q80coxT_swTSq-PL6e-tYFJW7eF32Jr2NXOs/exec';
+        const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+        // Additional DB for Spanish
+        const spanishDb = new Dexie('spanishLearningDB');
+        spanishDb.version(4).stores({
+            words: '++id, &spanish, english, learned',
+            sentences: '++id, &spanish, english, learned',
+            myVocabulary: '++id, &[spanish+source], english, source',
+            verbs: '++id, infinitive, mood, tense, learned',
+            activityLog: '++id, timestamp, type, result'
+        });
+
+        // === STATE ===
+        let updateInterval;
+        let allMetrics = []; // For correlation dropdowns
+
+        // === CORE: DATA FETCHING ===
+        async function getMetric(type, start, end) {
+            const d1 = start.toISOString().split('T')[0];
+            const d2 = end.toISOString().split('T')[0];
+            const startTs = start.getTime();
+            const endTs = end.getTime();
+
+            switch (type) {
+                case 'tasks_done': return await window.db.taskHistory.where('date').between(d1, d2, true, true).and(t => t.status === 'Completed').count();
+                case 'habits_done': return await window.db.habitHistory.where('date').between(d1, d2, true, true).and(h => h.status === 'Completed').count();
+                case 'mood':
+                    const m = await window.db.mood.where('datetime').between(start.toISOString(), end.toISOString()).toArray();
+                    return m.length ? m.reduce((a, b) => a + b.value, 0) / m.length : 0;
+                case 'sleep':
+                    const s = await window.db.sleepLogs.where('date').between(d1, d2, true, true).toArray();
+                    return s.length ? s.reduce((a, b) => a + (b.durationSeconds || 0), 0) / s.length / 3600 : 0;
+                case 'steps':
+                    const st = await window.db.healthTimeSeries.where('[type+datetime]').between(['steps', startTs], ['steps', endTs]).toArray();
+                    return st.reduce((a, b) => a + b.value, 0);
+                case 'spanish':
+                    const sp = await spanishDb.activityLog.where('timestamp').between(startTs, endTs).toArray();
+                    return sp.filter(x => x.result === 'correct' || x.result === 'completed').length;
+                case 'spending':
+                    const tx = await window.db.financeTransactions.where('date').between(d1, d2, true, true).and(t => t.type === 'Expense').toArray();
+                    return tx.reduce((a, b) => a + b.amount, 0);
+                case 'calories':
+                    const nut = await window.db.nutritionLogs.where('date').between(d1, d2, true, true).toArray();
+                    return nut.reduce((a, b) => a + b.calories, 0);
+                case 'cat_happiness':
+                    // Logic: % of "Salem" tasks completed
+                    const salemTasks = await window.db.tasks.filter(t => t.category === 'Salem').toArray();
+                    if (salemTasks.length === 0) return 0;
+                    // Check history for these tasks in range
+                    const salemIds = salemTasks.map(t => t.id);
+                    const done = await window.db.taskHistory.where('date').between(d1, d2, true, true)
+                        .and(h => salemIds.includes(h.taskId) && h.status === 'Completed').count();
+                    // Simple approximation: 1 task = 20% happiness, max 100%
+                    return Math.min(100, done * 20);
+            }
+            return 0;
+        }
+
+        // === MAIN LOOP: UPDATE WIDGET & ANALYSIS ===
+        async function updateDashboard() {
+            const now = new Date();
+            const start = new Date(now); start.setHours(0, 0, 0, 0);
+            const end = new Date(now); end.setHours(23, 59, 59, 999);
+
+            // 1. Fetch Metrics for Today
+            const m = {
+                tasks: await getMetric('tasks_done', start, end),
+                habits: await getMetric('habits_done', start, end),
+                mood: await getMetric('mood', start, end),
+                sleep: await getMetric('sleep', start, end),
+                steps: await getMetric('steps', start, end),
+                spanish: await getMetric('spanish', start, end),
+                spending: await getMetric('spending', start, end),
+                calories: await getMetric('calories', start, end),
+                cat: await getMetric('cat_happiness', start, end)
+            };
+
+            // 2. Fetch Totals (Left to do)
+            const allTasks = await window.db.tasks.where('status').equals('Active').toArray();
+            const tasksDue = allTasks.filter(t => (t.recurrenceType === 'none' && t.dueDate === todayStr) ||
+                (t.recurrenceType === 'weekly' && t.recurrenceDays && t.recurrenceDays.includes(now.getDay()))).length;
+
+            const allHabits = await window.db.habits.where('status').equals('Active').toArray();
+            const habitsDue = allHabits.filter(h => h.recurrenceDays && h.recurrenceDays.includes(now.getDay())).length;
+
+            // 3. Calculate Score (0-100)
+            let score = 50;
+            score += (m.tasks / (tasksDue || 1)) * 15;
+            score += (m.habits / (habitsDue || 1)) * 15;
+            if (m.sleep >= 7) score += 10;
+            if (m.steps > 5000) score += 10;
+            if (m.spanish > 5) score += 10;
+            if (m.spending > 50) score -= 10;
+            if (m.cat > 50) score += 10;
+
+            score = Math.min(100, Math.max(0, Math.round(score)));
+
+            // 4. Render Main Widget
+            document.getElementById('ow-score').textContent = score;
+            const waterHeight = Math.max(10, score); // Min 10% for visual
+            document.getElementById('ow-water-level').style.height = `${waterHeight}%`;
+
+            let msg = "Needs Focus";
+            if (score > 80) msg = "Excellent!";
+            else if (score > 60) msg = "Good Job";
+            else if (score > 40) msg = "Keep Going";
+            document.getElementById('ow-score-msg').textContent = msg;
+
+            document.getElementById('ow-t-val').textContent = Math.max(0, tasksDue - m.tasks);
+            document.getElementById('ow-h-val').textContent = Math.max(0, habitsDue - m.habits);
+
+            // 5. Update Analysis Overlay Data
+            updateAnalysisOverlay(m, tasksDue, habitsDue);
+        }
+
+        async function updateAnalysisOverlay(current, tDue, hDue) {
+            // Grid Stats
+            const grid = document.getElementById('ow-analysis-grid');
+
+            // Comparison Logic
+            const period = document.getElementById('ow-analysis-period').value;
+            const now = new Date();
+            let prevStart = new Date(now);
+            let prevEnd = new Date(now);
+
+            if (period === 'day') {
+                prevStart.setDate(now.getDate() - 1); prevStart.setHours(0, 0, 0, 0);
+                prevEnd.setDate(now.getDate() - 1); prevEnd.setHours(23, 59, 59, 999);
+            } else {
+                prevStart.setDate(now.getDate() - 7); prevStart.setHours(0, 0, 0, 0);
+                prevEnd.setDate(now.getDate() - 7); prevEnd.setHours(23, 59, 59, 999);
+            }
+
+            // Fetch previous for comparison
+            const pTasks = await getMetric('tasks_done', prevStart, prevEnd);
+            const pHabits = await getMetric('habits_done', prevStart, prevEnd);
+            const pSpend = await getMetric('spending', prevStart, prevEnd);
+            const pSpanish = await getMetric('spanish', prevStart, prevEnd);
+            const pCat = await getMetric('cat_happiness', prevStart, prevEnd);
+
+            // Fetch previous for Health Composite
+            const pSteps = await getMetric('steps', prevStart, prevEnd);
+            const pSleep = await getMetric('sleep', prevStart, prevEnd);
+            const pMood = await getMetric('mood', prevStart, prevEnd);
+            const pCal = await getMetric('calories', prevStart, prevEnd);
+
+            const getPct = (curr, prev) => {
+                if (prev === 0) return curr === 0 ? 0 : 100;
+                return Math.round(((curr - prev) / prev) * 100);
+            };
+            const fmtPct = (p, inv = false) => {
+                const cls = p === 0 ? 't-neutral' : (inv ? (p < 0 ? 't-up' : 't-down') : (p > 0 ? 't-up' : 't-down'));
+                const sign = p > 0 ? '+' : '';
+                return `<span class="ow-stat-trend ${cls}">${sign}${p}%</span>`;
+            };
+
+            // Health Composite Score
+            // Goals (approx): Steps 6000, Sleep 7h, Mood 4/5, Calories 2000 (diff)
+            const calcHealth = (s, sl, m, c) => {
+                let pts = 0;
+                pts += Math.min(100, (s / 6000) * 100) * 0.3; // 30% Steps
+                pts += Math.min(100, (sl / 7) * 100) * 0.3;   // 30% Sleep
+                pts += Math.min(100, (m / 5) * 100) * 0.2;    // 20% Mood
+                // Calories: 100% if within 10% of 2000.
+                const calDiff = Math.abs(c - 2000);
+                let calScore = 100 - (calDiff / 20);
+                pts += Math.max(0, calScore) * 0.2;           // 20% Nutrition
+                return Math.round(pts);
+            };
+
+            const hScore = calcHealth(current.steps, current.sleep, current.mood, current.calories);
+            const prevHScore = calcHealth(pSteps, pSleep, pMood, pCal);
+
+            grid.innerHTML = `
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Productivity</div>
+                <div class="ow-stat-val">${current.tasks} ${fmtPct(getPct(current.tasks, pTasks))}</div>
+                <div class="ow-mc-sub">Tasks Done</div>
+            </div>
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Consistency</div>
+                <div class="ow-stat-val">${current.habits} ${fmtPct(getPct(current.habits, pHabits))}</div>
+                <div class="ow-mc-sub">Habits Done</div>
+            </div>
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Spending</div>
+                <div class="ow-stat-val">$${current.spending} ${fmtPct(getPct(current.spending, pSpend), true)}</div>
+                <div class="ow-mc-sub">USD</div>
+            </div>
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Spanish</div>
+                <div class="ow-stat-val">${current.spanish} ${fmtPct(getPct(current.spanish, pSpanish))}</div>
+                <div class="ow-mc-sub">Points</div>
+            </div>
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Cat Happiness</div>
+                <div class="ow-stat-val">${current.cat}% ${fmtPct(getPct(current.cat, pCat))}</div>
+                <div class="ow-mc-sub">Salem Tasks</div>
+            </div>
+            <div class="ow-stat-card">
+                <div class="ow-stat-head">Health Score</div>
+                <div class="ow-stat-val">${hScore} ${fmtPct(getPct(hScore, prevHScore))}</div>
+                <div class="ow-mc-sub">Composite</div>
+            </div>
+        `;
+        }
+
+        document.getElementById('ow-analysis-period').onchange = () => updateDashboard();
+
+        // === CORRELATION LOGIC ===
+        async function initCorrelations() {
+            const x = document.getElementById('ow-corr-x');
+            const y = document.getElementById('ow-corr-y');
+
+            const opts = [
+                { v: 'mood', t: 'Mood' }, { v: 'sleep', t: 'Sleep' }, { v: 'steps', t: 'Steps' },
+                { v: 'tasks_done', t: 'Tasks Done' }, { v: 'habits_done', t: 'Habits Done' },
+                { v: 'spending', t: 'Spending' }, { v: 'spanish', t: 'Spanish Score' },
+                { v: 'calories', t: 'Calories' }, { v: 'cat_happiness', t: 'Cat Happiness' }
+            ];
+
+            const html = opts.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+            x.innerHTML = html;
+            y.innerHTML = html;
+            y.value = 'sleep'; // Default diff
+        }
+
+        window.calcCorrelation = async () => {
+            const mx = document.getElementById('ow-corr-x').value;
+            const my = document.getElementById('ow-corr-y').value;
+            const resEl = document.getElementById('ow-corr-result');
+
+            resEl.style.display = 'block';
+            resEl.innerHTML = 'Calculating (30 days)...';
+
+            // Fetch 30 days of data
+            const end = new Date();
+            const start = new Date(); start.setDate(end.getDate() - 30);
+
+            const dataX = [];
+            const dataY = [];
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const s = new Date(d); s.setHours(0, 0, 0, 0);
+                const e = new Date(d); e.setHours(23, 59, 59, 999);
+                dataX.push(await getMetric(mx, s, e));
+                dataY.push(await getMetric(my, s, e));
+            }
+
+            // Pearson Calculation
+            const n = dataX.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            for (let i = 0; i < n; i++) {
+                sumX += dataX[i]; sumY += dataY[i];
+                sumXY += dataX[i] * dataY[i];
+                sumX2 += dataX[i] * dataX[i];
+                sumY2 += dataY[i] * dataY[i];
+            }
+
+            const num = (n * sumXY) - (sumX * sumY);
+            const den = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+            const r = den === 0 ? 0 : num / den;
+
+            let strength = "No";
+            if (Math.abs(r) > 0.7) strength = "Very Strong";
+            else if (Math.abs(r) > 0.5) strength = "Strong";
+            else if (Math.abs(r) > 0.3) strength = "Moderate";
+            else if (Math.abs(r) > 0.1) strength = "Weak";
+
+            resEl.innerHTML = `
+            <strong>R-Value: ${r.toFixed(3)}</strong><br>
+            ${strength} ${r > 0 ? 'Positive' : 'Negative'} Correlation.<br>
+            <span style="font-size:12px; color:#666;">Based on last 30 days.</span>
+        `;
+        }
+
+        // === CALENDAR ===
+        async function fetchCalendar() {
+            try {
+                const res = await fetch(CALENDAR_URL);
+                const data = await res.json();
+                const now = new Date();
+                const upcoming = data.allEvents.filter(e => new Date(e.start) > now && new Date(e.start).getDate() === now.getDate());
+
+                document.getElementById('ow-e-val').textContent = upcoming.length;
+
+                const list = document.getElementById('ow-calendar-list');
+                list.innerHTML = upcoming.length ? '' : '<p>No more events today.</p>';
+
+                upcoming.forEach(e => {
+                    const time = new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'ow-cal-item';
+                    div.innerHTML = `<div class="ow-cal-time">${time}</div>${e.title}`;
+                    // Click to open link if available (assuming 'link' or 'htmlLink' property)
+                    const link = e.link || e.htmlLink || e.location; // Fallback
+                    if (link && link.startsWith('http')) {
+                        div.onclick = () => window.open(link, '_blank');
+                        div.title = "Click to open";
+                    }
+                    list.appendChild(div);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        // === TASK MANAGER (FULL CRUD) ===
+        async function renderTasks() {
+            const listDue = document.getElementById('ow-task-list-due');
+            const listUp = document.getElementById('ow-task-list-upcoming');
+            listDue.innerHTML = 'Loading...'; listUp.innerHTML = '';
+
+            const tasks = await window.db.tasks.where('status').equals('Active').toArray();
+            const history = await window.db.taskHistory.where('date').equals(todayStr).toArray();
+            const doneIds = new Set(history.map(h => h.taskId));
+
+            const due = [];
+            const upcoming = [];
+            const day = new Date().getDay();
+
+            tasks.forEach(t => {
+                if (doneIds.has(t.id)) return;
+
+                let isDue = false;
+                if (t.recurrenceType === 'none' && t.dueDate === todayStr) isDue = true;
+                else if (t.recurrenceType === 'weekly' && t.recurrenceDays && t.recurrenceDays.includes(day)) isDue = true;
+                else if (t.recurrenceType === 'none' && t.dueDate < todayStr) isDue = true; // Overdue
+
+                if (isDue) due.push(t);
+                else upcoming.push(t);
+            });
+
+            const createItem = (t) => {
+                const li = document.createElement('li');
+                li.className = 'ow-item';
+                li.innerHTML = `
+                <div>
+                    <div style="font-weight:bold">${t.name}</div>
+                    <div style="font-size:11px; color:#666">${t.category || ''} | ${t.priority}</div>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button class="ow-btn ow-btn-check" onclick="completeTask(${t.id})">✓</button>
+                    <button class="ow-btn" style="background:#eee" onclick="editTask(${t.id})">✎</button>
+                    <button class="ow-btn ow-btn-del" onclick="deleteTask(${t.id})">🗑</button>
+                </div>
+            `;
+                return li;
+            };
+
+            listDue.innerHTML = '';
+            if (due.length === 0) listDue.innerHTML = '<p style="color:#888">No tasks due.</p>';
+            due.forEach(t => listDue.appendChild(createItem(t)));
+
+            listUp.innerHTML = '';
+            upcoming.slice(0, 5).forEach(t => listUp.appendChild(createItem(t)));
+        }
+
+        window.openTaskForm = (id = null) => {
+            const form = document.getElementById('ow-task-form-el');
+            form.reset();
+            document.getElementById('ow-tf-id').value = id || '';
+            document.getElementById('ow-tf-title').textContent = id ? 'Edit Task' : 'Add Task';
+            document.getElementById('ow-tf-date').value = todayStr;
+            document.getElementById('ow-tf-days-group').style.display = 'none';
+
+            if (id) {
+                window.db.tasks.get(id).then(t => {
+                    document.getElementById('ow-tf-name').value = t.name;
+                    document.getElementById('ow-tf-cat').value = t.category;
+                    document.getElementById('ow-tf-prio').value = t.priority;
+                    document.getElementById('ow-tf-date').value = t.dueDate;
+                    document.getElementById('ow-tf-rec').value = t.recurrenceType || 'none';
+                    if (t.recurrenceType === 'weekly') {
+                        document.getElementById('ow-tf-days-group').style.display = 'block';
+                        document.querySelectorAll('#ow-tf-days .ow-day-btn').forEach(b => {
+                            if (t.recurrenceDays.includes(parseInt(b.dataset.d))) b.classList.add('selected');
+                        });
+                    }
+                });
+            }
+            document.getElementById('overlay-task-form').classList.add('open');
+        };
+
+        window.toggleTaskRecurrence = () => {
+            const val = document.getElementById('ow-tf-rec').value;
+            document.getElementById('ow-tf-days-group').style.display = val === 'weekly' ? 'block' : 'none';
+        };
+
+        // Task Form Submit
+        document.getElementById('ow-task-form-el').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('ow-tf-id').value;
+            const data = {
+                name: document.getElementById('ow-tf-name').value,
+                category: document.getElementById('ow-tf-cat').value,
+                priority: document.getElementById('ow-tf-prio').value,
+                dueDate: document.getElementById('ow-tf-date').value,
+                recurrenceType: document.getElementById('ow-tf-rec').value,
+                status: 'Active'
+            };
+            if (data.recurrenceType === 'weekly') {
+                data.recurrenceDays = Array.from(document.querySelectorAll('#ow-tf-days .selected')).map(b => parseInt(b.dataset.d));
+            }
+
+            if (id) await window.db.tasks.update(parseInt(id), data);
+            else await window.db.tasks.add(data);
+
+            document.getElementById('overlay-task-form').classList.remove('open');
+            renderTasks(); updateDashboard();
+        };
+
+        window.completeTask = async (id) => {
+            await window.db.taskHistory.add({ taskId: id, date: todayStr, status: 'Completed' });
+            const t = await window.db.tasks.get(id);
+            if (t.recurrenceType === 'none') await window.db.tasks.update(id, { status: 'Completed' });
+            renderTasks(); updateDashboard();
+        };
+
+        window.deleteTask = async (id) => {
+            if (confirm('Delete task?')) {
+                await window.db.tasks.delete(id);
+                renderTasks(); updateDashboard();
+            }
+        };
+        window.editTask = (id) => openTaskForm(id);
+
+
+        // === HABIT MANAGER (FULL CRUD) ===
+        async function renderHabits() {
+            const list = document.getElementById('ow-habit-list');
+            list.innerHTML = 'Loading...';
+
+            const habits = await window.db.habits.where('status').equals('Active').toArray();
+            const history = await window.db.habitHistory.where('date').equals(todayStr).toArray();
+            const doneIds = new Set(history.map(h => h.habitId));
+            const day = new Date().getDay();
+
+            list.innerHTML = '';
+            habits.forEach(h => {
+                // SHOW ALL HABITS (User Request)
+                // But mark if due today
+                const isDue = h.recurrenceDays && h.recurrenceDays.includes(day);
+                const isDone = doneIds.has(h.id);
+
+                const li = document.createElement('li');
+                li.className = `ow-item ${isDone ? 'completed' : ''}`;
+                li.innerHTML = `
+                <div>
+                    <div style="font-weight:bold">${h.name} ${isDue ? '<span style="color:#22c55e; font-size:10px;">● Today</span>' : ''}</div>
+                    <div style="font-size:11px; color:#666">${h.category || ''}</div>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    ${!isDone && isDue ? `<button class="ow-btn ow-btn-check" onclick="completeHabit(${h.id})">✓</button>` : ''}
+                    <button class="ow-btn" style="background:#eee" onclick="editHabit(${h.id})">✎</button>
+                    <button class="ow-btn ow-btn-del" onclick="deleteHabit(${h.id})">🗑</button>
+                </div>
+            `;
+                list.appendChild(li);
+            });
+            if (list.innerHTML === '') list.innerHTML = '<p>No habits defined.</p>';
+        }
+
+        window.openHabitForm = (id = null) => {
+            const form = document.getElementById('ow-habit-form-el');
+            form.reset();
+            document.getElementById('ow-hf-id').value = id || '';
+            document.getElementById('ow-hf-title').textContent = id ? 'Edit Habit' : 'Add Habit';
+            document.querySelectorAll('#ow-hf-days .ow-day-btn').forEach(b => b.classList.remove('selected'));
+
+            if (id) {
+                window.db.habits.get(id).then(h => {
+                    document.getElementById('ow-hf-name').value = h.name;
+                    document.getElementById('ow-hf-cat').value = h.category;
+                    if (h.recurrenceDays) {
+                        document.querySelectorAll('#ow-hf-days .ow-day-btn').forEach(b => {
+                            if (h.recurrenceDays.includes(parseInt(b.dataset.d))) b.classList.add('selected');
+                        });
+                    }
+                });
+            }
+            document.getElementById('overlay-habit-form').classList.add('open');
+        };
+
+        document.getElementById('ow-habit-form-el').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('ow-hf-id').value;
+            const data = {
+                name: document.getElementById('ow-hf-name').value,
+                category: document.getElementById('ow-hf-cat').value,
+                recurrenceDays: Array.from(document.querySelectorAll('#ow-hf-days .selected')).map(b => parseInt(b.dataset.d)),
+                status: 'Active'
+            };
+
+            if (id) await window.db.habits.update(parseInt(id), data);
+            else await window.db.habits.add(data);
+
+            document.getElementById('overlay-habit-form').classList.remove('open');
+            renderHabits(); updateDashboard();
+        };
+
+        window.completeHabit = async (id) => {
+            await window.db.habitHistory.add({ habitId: id, date: todayStr, status: 'Completed' });
+            renderHabits(); updateDashboard();
+        };
+        window.deleteHabit = async (id) => {
+            if (confirm('Delete habit?')) {
+                await window.db.habits.delete(id);
+                renderHabits(); updateDashboard();
+            }
+        };
+        window.editHabit = (id) => openHabitForm(id);
+
+
+        // === UI HANDLERS ===
+        window.closeOverlay = (id) => document.getElementById(`overlay-${id}`).classList.remove('open');
+
+        document.getElementById('ow-open-analysis').onclick = () => { updateDashboard(); document.getElementById('overlay-analysis').classList.add('open'); };
+        document.getElementById('ow-open-tasks').onclick = () => { renderTasks(); document.getElementById('overlay-tasks').classList.add('open'); };
+        document.getElementById('ow-open-habits').onclick = () => { renderHabits(); document.getElementById('overlay-habits').classList.add('open'); };
+        document.getElementById('ow-open-calendar').onclick = () => document.getElementById('overlay-calendar').classList.add('open');
+
+        // Day Selectors (General)
+        document.querySelectorAll('.ow-day-btn').forEach(btn => {
+            btn.onclick = () => btn.classList.toggle('selected');
+        });
+
+        // === INITIALIZATION ===
+        Promise.all([window.db.open(), spanishDb.open()]).then(() => {
+            updateDashboard();
+            fetchCalendar();
+            initCorrelations();
+            updateInterval = setInterval(updateDashboard, 10000); // 10s refresh
+        });
+
+    })();
+</script>

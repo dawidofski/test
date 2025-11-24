@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>Homescreen Shell</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
+
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    
     <script src="database.js"></script>
+    <script src="googleSheetImporter.js"></script>
     <script src="errorhandler.js"></script>
 
     <style>
@@ -17,21 +18,27 @@
             --bg-color: #f4f7f6;
             --text-color: #333;
             --card-bg: #ffffff;
-            --status-bar-height: 20px; 
+            --status-bar-height: 20px;
             --nav-bar-height: 0px;
             --accent-color: #007bff;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #121212;
+                --bg-color: #000000;
+                /* True Black */
                 --text-color: #e0e0e0;
-                --card-bg: #1e1e1e;
+                --card-bg: #121212;
+                /* Dark Gray for cards */
                 --accent-color: #4dabf7;
+                --input-bg: #1e1e1e;
+                --input-border: #333;
             }
         }
 
-        body { 
+        body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -42,6 +49,26 @@
             overflow: hidden;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- Global Input Styles --- */
+        input,
+        select,
+        textarea {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
         }
 
         /* --- Pages --- */
@@ -57,8 +84,8 @@
             min-width: 100vw;
             height: 100%;
             padding: 20px;
-            padding-top: calc(var(--status-bar-height) + 20px); 
-            padding-bottom: 100px; 
+            padding-top: calc(var(--status-bar-height) + 20px);
+            padding-bottom: 100px;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden;
@@ -70,17 +97,17 @@
             background: var(--card-bg);
             border-radius: 16px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: opacity 0.3s ease;
         }
-        
+
         .widget-placeholder.loading {
             opacity: 0.6;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        
+
         .widget-error {
             padding: 20px;
             color: #dc3545;
@@ -105,12 +132,22 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
             z-index: 100;
             padding: 0 20px;
             box-sizing: border-box;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(-50%) translateY(100px);
+            /* Start hidden (pushed down) */
+            opacity: 0;
         }
-        
+
+        .bottom-dock.visible {
+            transform: translateX(-50%) translateY(0);
+            /* Bring it back up */
+            opacity: 1;
+        }
+
         @media (prefers-color-scheme: dark) {
             .bottom-dock {
                 background: rgba(30, 30, 30, 0.8);
@@ -125,13 +162,17 @@
             color: var(--text-color);
             opacity: 0.7;
         }
-        .dock-btn:hover { opacity: 1; }
+
+        .dock-btn:hover {
+            opacity: 1;
+        }
 
         /* Page Dots Indicator */
         .page-dots {
             display: flex;
             gap: 10px;
         }
+
         .dot {
             width: 8px;
             height: 8px;
@@ -139,6 +180,7 @@
             border-radius: 50%;
             transition: background-color 0.3s, transform 0.3s;
         }
+
         .dot.active {
             background-color: var(--accent-color);
             transform: scale(1.3);
@@ -158,7 +200,11 @@
             flex-direction: column;
             overflow-y: auto;
         }
-        .overlay.open { top: 0; }
+
+        .overlay.open {
+            top: 0;
+        }
+
         .overlay-header {
             padding: 20px;
             padding-top: calc(var(--status-bar-height) + 20px);
@@ -166,19 +212,30 @@
             justify-content: space-between;
             align-items: center;
             background: var(--card-bg);
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
-        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); }
-        .overlay-content { padding: 20px; flex-grow: 1; }
 
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .overlay-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="page-container" id="page-container">
-        
+
         <div id="page-life" class="page-view">
-            <h2 style="margin-top: 0; margin-bottom: 15px; opacity: 0.5;">Life Organizer</h2>
+            <div id="widget-container-overview" class="widget-placeholder loading"></div>
             <div id="widget-container-tasks" class="widget-placeholder loading"></div>
             <div id="widget-container-habits" class="widget-placeholder loading"></div>
             <div id="widget-container-finance" class="widget-placeholder loading"></div>
@@ -188,7 +245,6 @@
         </div>
 
         <div id="page-spanish" class="page-view">
-            <h2 style="margin-top: 0; margin-bottom: 15px; opacity: 0.5;">Español</h2>
             <div id="widget-container-rss" class="widget-placeholder loading"></div>
             <div id="widget-container-quiz" class="widget-placeholder loading"></div>
             <div id="widget-container-dictation" class="widget-placeholder loading"></div>
@@ -200,7 +256,7 @@
 
     <div class="bottom-dock">
         <div class="dock-btn" onclick="toggleOverlay('overlay-launcher', true)">🔎</div>
-        
+
         <div class="page-dots">
             <div class="dot active" id="dot-life"></div>
             <div class="dot" id="dot-spanish"></div>
@@ -220,12 +276,11 @@
     <div id="overlay-launcher" class="overlay">
         <div class="overlay-header">
             <form onsubmit="return false;" style="width: 100%; display: flex; margin: 0;">
-                <input type="search" 
-                       placeholder="Search apps or Google..." 
-                       autocomplete="off"
-                       style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px;">
+                <input type="search" placeholder="Search apps or Google..." autocomplete="off"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); font-size: 16px;">
             </form>
-            <button class="close-btn" onclick="toggleOverlay('overlay-launcher', false)" style="margin-left: 10px;">✕</button>
+            <button class="close-btn" onclick="toggleOverlay('overlay-launcher', false)"
+                style="margin-left: 10px;">✕</button>
         </div>
         <div id="launcher-content" class="overlay-content">Loading Launcher...</div>
     </div>
@@ -236,8 +291,8 @@
             window.Bridge = {
                 requestOpenAppInfo: () => console.log("Mock: Open App Info"),
                 showToast: (msg) => console.log("Mock Toast:", msg),
-                getStatusBarsWindowInsets: () => JSON.stringify({top: 20}),
-                getNavigationBarsWindowInsets: () => JSON.stringify({bottom: 0}),
+                getStatusBarsWindowInsets: () => JSON.stringify({ top: 20 }),
+                getNavigationBarsWindowInsets: () => JSON.stringify({ bottom: 0 }),
             };
         }
 
@@ -252,30 +307,30 @@
 
         document.addEventListener('touchstart', e => {
             // *** UPDATED: Ignore touches inside swipeable widgets ***
-            if (e.target.closest('.widget-swipe-area')) return; 
+            if (e.target.closest('.widget-swipe-area')) return;
 
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
-        }, {passive: true});
+        }, { passive: true });
 
         document.addEventListener('touchend', e => {
             // *** UPDATED: Ignore touches inside swipeable widgets ***
-            if (e.target.closest('.widget-swipe-area')) return; 
+            if (e.target.closest('.widget-swipe-area')) return;
 
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
             handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
-        }, {passive: true});
+        }, { passive: true });
 
         function handleSwipe(sx, sy, ex, ey) {
             try {
                 const diffX = sx - ex;
                 const diffY = sy - ey;
                 if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                    if (diffX > 0) { if (currentPage === 0) switchPage(1); } 
+                    if (diffX > 0) { if (currentPage === 0) switchPage(1); }
                     else { if (currentPage === 1) switchPage(0); }
                 }
-            } catch(e) {
+            } catch (e) {
                 window.ErrorHandler.logError('Swipe Logic', e);
             }
         }
@@ -295,16 +350,16 @@
         function toggleOverlay(id, show) {
             try {
                 const el = document.getElementById(id);
-                if(show) el.classList.add('open');
+                if (show) el.classList.add('open');
                 else el.classList.remove('open');
-            } catch(e) {
+            } catch (e) {
                 window.ErrorHandler.logError('Overlay Toggle', e);
             }
         }
 
         // --- 3. WIDGET LOADER ENGINE (With Error Boundaries) ---
         // Ensure this points to your local folder structure
-        const CONFIG_URL = 'widgets/widgets.json'; 
+        const CONFIG_URL = 'widgets/widgets.json';
 
         class WidgetLoader {
             async init() {
@@ -327,7 +382,7 @@
                 try {
                     const response = await fetch(CONFIG_URL + '?t=' + Date.now());
                     if (!response.ok) throw new Error("Config fetch failed");
-                    
+
                     const data = await response.json();
                     const remoteWidgets = data.widgets;
                     const remoteIds = new Set(remoteWidgets.map(w => w.id));
@@ -335,7 +390,7 @@
                     for (const remoteWidget of remoteWidgets) {
                         try {
                             await this.syncWidget(remoteWidget, data.config.baseUrl, force);
-                        } catch(widgetErr) {
+                        } catch (widgetErr) {
                             window.ErrorHandler.logError(`Sync ${remoteWidget.id}`, widgetErr);
                         }
                     }
@@ -361,7 +416,7 @@
                 if (!force && cached && cached.version === remoteWidget.version) {
                     const container = document.getElementById(remoteWidget.targetId || remoteWidget.containerId);
                     if (container && container.innerHTML.trim() === "") this.renderWidget(cached);
-                    return; 
+                    return;
                 }
 
                 console.log(`[Loader] Updating ${remoteWidget.id}`);
@@ -373,7 +428,7 @@
                     id: remoteWidget.id,
                     version: remoteWidget.version,
                     code: html,
-                    containerId: remoteWidget.targetId || remoteWidget.containerId, 
+                    containerId: remoteWidget.targetId || remoteWidget.containerId,
                     lastUpdated: Date.now()
                 };
 
@@ -398,7 +453,7 @@
                     container.classList.remove('loading');
                     const cleanCode = this.sanitizeCode(widgetData.code);
                     const range = document.createRange();
-                    range.selectNode(document.body); 
+                    range.selectNode(document.body);
                     const fragment = range.createContextualFragment(cleanCode);
 
                     container.innerHTML = '';
@@ -410,10 +465,10 @@
                         newScript.appendChild(document.createTextNode(oldScript.innerHTML));
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                } catch(e) {
+                } catch (e) {
                     window.ErrorHandler.logError(`Render ${widgetData.id}`, e);
                     const container = document.getElementById(widgetData.containerId);
-                    if(container) {
+                    if (container) {
                         container.innerHTML = `<div class="widget-error">Failed to load widget.<br>${e.message}</div>`;
                     }
                 }
@@ -423,6 +478,48 @@
         window.loader = new WidgetLoader();
         document.addEventListener('DOMContentLoaded', () => window.loader.init());
 
+
+        // --- Scroll Logic for Bottom Dock (Overscroll Trigger) ---
+        const dock = document.querySelector('.bottom-dock');
+        const pages = document.querySelectorAll('.page-view');
+        let isDockVisible = false;
+
+        // We use touch events to detect "overscroll" intent at the bottom
+        let lastTouchY = 0;
+
+        pages.forEach(page => {
+            page.addEventListener('touchstart', (e) => {
+                lastTouchY = e.touches[0].clientY;
+            }, { passive: true });
+
+            page.addEventListener('touchmove', (e) => {
+                const currentY = e.touches[0].clientY;
+                const deltaY = currentY - lastTouchY; // Positive = Down (scrolling up), Negative = Up (scrolling down)
+                lastTouchY = currentY;
+
+                // Check if we are at the bottom
+                // scrollTop + clientHeight is approx scrollHeight
+                const isAtBottom = page.scrollTop + page.clientHeight >= page.scrollHeight - 10;
+
+                // If at bottom AND user swipes UP (trying to scroll further down)
+                if (isAtBottom && deltaY < -5) {
+                    if (!isDockVisible) {
+                        dock.classList.add('visible');
+                        isDockVisible = true;
+                    }
+                }
+
+                // Optional: Hide dock if scrolling UP (away from bottom) significantly?
+                // Or just let it stay until they tap something else?
+                // For now, let's keep it simple. If they scroll up significantly, hide it.
+                if (deltaY > 10 && isDockVisible) {
+                    dock.classList.remove('visible');
+                    isDockVisible = false;
+                }
+            }, { passive: true });
+        });
+
     </script>
 </body>
+
 </html>

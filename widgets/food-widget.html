@@ -11,7 +11,9 @@
         overflow: hidden;
     }
 
-    .widget-swipe-area { touch-action: pan-y; }
+    .widget-swipe-area {
+        touch-action: pan-y;
+    }
 
     /* --- Header --- */
     .nw-header-row {
@@ -29,12 +31,22 @@
         cursor: pointer;
     }
 
-    .nw-dots { display: flex; gap: 5px; }
+    .nw-dots {
+        display: flex;
+        gap: 5px;
+    }
+
     .nw-dot {
-        width: 6px; height: 6px; border-radius: 50%; background: #ccc;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ccc;
         transition: background 0.3s;
     }
-    .nw-dot.active { background: var(--accent-color); }
+
+    .nw-dot.active {
+        background: var(--accent-color);
+    }
 
     /* --- Carousel --- */
     .nw-views-wrapper {
@@ -46,7 +58,10 @@
 
     .nw-view {
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease, transform 0.3s ease;
@@ -56,14 +71,18 @@
         background: var(--card-bg);
         z-index: 0;
     }
-    
+
     @media (prefers-color-scheme: dark) {
-        .nw-view { background: #1e1e1e; }
+        .nw-view {
+            background: #1e1e1e;
+        }
     }
 
     .nw-view.active {
-        opacity: 1; pointer-events: all;
-        transform: translateX(0); z-index: 10;
+        opacity: 1;
+        pointer-events: all;
+        transform: translateX(0);
+        z-index: 10;
     }
 
     /* --- View 1: Daily Progress --- */
@@ -75,17 +94,27 @@
         align-items: center;
         max-height: 180px;
     }
-    
+
     /* Center text inside donut chart */
     .nw-chart-center {
         position: absolute;
-        top: 50%; left: 50%;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
         pointer-events: none;
     }
-    .nw-cal-big { font-size: 20px; font-weight: bold; color: var(--text-color); }
-    .nw-cal-sub { font-size: 11px; color: #888; }
+
+    .nw-cal-big {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    .nw-cal-sub {
+        font-size: 11px;
+        color: #888;
+    }
 
     .nw-macros {
         display: flex;
@@ -94,72 +123,287 @@
         font-size: 12px;
         font-weight: 600;
     }
-    .nw-macro-item { text-align: center; }
-    .nw-pro { color: #3b82f6; }
-    .nw-fat { color: #eab308; }
-    .nw-carb { color: #ef4444; }
+
+    .nw-macro-item {
+        text-align: center;
+    }
+
+    .nw-pro {
+        color: #3b82f6;
+    }
+
+    .nw-fat {
+        color: #eab308;
+    }
+
+    .nw-carb {
+        color: #ef4444;
+    }
 
     .nw-add-btn {
-        width: 100%; padding: 10px; margin-top: auto;
-        background: rgba(0,0,0,0.05); border: none; border-radius: 8px;
-        color: var(--text-color); font-weight: 600; cursor: pointer;
+        width: 100%;
+        padding: 10px;
+        margin-top: auto;
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 8px;
+        color: var(--text-color);
+        font-weight: 600;
+        cursor: pointer;
     }
 
     /* --- View 2: History --- */
-    .nw-controls { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .nw-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
     .nw-select {
-        padding: 5px; font-size: 12px; border-radius: 6px;
-        border: 1px solid #ccc; background: rgba(0,0,0,0.05);
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: rgba(0, 0, 0, 0.05);
         color: var(--text-color);
     }
-    .nw-history-wrapper { flex-grow: 1; position: relative; width: 100%; min-height: 150px; }
+
+    .nw-history-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 150px;
+    }
+
+    /* --- Toggle Switch --- */
+    .nw-toggle-container {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        padding: 2px;
+    }
+
+    .nw-toggle-btn {
+        padding: 4px 12px;
+        font-size: 11px;
+        border-radius: 15px;
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        cursor: pointer;
+        opacity: 0.6;
+    }
+
+    .nw-toggle-btn.active {
+        background: var(--card-bg);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- List View (CRUD) --- */
+    .nw-list-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .nw-date-group {
+        margin-bottom: 15px;
+    }
+
+    .nw-date-header {
+        font-size: 12px;
+        font-weight: 700;
+        color: #888;
+        margin-bottom: 5px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 2px;
+    }
+
+    .nw-log-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        font-size: 13px;
+    }
+
+    .nw-log-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex-grow: 1;
+    }
+
+    .nw-log-name {
+        font-weight: 600;
+    }
+
+    .nw-log-meta {
+        font-size: 11px;
+        color: #888;
+    }
+
+    .nw-log-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .nw-log-cal {
+        font-weight: 600;
+    }
+
+    .nw-log-del {
+        color: #dc3545;
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 0 5px;
+        opacity: 0.5;
+    }
+
+    .nw-log-del:hover {
+        opacity: 1;
+    }
 
     /* --- Overlays --- */
-    .nw-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.6); z-index: 2000; 
-        display: none; justify-content: center; align-items: center; 
+    .nw-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    .nw-overlay-content { 
-        background: var(--card-bg); padding: 20px; border-radius: 12px; 
-        max-width: 400px; width: 90%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        color: var(--text-color); max-height: 90vh; overflow-y: auto;
+
+    .nw-overlay-content {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        color: var(--text-color);
+        max-height: 90vh;
+        overflow-y: auto;
     }
-    .nw-form-group { margin-bottom: 12px; }
-    .nw-form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
-    .nw-input { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-    
-    .nw-row { display: flex; gap: 10px; }
-    .nw-btn-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-    .nw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .nw-btn-cancel { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-    
+
+    .nw-form-group {
+        margin-bottom: 12px;
+    }
+
+    .nw-form-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .nw-input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .nw-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    .nw-btn-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .nw-btn-save {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .nw-btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
     /* API Search Results */
     .nw-api-results {
-        max-height: 150px; overflow-y: auto; margin-top: 5px;
-        border: 1px solid #eee; border-radius: 6px; display: none;
+        max-height: 150px;
+        overflow-y: auto;
+        margin-top: 5px;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        display: none;
     }
-    .nw-api-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
-    .nw-api-item:hover { background: rgba(0,0,0,0.05); }
 
-    .nw-tab-bar { display: flex; border-bottom: 1px solid #eee; margin-bottom: 15px; }
-    .nw-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #888; font-weight: 600; }
-    .nw-tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
+    .nw-api-item {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        font-size: 14px;
+    }
 
+    .nw-api-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .nw-tab-bar {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+
+    .nw-tab {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        color: #888;
+        font-weight: 600;
+    }
+
+    .nw-tab.active {
+        color: var(--accent-color);
+        border-bottom: 2px solid var(--accent-color);
+    }
 </style>
 
+
 <div class="nw-widget widget-swipe-area" id="nw-widget-root">
-    
+
     <div class="nw-header-row">
         <div class="nw-title" id="nw-view-title">Nutrition Today</div>
         <div class="nw-dots">
             <div class="nw-dot active" data-idx="0"></div>
             <div class="nw-dot" data-idx="1"></div>
+            <div class="nw-dot" data-idx="2"></div>
+            <div class="nw-dot" data-idx="3"></div>
         </div>
     </div>
 
     <div class="nw-views-wrapper">
-        
+
         <div class="nw-view active" id="nw-view-0">
             <div class="nw-chart-container">
                 <canvas id="nw-chart-daily"></canvas>
@@ -168,7 +412,7 @@
                     <div class="nw-cal-sub">KCAL LEFT</div>
                 </div>
             </div>
-            
+
             <div class="nw-macros">
                 <div class="nw-macro-item nw-pro">PRO<br><span id="nw-val-pro">0g</span></div>
                 <div class="nw-macro-item nw-fat">FAT<br><span id="nw-val-fat">0g</span></div>
@@ -184,23 +428,108 @@
                     <option value="week">This Week</option>
                     <option value="month" selected>This Month</option>
                 </select>
+                <div class="nw-toggle-container">
+                    <button class="nw-toggle-btn active" id="nw-mode-chart">Chart</button>
+                    <button class="nw-toggle-btn" id="nw-mode-list">List</button>
+                </div>
             </div>
-            <div class="nw-history-wrapper">
+
+            <!-- Chart Container -->
+            <div class="nw-history-wrapper" id="nw-chart-container">
                 <canvas id="nw-chart-history"></canvas>
+            </div>
+
+            <!-- List Container -->
+            <div class="nw-list-container" id="nw-list-container" style="display: none;">
+                <!-- Populated by JS -->
             </div>
         </div>
 
+        <div class="nw-view" id="nw-view-2">
+            <div class="wt-current-weight" id="wt-current-display"
+                style="text-align: center; padding: 20px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.03); border-radius: 12px; cursor: pointer; transition: background 0.2s;">
+                <div class="wt-weight-value" id="wt-current-value"
+                    style="font-size: 36px; font-weight: bold; color: var(--accent-color); margin-bottom: 5px;">--</div>
+                <div class="wt-weight-label"
+                    style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Current Weight
+                    (kg)</div>
+                <div class="wt-date-info" id="wt-last-date" style="font-size: 11px; color: #888; margin-top: 5px;">Click
+                    to add entry</div>
+            </div>
+
+            <div class="nw-controls">
+                <div class="nw-toggle-container">
+                    <button class="nw-toggle-btn active" id="wt-mode-week">Week</button>
+                    <button class="nw-toggle-btn" id="wt-mode-month">Month</button>
+                </div>
+            </div>
+
+            <div class="nw-history-wrapper" style="flex-grow: 1; max-height: 200px;">
+
+                <canvas id="wt-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="nw-view" id="nw-view-3" style="zoom:0.8;">
+        <div class="nw-controls" style="margin-bottom: 15px;">
+            <select id="ht-metric-select" class="nw-select">
+                <option value="steps_total">Steps</option>
+                <option value="heart_rate_avg">Heart Rate (Avg)</option>
+                <option value="sleep_duration">Sleep (Hours)</option>
+            </select>
+        </div>
+
+        <div class="nw-controls" style="margin-bottom: 15px;">
+            <div class="nw-toggle-container">
+                <button class="nw-toggle-btn active" id="ht-range-week">Week</button>
+                <button class="nw-toggle-btn" id="ht-range-month">Month</button>
+                <button class="nw-toggle-btn" id="ht-range-all">All</button>
+            </div>
+        </div>
+
+        <div class="nw-history-wrapper" style="flex-grow: 1;">
+            <canvas id="ht-chart"></canvas>
+        </div>
+    </div>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="wt-overlay" class="nw-overlay">
+    <div class="nw-overlay-content">
+        <h3 style="margin-top:0">Log Weight</h3>
+        <form id="wt-form">
+            <div class="nw-form-group">
+                <label>Weight (kg)</label>
+                <input type="number" id="wt-input-weight" class="nw-input" step="0.1" required>
+            </div>
+            <div class="nw-form-group">
+                <label>Date</label>
+                <input type="date" id="wt-input-date" class="nw-input" required>
+            </div>
+            <div class="nw-form-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="wt-input-notes" class="nw-input" placeholder="Optional notes">
+            </div>
+            <div class="nw-btn-row">
+                <button type="button" id="wt-btn-cancel" class="nw-btn-cancel">Cancel</button>
+                <button type="submit" class="nw-btn-save">Save</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <div id="nw-log-overlay" class="nw-overlay">
     <div class="nw-overlay-content">
         <div class="nw-header-row">
-            <h3 style="margin:0">Log Food</h3>
+            <h3 style="margin:0" id="nw-log-title">Log Food</h3>
             <button class="nw-btn-cancel" style="padding:5px 10px;" id="nw-log-close">✕</button>
         </div>
 
-        <div class="nw-tab-bar">
+        <div class="nw-tab-bar" id="nw-tab-bar">
             <div class="nw-tab active" id="nw-tab-search">Search</div>
             <div class="nw-tab" id="nw-tab-manual">Manual</div>
         </div>
@@ -214,6 +543,9 @@
         </div>
 
         <form id="nw-log-form" style="margin-top:15px;">
+            <input type="hidden" id="nw-edit-id">
+            <input type="hidden" id="nw-edit-date">
+
             <div class="nw-form-group">
                 <label>Name</label>
                 <input type="text" id="nw-log-name" class="nw-input" required>
@@ -229,17 +561,23 @@
                 </div>
             </div>
             <div class="nw-row">
-                <div class="nw-form-group" style="flex:1"><label>Pro</label><input type="number" id="nw-log-p" class="nw-input" step="0.1"></div>
-                <div class="nw-form-group" style="flex:1"><label>Fat</label><input type="number" id="nw-log-f" class="nw-input" step="0.1"></div>
-                <div class="nw-form-group" style="flex:1"><label>Carb</label><input type="number" id="nw-log-c" class="nw-input" step="0.1"></div>
+                <div class="nw-form-group" style="flex:1"><label>Pro</label><input type="number" id="nw-log-p"
+                        class="nw-input" step="0.1"></div>
+                <div class="nw-form-group" style="flex:1"><label>Fat</label><input type="number" id="nw-log-f"
+                        class="nw-input" step="0.1"></div>
+                <div class="nw-form-group" style="flex:1"><label>Carb</label><input type="number" id="nw-log-c"
+                        class="nw-input" step="0.1"></div>
             </div>
             <div class="nw-form-group">
                 <label>Meal</label>
                 <select id="nw-log-meal" class="nw-input">
-                    <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
+                    <option>Breakfast</option>
+                    <option>Lunch</option>
+                    <option>Dinner</option>
+                    <option>Snack</option>
                 </select>
             </div>
-            <button type="submit" class="nw-btn-save" style="width:100%">Add Log</button>
+            <button type="submit" class="nw-btn-save" style="width:100%">Save Log</button>
         </form>
     </div>
 </div>
@@ -248,11 +586,14 @@
     <div class="nw-overlay-content">
         <h3>Set Daily Goals</h3>
         <form id="nw-goal-form">
-            <div class="nw-form-group"><label>Calories Goal</label><input type="number" id="nw-goal-cal" class="nw-input"></div>
+            <div class="nw-form-group"><label>Calories Goal</label><input type="number" id="nw-goal-cal"
+                    class="nw-input"></div>
             <div class="nw-row">
-                <div class="nw-form-group"><label>Protein</label><input type="number" id="nw-goal-p" class="nw-input"></div>
+                <div class="nw-form-group"><label>Protein</label><input type="number" id="nw-goal-p" class="nw-input">
+                </div>
                 <div class="nw-form-group"><label>Fat</label><input type="number" id="nw-goal-f" class="nw-input"></div>
-                <div class="nw-form-group"><label>Carbs</label><input type="number" id="nw-goal-c" class="nw-input"></div>
+                <div class="nw-form-group"><label>Carbs</label><input type="number" id="nw-goal-c" class="nw-input">
+                </div>
             </div>
             <div class="nw-btn-row">
                 <button type="button" id="nw-goal-cancel" class="nw-btn-cancel">Cancel</button>
@@ -263,300 +604,704 @@
 </div>
 
 <script>
-(() => {
-    // === DOM & STATE ===
-    const root = document.getElementById('nw-widget-root');
-    const titleEl = document.getElementById('nw-view-title');
-    const dots = root.querySelectorAll('.nw-dot');
-    const views = [document.getElementById('nw-view-0'), document.getElementById('nw-view-1')];
-    const titles = ["Nutrition Today", "Calorie History"];
-    
-    let currentView = 0;
-    let dailyChart = null;
-    let histChart = null;
-    
-    // Helper date
-    const getTodayStr = () => {
-        const d = new Date();
-        return new Date(d.getTime() - (d.getTimezoneOffset()*60000)).toISOString().split("T")[0];
-    };
-    const todayStr = getTodayStr();
+    (() => {
+        // === DOM & STATE ===
+        const root = document.getElementById('nw-widget-root');
+        const titleEl = document.getElementById('nw-view-title');
+        const dots = root.querySelectorAll('.nw-dot');
+        const views = [document.getElementById('nw-view-0'), document.getElementById('nw-view-1'), document.getElementById('nw-view-2'), document.getElementById('nw-view-3')];
+        const titles = ["Nutrition Today", "Calorie History", "Body Weight", "Health Trends"];
 
-    const isAlive = () => root && root.isConnected;
+        let currentView = 0;
+        let dailyChart = null;
+        let histChart = null;
+        let weightChart = null;
+        let view1Mode = 'chart'; // 'chart' or 'list'
+        let weightMode = 'week'; // 'week' or 'month'
+        let healthChart = null;  // ADD THIS
+        let healthMetric = 'steps_total';  // ADD THIS
+        let healthRange = 'week';  // ADD THIS
 
-    // --- Swipe Logic ---
-    let touchStartX = 0, touchStartY = 0;
-    root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
-    root.addEventListener('touchend', e => {
-        if (!isAlive()) return;
-        const diffX = touchStartX - e.changedTouches[0].screenX;
-        const diffY = touchStartY - e.changedTouches[0].screenY;
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
-    }, {passive: true});
-
-    function switchView(dir) {
-        if (!isAlive()) return;
-        views[currentView].classList.remove('active');
-        dots[currentView].classList.remove('active');
-        currentView += dir;
-        if (currentView >= views.length) currentView = 0;
-        if (currentView < 0) currentView = views.length - 1;
-        views[currentView].classList.add('active');
-        dots[currentView].classList.add('active');
-        titleEl.textContent = titles[currentView];
-        refreshAll();
-    }
-
-    // ==========================
-    // VIEW 0: DAILY LOGIC
-    // ==========================
-    async function loadDaily() {
-        if (!isAlive()) return;
-        
-        // Defaults
-        const defaults = { calorieGoal: 2000, proteinGoal: 150, fatGoal: 70, carbGoal: 200 };
-        const settings = await window.db.settings.toArray();
-        settings.forEach(s => defaults[s.key] = parseInt(s.value));
-
-        const logs = await window.db.nutritionLogs.where('date').equals(todayStr).toArray();
-        const totals = logs.reduce((acc, l) => {
-            acc.cal += l.calories; acc.pro += l.protein; acc.fat += l.fat; acc.carb += l.carbs;
-            return acc;
-        }, {cal:0, pro:0, fat:0, carb:0});
-
-        // Update Text
-        document.getElementById('nw-val-cal').textContent = Math.max(0, defaults.calorieGoal - totals.cal);
-        document.getElementById('nw-val-pro').textContent = `${totals.pro.toFixed(0)}/${defaults.proteinGoal}g`;
-        document.getElementById('nw-val-fat').textContent = `${totals.fat.toFixed(0)}/${defaults.fatGoal}g`;
-        document.getElementById('nw-val-carb').textContent = `${totals.carb.toFixed(0)}/${defaults.carbGoal}g`;
-
-        // Update Chart
-        initDailyChart(totals.cal, defaults.calorieGoal);
-    }
-
-    function initDailyChart(current, goal) {
-        const ctx = document.getElementById('nw-chart-daily');
-        if (!ctx) return;
-        if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
-
-        dailyChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Consumed', 'Left'],
-                datasets: [{
-                    data: [current, Math.max(0, goal - current)],
-                    backgroundColor: ['#007bff', '#e0e0e0'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: { legend: { display: false }, tooltip: { enabled: false } }
-            }
-        });
-    }
-
-    // ==========================
-    // VIEW 1: HISTORY LOGIC
-    // ==========================
-    const histSelect = document.getElementById('nw-hist-range');
-    histSelect.onchange = loadHistory;
-
-    async function loadHistory() {
-        if (!isAlive() || currentView !== 1) return;
-        
-        const range = histSelect.value;
-        const end = new Date();
-        const start = new Date();
-        if (range === 'week') start.setDate(end.getDate() - 6);
-        else start.setDate(end.getDate() - 29);
-
-        // Format for DB query
-        const startStr = new Date(start.getTime() - (start.getTimezoneOffset()*60000)).toISOString().split("T")[0];
-        const endStr = new Date(end.getTime() - (end.getTimezoneOffset()*60000)).toISOString().split("T")[0];
-
-        const logs = await window.db.nutritionLogs.where('date').between(startStr, endStr, true, true).toArray();
-        
-        // Aggregate
-        const daily = {};
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            const dStr = new Date(d.getTime() - (d.getTimezoneOffset()*60000)).toISOString().split("T")[0];
-            daily[dStr] = 0;
-        }
-        logs.forEach(l => { if (daily[l.date] !== undefined) daily[l.date] += l.calories; });
-
-        initHistChart(Object.keys(daily), Object.values(daily));
-    }
-
-    function initHistChart(labels, data) {
-        const ctx = document.getElementById('nw-chart-history');
-        if (!ctx) return;
-        if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
-
-        const niceLabels = labels.map(d => d.slice(5)); // MM-DD
-
-        histChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: niceLabels,
-                datasets: [{
-                    label: 'Calories',
-                    data: data,
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    // ==========================
-    // ACTIONS: ADD & GOALS
-    // ==========================
-    
-    // --- LOG OVERLAY ---
-    const logOverlay = document.getElementById('nw-log-overlay');
-    const logForm = document.getElementById('nw-log-form');
-    const searchDiv = document.getElementById('nw-view-search');
-    const searchRes = document.getElementById('nw-api-results');
-    
-    // Base API values for recalculation
-    let baseNutrients = null;
-
-    document.getElementById('nw-open-log-btn').onclick = () => {
-        logForm.reset(); baseNutrients = null;
-        searchDiv.style.display = 'block';
-        searchRes.style.display = 'none';
-        logOverlay.style.display = 'flex';
-        switchTab('search');
-    };
-    document.getElementById('nw-log-close').onclick = () => logOverlay.style.display = 'none';
-
-    // Tabs
-    function switchTab(t) {
-        document.querySelectorAll('.nw-tab').forEach(el => el.classList.remove('active'));
-        document.getElementById('nw-tab-'+t).classList.add('active');
-        if (t === 'search') {
-            searchDiv.style.display = 'block';
-            document.getElementById('nw-log-name').readOnly = true;
-        } else {
-            searchDiv.style.display = 'none';
-            document.getElementById('nw-log-name').readOnly = false;
-        }
-    }
-    document.getElementById('nw-tab-search').onclick = () => switchTab('search');
-    document.getElementById('nw-tab-manual').onclick = () => switchTab('manual');
-
-    // API Search
-    document.getElementById('nw-api-btn').onclick = async () => {
-        const q = document.getElementById('nw-api-input').value;
-        if (!q) return;
-        searchRes.style.display = 'block';
-        searchRes.innerHTML = '<div style="padding:10px;">Searching...</div>';
-        try {
-            const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1`);
-            const data = await res.json();
-            searchRes.innerHTML = '';
-            if(data.products.length === 0) searchRes.innerHTML = '<div style="padding:10px;">No results.</div>';
-            
-            data.products.slice(0,10).forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'nw-api-item';
-                item.innerHTML = `<b>${p.product_name}</b> <span style="color:#888">${Math.round(p.nutriments['energy-kcal_100g']||0)} cal/100g</span>`;
-                item.onclick = () => fillForm(p);
-                searchRes.appendChild(item);
-            });
-        } catch(e) { searchRes.innerHTML = '<div style="padding:10px; color:red">Error</div>'; }
-    };
-
-    function fillForm(p) {
-        baseNutrients = {
-            cal: p.nutriments['energy-kcal_100g'] || 0,
-            pro: p.nutriments.proteins_100g || 0,
-            fat: p.nutriments.fat_100g || 0,
-            carb: p.nutriments.carbohydrates_100g || 0
+        // Helper date
+        const getTodayStr = () => {
+            const d = new Date();
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
         };
-        document.getElementById('nw-log-name').value = p.product_name;
-        document.getElementById('nw-log-g').value = 100;
-        recalc(100);
-        searchRes.style.display = 'none';
-    }
+        const todayStr = getTodayStr();
 
-    function recalc(g) {
-        if (!baseNutrients) return;
-        const r = g / 100;
-        document.getElementById('nw-log-cal').value = Math.round(baseNutrients.cal * r);
-        document.getElementById('nw-log-p').value = (baseNutrients.pro * r).toFixed(1);
-        document.getElementById('nw-log-f').value = (baseNutrients.fat * r).toFixed(1);
-        document.getElementById('nw-log-c').value = (baseNutrients.carb * r).toFixed(1);
-    }
+        const isAlive = () => root && root.isConnected;
 
-    document.getElementById('nw-log-g').oninput = (e) => recalc(e.target.value);
+        // --- Swipe Logic ---
+        let touchStartX = 0, touchStartY = 0;
+        root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+        root.addEventListener('touchend', e => {
+            if (!isAlive()) return;
+            const diffX = touchStartX - e.changedTouches[0].screenX;
+            const diffY = touchStartY - e.changedTouches[0].screenY;
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
+        }, { passive: true });
 
-    logForm.onsubmit = async (e) => {
-        e.preventDefault();
-        await window.db.nutritionLogs.add({
-            date: todayStr,
-            foodName: document.getElementById('nw-log-name').value,
-            amountG: parseInt(document.getElementById('nw-log-g').value),
-            calories: parseInt(document.getElementById('nw-log-cal').value),
-            protein: parseFloat(document.getElementById('nw-log-p').value),
-            fat: parseFloat(document.getElementById('nw-log-f').value),
-            carbs: parseFloat(document.getElementById('nw-log-c').value),
-            mealType: document.getElementById('nw-log-meal').value
-        });
-        logOverlay.style.display = 'none';
-        refreshAll();
-    };
+        function switchView(dir) {
+            if (!isAlive()) return;
+            views[currentView].classList.remove('active');
+            dots[currentView].classList.remove('active');
+            currentView += dir;
+            if (currentView >= views.length) currentView = 0;
+            if (currentView < 0) currentView = views.length - 1;
+            views[currentView].classList.add('active');
+            dots[currentView].classList.add('active');
+            titleEl.textContent = titles[currentView];
+            refreshAll();
+        }
 
-    // --- GOALS OVERLAY ---
-    const goalOverlay = document.getElementById('nw-goal-overlay');
-    const goalForm = document.getElementById('nw-goal-form');
+        // ==========================
+        // VIEW 0: DAILY LOGIC
+        // ==========================
+        async function loadDaily() {
+            if (!isAlive()) return;
 
-    titleEl.onclick = async () => {
-        if (currentView !== 0) return;
-        // Load current settings
-        const def = { calorieGoal: 2000, proteinGoal: 150, fatGoal: 70, carbGoal: 200 };
-        const s = await window.db.settings.toArray();
-        s.forEach(x => def[x.key] = x.value);
-        
-        document.getElementById('nw-goal-cal').value = def.calorieGoal;
-        document.getElementById('nw-goal-p').value = def.proteinGoal;
-        document.getElementById('nw-goal-f').value = def.fatGoal;
-        document.getElementById('nw-goal-c').value = def.carbGoal;
-        
-        goalOverlay.style.display = 'flex';
-    };
-    document.getElementById('nw-goal-cancel').onclick = () => goalOverlay.style.display = 'none';
+            // Defaults
+            const defaults = { calorieGoal: 2000, proteinGoal: 150, fatGoal: 70, carbGoal: 200 };
+            const settings = await window.db.settings.toArray();
+            settings.forEach(s => defaults[s.key] = parseInt(s.value));
 
-    goalForm.onsubmit = async (e) => {
-        e.preventDefault();
-        await window.db.settings.bulkPut([
-            { key: 'calorieGoal', value: parseInt(document.getElementById('nw-goal-cal').value) },
-            { key: 'proteinGoal', value: parseInt(document.getElementById('nw-goal-p').value) },
-            { key: 'fatGoal', value: parseInt(document.getElementById('nw-goal-f').value) },
-            { key: 'carbGoal', value: parseInt(document.getElementById('nw-goal-c').value) }
-        ]);
-        goalOverlay.style.display = 'none';
-        refreshAll();
-    };
+            const logs = await window.db.nutritionLogs.where('date').equals(todayStr).toArray();
+            const totals = logs.reduce((acc, l) => {
+                acc.cal += l.calories; acc.pro += l.protein; acc.fat += l.fat; acc.carb += l.carbs;
+                return acc;
+            }, { cal: 0, pro: 0, fat: 0, carb: 0 });
 
-    function refreshAll() {
+            // Update Text
+            document.getElementById('nw-val-cal').textContent = Math.max(0, defaults.calorieGoal - totals.cal);
+            document.getElementById('nw-val-pro').textContent = `${totals.pro.toFixed(0)}/${defaults.proteinGoal}g`;
+            document.getElementById('nw-val-fat').textContent = `${totals.fat.toFixed(0)}/${defaults.fatGoal}g`;
+            document.getElementById('nw-val-carb').textContent = `${totals.carb.toFixed(0)}/${defaults.carbGoal}g`;
+
+            // Update Chart
+            initDailyChart(totals.cal, defaults.calorieGoal);
+        }
+
+        function initDailyChart(current, goal) {
+            const ctx = document.getElementById('nw-chart-daily');
+            if (!ctx) return;
+            if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+
+            dailyChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Consumed', 'Left'],
+                    datasets: [{
+                        data: [current, Math.max(0, goal - current)],
+                        backgroundColor: ['#007bff', '#e0e0e0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+        }
+
+        // ==========================
+        // VIEW 1: HISTORY LOGIC (Chart + List)
+        // ==========================
+        const histSelect = document.getElementById('nw-hist-range');
+        const chartContainer = document.getElementById('nw-chart-container');
+        const listContainer = document.getElementById('nw-list-container');
+        const btnChart = document.getElementById('nw-mode-chart');
+        const btnList = document.getElementById('nw-mode-list');
+
+        // Toggle Logic
+        btnChart.onclick = () => setView1Mode('chart');
+        btnList.onclick = () => setView1Mode('list');
+
+        function setView1Mode(mode) {
+            view1Mode = mode;
+            btnChart.classList.toggle('active', mode === 'chart');
+            btnList.classList.toggle('active', mode === 'list');
+
+            chartContainer.style.display = mode === 'chart' ? 'block' : 'none';
+            listContainer.style.display = mode === 'list' ? 'block' : 'none';
+
+            loadHistory();
+        }
+
+        histSelect.onchange = loadHistory;
+
+        async function loadHistory() {
+            if (!isAlive() || currentView !== 1) return;
+
+            const range = histSelect.value;
+            const end = new Date();
+            const start = new Date();
+            if (range === 'week') start.setDate(end.getDate() - 6);
+            else start.setDate(end.getDate() - 29);
+
+            // Format for DB query
+            const startStr = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+            const endStr = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+            const logs = await window.db.nutritionLogs
+                .where('date').between(startStr, endStr, true, true)
+                .reverse() // Newest first for list
+                .sortBy('date');
+
+            if (view1Mode === 'chart') {
+                renderChart(logs, start, end);
+            } else {
+                renderList(logs);
+            }
+        }
+
+        function renderChart(logs, start, end) {
+            const ctx = document.getElementById('nw-chart-history');
+            if (!ctx) return;
+            if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+
+            // Aggregate
+            const daily = {};
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                daily[dStr] = 0;
+            }
+            logs.forEach(l => { if (daily[l.date] !== undefined) daily[l.date] += l.calories; });
+
+            const niceLabels = Object.keys(daily).map(d => d.slice(5)); // MM-DD
+
+            histChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: niceLabels,
+                    datasets: [{
+                        label: 'Calories',
+                        data: Object.values(daily),
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderList(logs) {
+            listContainer.innerHTML = '';
+            if (logs.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No logs found.</div>';
+                return;
+            }
+
+            // Group by Date (logs are already sorted by date desc)
+            const groups = {};
+            logs.forEach(l => {
+                if (!groups[l.date]) groups[l.date] = [];
+                groups[l.date].push(l);
+            });
+
+            const dates = Object.keys(groups).sort().reverse();
+
+            dates.forEach(date => {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'nw-date-group';
+
+                const header = document.createElement('div');
+                header.className = 'nw-date-header';
+                header.textContent = new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                groupEl.appendChild(header);
+
+                groups[date].forEach(l => {
+                    const item = document.createElement('div');
+                    item.className = 'nw-log-item';
+                    item.innerHTML = `
+                    <div class="nw-log-left" onclick="editLog(${l.id})">
+                        <div class="nw-log-name">${l.foodName}</div>
+                        <div class="nw-log-meta">${l.mealType} • ${l.amountG}g • P:${l.protein} F:${l.fat} C:${l.carbs}</div>
+                    </div>
+                    <div class="nw-log-right">
+                        <div class="nw-log-cal">${l.calories}</div>
+                        <button class="nw-log-del" onclick="deleteLog(${l.id})">×</button>
+                    </div>
+                `;
+                    groupEl.appendChild(item);
+                });
+
+                listContainer.appendChild(groupEl);
+            });
+        }
+
+        // Expose helpers globally
+        window.deleteLog = async (id) => {
+            if (confirm('Delete this log?')) {
+                await window.db.nutritionLogs.delete(id);
+                refreshAll();
+            }
+        };
+
+        window.editLog = async (id) => {
+            const log = await window.db.nutritionLogs.get(id);
+            if (log) {
+                document.getElementById('nw-log-title').textContent = 'Edit Log';
+                document.getElementById('nw-edit-id').value = log.id;
+                document.getElementById('nw-edit-date').value = log.date;
+
+                document.getElementById('nw-log-name').value = log.foodName;
+                document.getElementById('nw-log-g').value = log.amountG;
+                document.getElementById('nw-log-cal').value = log.calories;
+                document.getElementById('nw-log-p').value = log.protein;
+                document.getElementById('nw-log-f').value = log.fat;
+                document.getElementById('nw-log-c').value = log.carbs;
+                document.getElementById('nw-log-meal').value = log.mealType;
+
+                // Hide Search Tab for Edit Mode
+                document.getElementById('nw-tab-bar').style.display = 'none';
+                switchTab('manual');
+
+                logOverlay.style.display = 'flex';
+            }
+        };
+
+        // ==========================
+        // ACTIONS: ADD & GOALS
+        // ==========================
+
+        // --- LOG OVERLAY ---
+        const logOverlay = document.getElementById('nw-log-overlay');
+        const logForm = document.getElementById('nw-log-form');
+        const searchDiv = document.getElementById('nw-view-search');
+        const searchRes = document.getElementById('nw-api-results');
+
+        // Base API values for recalculation
+        let baseNutrients = null;
+
+        document.getElementById('nw-open-log-btn').onclick = () => {
+            logForm.reset(); baseNutrients = null;
+            document.getElementById('nw-log-title').textContent = 'Log Food';
+            document.getElementById('nw-edit-id').value = '';
+            document.getElementById('nw-edit-date').value = todayStr;
+
+            document.getElementById('nw-tab-bar').style.display = 'flex';
+            searchDiv.style.display = 'block';
+            searchRes.style.display = 'none';
+            logOverlay.style.display = 'flex';
+            switchTab('search');
+        };
+        document.getElementById('nw-log-close').onclick = () => logOverlay.style.display = 'none';
+
+        // Tabs
+        function switchTab(t) {
+            document.querySelectorAll('.nw-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('nw-tab-' + t).classList.add('active');
+            if (t === 'search') {
+                searchDiv.style.display = 'block';
+                document.getElementById('nw-log-name').readOnly = true;
+            } else {
+                searchDiv.style.display = 'none';
+                document.getElementById('nw-log-name').readOnly = false;
+            }
+        }
+        document.getElementById('nw-tab-search').onclick = () => switchTab('search');
+        document.getElementById('nw-tab-manual').onclick = () => switchTab('manual');
+
+        // API Search
+        document.getElementById('nw-api-btn').onclick = async () => {
+            const q = document.getElementById('nw-api-input').value;
+            if (!q) return;
+            searchRes.style.display = 'block';
+            searchRes.innerHTML = '<div style="padding:10px;">Searching...</div>';
+            try {
+                const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1`);
+                const data = await res.json();
+                searchRes.innerHTML = '';
+                if (data.products.length === 0) searchRes.innerHTML = '<div style="padding:10px;">No results.</div>';
+
+                data.products.slice(0, 10).forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'nw-api-item';
+                    item.innerHTML = `<b>${p.product_name}</b> <span style="color:#888">${Math.round(p.nutriments['energy-kcal_100g'] || 0)} cal/100g</span>`;
+                    item.onclick = () => fillForm(p);
+                    searchRes.appendChild(item);
+                });
+            } catch (e) { searchRes.innerHTML = '<div style="padding:10px; color:red">Error</div>'; }
+        };
+
+        function fillForm(p) {
+            baseNutrients = {
+                cal: p.nutriments['energy-kcal_100g'] || 0,
+                pro: p.nutriments.proteins_100g || 0,
+                fat: p.nutriments.fat_100g || 0,
+                carb: p.nutriments.carbohydrates_100g || 0
+            };
+            document.getElementById('nw-log-name').value = p.product_name;
+            document.getElementById('nw-log-g').value = 100;
+            recalc(100);
+            searchRes.style.display = 'none';
+        }
+
+        function recalc(g) {
+            if (!baseNutrients) return;
+            const r = g / 100;
+            document.getElementById('nw-log-cal').value = Math.round(baseNutrients.cal * r);
+            document.getElementById('nw-log-p').value = (baseNutrients.pro * r).toFixed(1);
+            document.getElementById('nw-log-f').value = (baseNutrients.fat * r).toFixed(1);
+            document.getElementById('nw-log-c').value = (baseNutrients.carb * r).toFixed(1);
+        }
+
+        document.getElementById('nw-log-g').oninput = (e) => recalc(e.target.value);
+
+        logForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('nw-edit-id').value;
+            const date = document.getElementById('nw-edit-date').value || todayStr;
+
+            const data = {
+                date: date,
+                foodName: document.getElementById('nw-log-name').value,
+                amountG: parseInt(document.getElementById('nw-log-g').value),
+                calories: parseInt(document.getElementById('nw-log-cal').value),
+                protein: parseFloat(document.getElementById('nw-log-p').value),
+                fat: parseFloat(document.getElementById('nw-log-f').value),
+                carbs: parseFloat(document.getElementById('nw-log-c').value),
+                mealType: document.getElementById('nw-log-meal').value
+            };
+
+            if (id) {
+                await window.db.nutritionLogs.update(parseInt(id), data);
+            } else {
+                await window.db.nutritionLogs.add(data);
+            }
+
+            logOverlay.style.display = 'none';
+            refreshAll();
+        };
+
+        // --- GOALS OVERLAY ---
+        const goalOverlay = document.getElementById('nw-goal-overlay');
+        const goalForm = document.getElementById('nw-goal-form');
+
+        titleEl.onclick = async () => {
+            if (currentView !== 0) return;
+            // Load current settings
+            const def = { calorieGoal: 2000, proteinGoal: 150, fatGoal: 70, carbGoal: 200 };
+            const s = await window.db.settings.toArray();
+            s.forEach(x => def[x.key] = x.value);
+
+            document.getElementById('nw-goal-cal').value = def.calorieGoal;
+            document.getElementById('nw-goal-p').value = def.proteinGoal;
+            document.getElementById('nw-goal-f').value = def.fatGoal;
+            document.getElementById('nw-goal-c').value = def.carbGoal;
+
+            goalOverlay.style.display = 'flex';
+        };
+        document.getElementById('nw-goal-cancel').onclick = () => goalOverlay.style.display = 'none';
+
+        goalForm.onsubmit = async (e) => {
+            e.preventDefault();
+            await window.db.settings.bulkPut([
+                { key: 'calorieGoal', value: parseInt(document.getElementById('nw-goal-cal').value) },
+                { key: 'proteinGoal', value: parseInt(document.getElementById('nw-goal-p').value) },
+                { key: 'fatGoal', value: parseInt(document.getElementById('nw-goal-f').value) },
+                { key: 'carbGoal', value: parseInt(document.getElementById('nw-goal-c').value) }
+            ]);
+            goalOverlay.style.display = 'none';
+            refreshAll();
+        };
+
+        function refreshAll() {
+            if (currentView === 0) loadDaily();
+            else if (currentView === 1) loadHistory();
+            else if (currentView === 2) loadWeightData();
+            else if (currentView === 3) loadHealthData();
+        }
+
+        // === WEIGHT TRACKING (VIEW 2) ===
+        const wtCurrentValue = document.getElementById('wt-current-value');
+        const wtLastDate = document.getElementById('wt-last-date');
+        const wtCurrentDisplay = document.getElementById('wt-current-display');
+        const wtOverlay = document.getElementById('wt-overlay');
+        const wtForm = document.getElementById('wt-form');
+        const btnWeek = document.getElementById('wt-mode-week');
+        const btnMonth = document.getElementById('wt-mode-month');
+
+        async function loadWeightData() {
+            if (!isAlive()) return;
+
+            const latest = await window.db.weightLogs.orderBy('date').reverse().first();
+
+            if (latest) {
+                wtCurrentValue.textContent = latest.weight.toFixed(1);
+                const dateObj = new Date(latest.date);
+                wtLastDate.textContent = `Last updated: ${dateObj.toLocaleDateString()}`;
+            } else {
+                wtCurrentValue.textContent = '--';
+                wtLastDate.textContent = 'Click to add entry';
+            }
+
+            await loadWeightChart();
+        }
+
+        async function loadWeightChart() {
+            if (!isAlive()) return;
+
+            const end = new Date();
+            const start = new Date();
+
+            if (weightMode === 'week') {
+                start.setDate(end.getDate() - 6);
+            } else {
+                start.setDate(end.getDate() - 29);
+            }
+
+            const startStr = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+            const endStr = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+            const logs = await window.db.weightLogs
+                .where('date').between(startStr, endStr, true, true)
+                .sortBy('date');
+
+            renderWeightChart(logs, start, end);
+        }
+
+        function renderWeightChart(logs, start, end) {
+            const ctx = document.getElementById('wt-chart');
+            if (!ctx) return;
+
+            if (weightChart) weightChart.destroy();
+
+            const dataPoints = [];
+            const labels = [];
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                const log = logs.find(l => l.date === dStr);
+
+                labels.push(dStr.slice(5));
+                dataPoints.push(log ? log.weight : null);
+            }
+
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: dataPoints,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toFixed(1) + ' kg';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.parsed.y ? context.parsed.y.toFixed(1) + ' kg' : 'No data';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        wtCurrentDisplay.onclick = () => {
+            document.getElementById('wt-input-date').value = getTodayStr();
+            document.getElementById('wt-input-weight').value = '';
+            document.getElementById('wt-input-notes').value = '';
+            wtOverlay.style.display = 'flex';
+            setTimeout(() => document.getElementById('wt-input-weight').focus(), 100);
+        };
+
+        document.getElementById('wt-btn-cancel').onclick = () => {
+            wtOverlay.style.display = 'none';
+        };
+
+        wtForm.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const weight = parseFloat(document.getElementById('wt-input-weight').value);
+            const date = document.getElementById('wt-input-date').value;
+            const notes = document.getElementById('wt-input-notes').value;
+
+            if (!weight || !date) return;
+
+            const existing = await window.db.weightLogs.where('date').equals(date).first();
+
+            if (existing) {
+                if (confirm('An entry for this date already exists. Update it?')) {
+                    await window.db.weightLogs.update(existing.id, { weight, notes });
+                }
+            } else {
+                await window.db.weightLogs.add({ date, weight, notes });
+            }
+
+            wtOverlay.style.display = 'none';
+            loadWeightData();
+        };
+
+        btnWeek.onclick = () => {
+            weightMode = 'week';
+            btnWeek.classList.add('active');
+            btnMonth.classList.remove('active');
+            loadWeightChart();
+        };
+
+        btnMonth.onclick = () => {
+            weightMode = 'month';
+            btnMonth.classList.add('active');
+            btnWeek.classList.remove('active');
+            loadWeightChart();
+        };
+
+        wtOverlay.onclick = (e) => {
+            if (e.target === wtOverlay) {
+                wtOverlay.style.display = 'none';
+            }
+        };
+
+        // Init
         loadDaily();
-        if (currentView === 1) loadHistory();
-    }
 
-    // Init
-    loadDaily();
+        // ==========================
+        // VIEW 3: HEALTH TRENDS
+        // ==========================
+        const htMetricSelect = document.getElementById('ht-metric-select');
+        const htBtnWeek = document.getElementById('ht-range-week');
+        const htBtnMonth = document.getElementById('ht-range-month');
+        const htBtnAll = document.getElementById('ht-range-all');
 
-})();
+        htMetricSelect.onchange = () => { healthMetric = htMetricSelect.value; loadHealthData(); };
+        htBtnWeek.onclick = () => setHealthRange('week');
+        htBtnMonth.onclick = () => setHealthRange('month');
+        htBtnAll.onclick = () => setHealthRange('all');
+
+        function setHealthRange(range) {
+            healthRange = range;
+            htBtnWeek.classList.toggle('active', range === 'week');
+            htBtnMonth.classList.toggle('active', range === 'month');
+            htBtnAll.classList.toggle('active', range === 'all');
+            loadHealthData();
+        }
+
+        async function loadHealthData() {
+            if (!isAlive() || currentView !== 3) return;
+
+            const today = new Date();
+            let startDate;
+            if (healthRange === 'week') {
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 6);
+            } else if (healthRange === 'month') {
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 29);
+            } else {
+                startDate = new Date('1970-01-01');
+            }
+
+            const startStr = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+            const endStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+            const dataMap = new Map();
+            const startOfDay = new Date(startStr + 'T00:00:00');
+            const endOfDay = new Date(endStr + 'T23:59:59');
+
+            if (healthMetric === 'sleep_duration') {
+                const logs = await window.db.sleepLogs.where('date').between(startStr, endStr, true, true).toArray();
+                for (const entry of logs) {
+                    const date = entry.date;
+                    const hours = (parseFloat(entry.durationSeconds) || 0) / 3600;
+                    dataMap.set(date, (dataMap.get(date) || 0) + hours);
+                }
+            } else if (healthMetric === 'heart_rate_avg') {
+                const logs = await window.db.healthTimeSeries
+                    .where('[type+datetime]').between(['heartrate', startOfDay], ['heartrate', endOfDay], true, true)
+                    .toArray();
+                const dailySums = new Map();
+                for (const entry of logs) {
+                    const date = new Date(entry.datetime.getTime() - (entry.datetime.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                    const current = dailySums.get(date) || { sum: 0, count: 0 };
+                    dailySums.set(date, { sum: current.sum + entry.value, count: current.count + 1 });
+                }
+                for (const [date, data] of dailySums.entries()) {
+                    dataMap.set(date, data.sum / data.count);
+                }
+            } else if (healthMetric === 'steps_total') {
+                const logs = await window.db.healthTimeSeries
+                    .where('[type+datetime]').between(['steps', startOfDay], ['steps', endOfDay], true, true)
+                    .toArray();
+                for (const entry of logs) {
+                    const date = new Date(entry.datetime.getTime() - (entry.datetime.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                    dataMap.set(date, entry.value);
+                }
+            }
+
+            renderHealthChart(dataMap, startDate, today);
+        }
+
+        function renderHealthChart(dataMap, startDate, endDate) {
+            const ctx = document.getElementById('ht-chart');
+            if (!ctx) return;
+            if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+
+            const dateLabels = [];
+            const dataPoints = [];
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                dateLabels.push(dStr.slice(5)); // MM-DD
+                dataPoints.push(dataMap.get(dStr) ?? null);
+            }
+
+            const label = htMetricSelect.options[htMetricSelect.selectedIndex].text;
+
+            healthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dateLabels,
+                    datasets: [{
+                        label: label,
+                        data: dataPoints,
+                        borderColor: 'rgb(0, 123, 255)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.1,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: label } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    })();
 </script>

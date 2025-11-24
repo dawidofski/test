@@ -35,6 +35,7 @@
         display: flex;
         gap: 5px;
     }
+
     .tw-dot {
         width: 6px;
         height: 6px;
@@ -42,32 +43,43 @@
         background: #ccc;
         transition: background 0.3s;
     }
-    .tw-dot.active { background: var(--accent-color); }
+
+    .tw-dot.active {
+        background: var(--accent-color);
+    }
 
     /* --- Views Carousel --- */
     .tw-views-wrapper {
         flex-grow: 1;
         position: relative;
         width: 100%;
-        min-height: 200px; /* Ensure space for content */
+        min-height: 200px;
+        /* Ensure space for content */
     }
 
     .tw-view {
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease, transform 0.3s ease;
         transform: translateX(20px);
         display: flex;
         flex-direction: column;
-        background: var(--card-bg); /* Opaque background */
+        background: var(--card-bg);
+        /* Opaque background */
         z-index: 0;
-        overflow-y: auto; /* Scroll internal content */
+        overflow-y: auto;
+        /* Scroll internal content */
     }
-    
+
     @media (prefers-color-scheme: dark) {
-        .tw-view { background: #1e1e1e; }
+        .tw-view {
+            background: #1e1e1e;
+        }
     }
 
     .tw-view.active {
@@ -104,45 +116,122 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(0,0,0,0.02);
+        background: rgba(0, 0, 0, 0.02);
         padding: 15px;
         border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .tw-info { text-align: left; flex-grow: 1; }
-    .tw-name { font-size: 18px; font-weight: 600; color: var(--text-color); margin-bottom: 4px; }
-    .tw-details { font-size: 13px; color: #888; }
-    .tw-priority-high { color: #dc3545; font-weight: bold; }
-    .tw-priority-medium { color: #ffc107; }
-    .tw-priority-low { color: #6c757d; }
+    .tw-info {
+        text-align: left;
+        flex-grow: 1;
+    }
 
-    .tw-actions { display: flex; gap: 15px; margin-left: 15px; }
-    .tw-btn { cursor: pointer; font-size: 36px; line-height: 1; transition: transform 0.1s; user-select: none; }
-    .tw-btn:active { transform: scale(0.9); }
-    .tw-check { color: #ccc; }
-    .tw-check:hover { color: #28a745; }
-    .tw-skip { color: #ccc; font-weight: 300; }
-    .tw-skip:hover { color: #dc3545; }
+    .tw-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
 
-    .tw-nav { display: flex; justify-content: center; margin-top: 5px; }
-    .tw-nav-btn { font-size: 24px; color: #ccc; cursor: pointer; padding: 0 10px; user-select: none; }
-    .tw-nav-btn:hover { color: var(--accent-color); }
-    .tw-nav-btn.disabled { opacity: 0.3; cursor: default; }
+    .tw-details {
+        font-size: 13px;
+        color: #888;
+    }
+
+    .tw-priority-high {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .tw-priority-medium {
+        color: #ffc107;
+    }
+
+    .tw-priority-low {
+        color: #6c757d;
+    }
+
+    .tw-actions {
+        display: flex;
+        gap: 15px;
+        margin-left: 15px;
+    }
+
+    .tw-btn {
+        cursor: pointer;
+        font-size: 36px;
+        line-height: 1;
+        transition: transform 0.1s;
+        user-select: none;
+    }
+
+    .tw-btn:active {
+        transform: scale(0.9);
+    }
+
+    .tw-check {
+        color: #ccc;
+    }
+
+    .tw-check:hover {
+        color: #28a745;
+    }
+
+    .tw-skip {
+        color: #ccc;
+        font-weight: 300;
+    }
+
+    .tw-skip:hover {
+        color: #dc3545;
+    }
+
+    .tw-nav {
+        display: flex;
+        justify-content: center;
+        margin-top: 5px;
+    }
+
+    .tw-nav-btn {
+        font-size: 24px;
+        color: #ccc;
+        cursor: pointer;
+        padding: 0 10px;
+        user-select: none;
+    }
+
+    .tw-nav-btn:hover {
+        color: var(--accent-color);
+    }
+
+    .tw-nav-btn.disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
 
     .tw-add-btn {
-        width: 100%;
-        margin-top: 10px;
-        padding: 8px;
-        background: rgba(0,0,0,0.05);
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        color: white;
+        font-size: 24px;
         border: none;
-        border-radius: 8px;
-        color: var(--text-color);
-        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
     }
-    
-    .tw-msg { color: #888; }
+
+    .tw-msg {
+        color: #888;
+    }
 
     /* =========================
        VIEW 2: GOALS STYLES
@@ -152,7 +241,7 @@
         justify-content: space-between;
         margin-bottom: 10px;
     }
-    
+
     .gw-filter {
         padding: 5px;
         font-size: 12px;
@@ -170,12 +259,12 @@
         flex-grow: 1;
         overflow-y: auto;
     }
-    
+
     .goal-item {
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         padding: 8px 0;
     }
-    
+
     .goal-summary {
         display: flex;
         align-items: center;
@@ -184,11 +273,21 @@
         padding: 5px;
         border-radius: 6px;
     }
-    .goal-summary:hover { background: rgba(0,0,0,0.02); }
-    
+
+    .goal-summary:hover {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
     /* Custom Triangle for Details */
-    .goal-summary::-webkit-details-marker { display: none; }
-    .goal-summary::marker { display: none; content: ""; }
+    .goal-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .goal-summary::marker {
+        display: none;
+        content: "";
+    }
+
     .goal-summary::before {
         content: '▶';
         display: inline-block;
@@ -197,11 +296,25 @@
         margin-right: 8px;
         transition: transform 0.2s;
     }
-    details[open] > .goal-summary::before { transform: rotate(90deg); }
-    .goal-summary.no-subgoals::before { opacity: 0; }
 
-    .goal-text { font-weight: 600; font-size: 14px; flex-grow: 1; }
-    .goal-text.completed { text-decoration: line-through; color: #aaa; }
+    details[open]>.goal-summary::before {
+        transform: rotate(90deg);
+    }
+
+    .goal-summary.no-subgoals::before {
+        opacity: 0;
+    }
+
+    .goal-text {
+        font-weight: 600;
+        font-size: 14px;
+        flex-grow: 1;
+    }
+
+    .goal-text.completed {
+        text-decoration: line-through;
+        color: #aaa;
+    }
 
     /* Progress Bar */
     .gw-progress-container {
@@ -212,19 +325,61 @@
         margin-left: 20px;
         overflow: hidden;
     }
-    .gw-progress-bar { height: 100%; background: #28a745; transition: width 0.3s; }
+
+    .gw-progress-bar {
+        height: 100%;
+        background: #28a745;
+        transition: width 0.3s;
+    }
 
     /* Actions */
-    .gw-actions { display: flex; gap: 8px; opacity: 0.5; transition: opacity 0.2s; }
-    .goal-item:hover .gw-actions { opacity: 1; }
-    .gw-icon-btn { cursor: pointer; font-size: 14px; background: none; border: none; padding: 0; }
-    
+    .gw-actions {
+        display: flex;
+        gap: 8px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+    }
+
+    .goal-item:hover .gw-actions {
+        opacity: 1;
+    }
+
+    .gw-icon-btn {
+        cursor: pointer;
+        font-size: 14px;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
     /* Subgoals */
-    .subgoal-list { list-style: none; padding-left: 20px; margin-top: 5px; border-left: 2px solid #eee; }
-    .subgoal-item { display: flex; align-items: center; padding: 4px 0; font-size: 13px; }
-    .subgoal-checkbox { margin-right: 8px; }
-    .subgoal-text { flex-grow: 1; }
-    .financial-amount { font-weight: bold; color: #28a745; margin-left: 5px; }
+    .subgoal-list {
+        list-style: none;
+        padding-left: 20px;
+        margin-top: 5px;
+        border-left: 2px solid #eee;
+    }
+
+    .subgoal-item {
+        display: flex;
+        align-items: center;
+        padding: 4px 0;
+        font-size: 13px;
+    }
+
+    .subgoal-checkbox {
+        margin-right: 8px;
+    }
+
+    .subgoal-text {
+        flex-grow: 1;
+    }
+
+    .financial-amount {
+        font-weight: bold;
+        color: #28a745;
+        margin-left: 5px;
+    }
 
     /* Floating Add Button for Goals */
     .gw-fab {
@@ -238,7 +393,7 @@
         color: white;
         font-size: 24px;
         border: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -247,35 +402,100 @@
     }
 
     /* --- Overlays (Common Styles) --- */
-    .tw-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.6); z-index: 1000; 
-        display: none; justify-content: center; align-items: center; 
+    .tw-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    .tw-overlay-content { 
-        background: var(--card-bg); padding: 25px; border-radius: 10px; 
-        max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
-        max-height: 85vh; overflow-y: auto; color: var(--text-color);
+
+    .tw-overlay-content {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 10px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        max-height: 85vh;
+        overflow-y: auto;
+        color: var(--text-color);
     }
-    .tw-form-field { margin-bottom: 15px; }
-    .tw-form-field label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
-    .tw-form-field input, .tw-form-field select, .tw-form-field textarea {
-        width: 100%; padding: 10px; font-size: 16px; 
-        border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+
+    .tw-form-field {
+        margin-bottom: 15px;
     }
-    .tw-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    .tw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-    .tw-btn-cancel { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+
+    .tw-form-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .tw-form-field input,
+    .tw-form-field select,
+    .tw-form-field textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    .tw-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .tw-btn-save {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .tw-btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
 
     /* Day Selector (Task Specific) */
-    .tw-day-selector { display: flex; gap: 5px; }
-    .tw-day-selector button { flex: 1; padding: 8px; border: 1px solid #ccc; background: #f0f0f0; cursor: pointer; }
-    .tw-day-selector button.selected { background: var(--accent-color); color: white; }
+    .tw-day-selector {
+        display: flex;
+        gap: 5px;
+    }
 
+    .tw-day-selector button {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        cursor: pointer;
+    }
+
+    .tw-day-selector button.selected {
+        background: var(--accent-color);
+        color: white;
+    }
 </style>
 
 <div class="tw-widget widget-swipe-area" id="tw-widget-root">
-    
+
     <div class="tw-header-row">
         <div class="tw-title" id="tw-main-title">Tasks</div>
         <div class="tw-dots">
@@ -285,10 +505,10 @@
     </div>
 
     <div class="tw-views-wrapper">
-        
+
         <div class="tw-view active" id="tw-view-0">
             <div class="tw-counter" id="tw-counter">0/0</div>
-            
+
             <div class="tw-slide-container" id="tw-slide-area">
                 <div class="tw-msg">Loading...</div>
             </div>
@@ -298,7 +518,7 @@
                 <span class="tw-nav-btn disabled" id="tw-next">❯</span>
             </div>
 
-            <button class="tw-add-btn" id="tw-add-task-btn">+ Quick Add Task</button>
+            <button class="tw-add-btn" id="tw-add-task-btn">+</button>
         </div>
 
         <div class="tw-view" id="tw-view-1">
@@ -311,7 +531,7 @@
                     <option value="career">Career</option>
                 </select>
             </div>
-            
+
             <ul id="gw-goal-list" class="gw-list">
                 <li style="padding:10px; color:#888;">Loading goals...</li>
             </ul>
@@ -390,117 +610,117 @@
 </div>
 
 <script>
-(() => {
-    // === ROOT & NAVIGATION ===
-    const root = document.getElementById('tw-widget-root');
-    const titleEl = document.getElementById('tw-main-title');
-    const dots = root.querySelectorAll('.tw-dot');
-    const views = [
-        document.getElementById('tw-view-0'),
-        document.getElementById('tw-view-1')
-    ];
-    const titles = ["Tasks", "Goals"];
-    
-    let currentView = 0;
-    
-    // Check for zombie widget
-    const isAlive = () => root && root.isConnected;
+    (() => {
+        // === ROOT & NAVIGATION ===
+        const root = document.getElementById('tw-widget-root');
+        const titleEl = document.getElementById('tw-main-title');
+        const dots = root.querySelectorAll('.tw-dot');
+        const views = [
+            document.getElementById('tw-view-0'),
+            document.getElementById('tw-view-1')
+        ];
+        const titles = ["Tasks", "Goals"];
 
-    // --- Swipe Logic ---
-    let touchStartX = 0;
-    let touchStartY = 0;
+        let currentView = 0;
 
-    root.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-    }, {passive: true});
+        // Check for zombie widget
+        const isAlive = () => root && root.isConnected;
 
-    root.addEventListener('touchend', e => {
-        if (!isAlive()) return;
-        const diffX = touchStartX - e.changedTouches[0].screenX;
-        const diffY = touchStartY - e.changedTouches[0].screenY;
-        // Ignore small swipes or vertical scrolls
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
-            switchView(diffX > 0 ? 1 : -1);
-        }
-    }, {passive: true});
+        // --- Swipe Logic ---
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-    function switchView(dir) {
-        if (!isAlive()) return;
-        views[currentView].classList.remove('active');
-        dots[currentView].classList.remove('active');
-        
-        currentView += dir;
-        if (currentView >= views.length) currentView = 0;
-        if (currentView < 0) currentView = views.length - 1;
-        
-        views[currentView].classList.add('active');
-        dots[currentView].classList.add('active');
-        titleEl.textContent = titles[currentView];
-        
-        if (currentView === 1) loadGoals(); // Refresh goals on view
-    }
+        root.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
 
+        root.addEventListener('touchend', e => {
+            if (!isAlive()) return;
+            const diffX = touchStartX - e.changedTouches[0].screenX;
+            const diffY = touchStartY - e.changedTouches[0].screenY;
+            // Ignore small swipes or vertical scrolls
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                switchView(diffX > 0 ? 1 : -1);
+            }
+        }, { passive: true });
 
-    // ===============================================
-    // LOGIC 1: TASKS (From previous widget)
-    // ===============================================
-    const slideArea = document.getElementById('tw-slide-area');
-    const counterEl = document.getElementById('tw-counter');
-    const prevBtn = document.getElementById('tw-prev');
-    const nextBtn = document.getElementById('tw-next');
-    let taskQueue = [];
-    let currentTaskIdx = 0;
-    const todayStr = new Date().toISOString().split("T")[0];
+        function switchView(dir) {
+            if (!isAlive()) return;
+            views[currentView].classList.remove('active');
+            dots[currentView].classList.remove('active');
 
-    async function loadTasks() {
-        if (!isAlive()) return;
-        try {
-            const allTasks = await window.db.tasks.where('status').equals('Active').toArray();
-            const history = await window.db.taskHistory.toArray();
-            
-            // Filter: Completed Today
-            const completedToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
-            const completedIds = new Set(completedToday.map(h => h.taskId));
+            currentView += dir;
+            if (currentView >= views.length) currentView = 0;
+            if (currentView < 0) currentView = views.length - 1;
 
-            // Filter: Due or Overdue
-            const relevant = allTasks.filter(t => {
-                if (completedIds.has(t.id)) return false;
-                // Simple Due Logic (Extendable)
-                if (t.dueDate && t.dueDate <= todayStr) return true; 
-                // Show standard non-dated active tasks too? Let's stick to due for widget brevity
-                if (!t.dueDate) return true; 
-                return false;
-            });
-            
-            // Sort: Priority
-            const pMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
-            relevant.sort((a,b) => (pMap[b.priority] || 0) - (pMap[a.priority] || 0));
+            views[currentView].classList.add('active');
+            dots[currentView].classList.add('active');
+            titleEl.textContent = titles[currentView];
 
-            taskQueue = relevant;
-            counterEl.textContent = `${completedToday.length}/${relevant.length + completedToday.length}`;
-            
-            renderTaskSlide();
-
-        } catch (e) { console.error(e); }
-    }
-
-    function renderTaskSlide() {
-        if (!isAlive()) return;
-        if (taskQueue.length === 0) {
-            slideArea.innerHTML = `<div class="tw-msg" style="color:#28a745">All caught up! 🎉</div>`;
-            prevBtn.classList.add('disabled');
-            nextBtn.classList.add('disabled');
-            return;
+            if (currentView === 1) loadGoals(); // Refresh goals on view
         }
 
-        if (currentTaskIdx >= taskQueue.length) currentTaskIdx = 0;
-        if (currentTaskIdx < 0) currentTaskIdx = taskQueue.length - 1;
-        
-        const task = taskQueue[currentTaskIdx];
-        const isOverdue = task.dueDate && task.dueDate < todayStr;
 
-        slideArea.innerHTML = `
+        // ===============================================
+        // LOGIC 1: TASKS (From previous widget)
+        // ===============================================
+        const slideArea = document.getElementById('tw-slide-area');
+        const counterEl = document.getElementById('tw-counter');
+        const prevBtn = document.getElementById('tw-prev');
+        const nextBtn = document.getElementById('tw-next');
+        let taskQueue = [];
+        let currentTaskIdx = 0;
+        const todayStr = new Date().toISOString().split("T")[0];
+
+        async function loadTasks() {
+            if (!isAlive()) return;
+            try {
+                const allTasks = await window.db.tasks.where('status').equals('Active').toArray();
+                const history = await window.db.taskHistory.toArray();
+
+                // Filter: Completed Today
+                const completedToday = history.filter(h => h.date === todayStr && h.status === 'Completed');
+                const completedIds = new Set(completedToday.map(h => h.taskId));
+
+                // Filter: Due or Overdue
+                const relevant = allTasks.filter(t => {
+                    if (completedIds.has(t.id)) return false;
+                    // Simple Due Logic (Extendable)
+                    if (t.dueDate && t.dueDate <= todayStr) return true;
+                    // Show standard non-dated active tasks too? Let's stick to due for widget brevity
+                    if (!t.dueDate) return true;
+                    return false;
+                });
+
+                // Sort: Priority
+                const pMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                relevant.sort((a, b) => (pMap[b.priority] || 0) - (pMap[a.priority] || 0));
+
+                taskQueue = relevant;
+                counterEl.textContent = `${completedToday.length}/${relevant.length + completedToday.length}`;
+
+                renderTaskSlide();
+
+            } catch (e) { console.error(e); }
+        }
+
+        function renderTaskSlide() {
+            if (!isAlive()) return;
+            if (taskQueue.length === 0) {
+                slideArea.innerHTML = `<div class="tw-msg" style="color:#28a745">All caught up! 🎉</div>`;
+                prevBtn.classList.add('disabled');
+                nextBtn.classList.add('disabled');
+                return;
+            }
+
+            if (currentTaskIdx >= taskQueue.length) currentTaskIdx = 0;
+            if (currentTaskIdx < 0) currentTaskIdx = taskQueue.length - 1;
+
+            const task = taskQueue[currentTaskIdx];
+            const isOverdue = task.dueDate && task.dueDate < todayStr;
+
+            slideArea.innerHTML = `
             <div class="tw-slide">
                 <div class="tw-info">
                     <div class="tw-name">${task.name}</div>
@@ -516,117 +736,117 @@
             </div>
         `;
 
-        document.getElementById(`tw-act-c-${task.id}`).onclick = () => finishTask(task, 'Completed');
-        document.getElementById(`tw-act-s-${task.id}`).onclick = () => finishTask(task, 'Skipped');
-        
-        prevBtn.classList.toggle('disabled', taskQueue.length <= 1);
-        nextBtn.classList.toggle('disabled', taskQueue.length <= 1);
-    }
+            document.getElementById(`tw-act-c-${task.id}`).onclick = () => finishTask(task, 'Completed');
+            document.getElementById(`tw-act-s-${task.id}`).onclick = () => finishTask(task, 'Skipped');
 
-    async function finishTask(task, status) {
-        await window.db.taskHistory.add({ taskId: task.id, date: todayStr, status: status });
-        // Auto-complete one-off tasks
-        if (!task.recurrenceType || task.recurrenceType === 'none') {
-            await window.db.tasks.update(task.id, { status: 'Completed' });
+            prevBtn.classList.toggle('disabled', taskQueue.length <= 1);
+            nextBtn.classList.toggle('disabled', taskQueue.length <= 1);
         }
-        loadTasks();
-    }
-    
-    prevBtn.onclick = () => { if(taskQueue.length > 1) { currentTaskIdx--; renderTaskSlide(); }};
-    nextBtn.onclick = () => { if(taskQueue.length > 1) { currentTaskIdx++; renderTaskSlide(); }};
 
-    // --- Task Overlay ---
-    const tOverlay = document.getElementById('tw-overlay');
-    const tForm = document.getElementById('tw-form');
-    document.getElementById('tw-add-task-btn').onclick = () => {
-        tForm.reset();
-        document.getElementById('tw-due-date').value = todayStr;
-        tOverlay.style.display = 'flex';
-    };
-    document.getElementById('tw-close-btn').onclick = () => tOverlay.style.display = 'none';
-    
-    tForm.onsubmit = async (e) => {
-        e.preventDefault();
-        await window.db.tasks.add({
-            name: document.getElementById('tw-name').value,
-            category: document.getElementById('tw-category').value,
-            priority: document.getElementById('tw-priority').value,
-            dueDate: document.getElementById('tw-due-date').value,
-            status: 'Active',
-            recurrenceType: 'none'
-        });
-        tOverlay.style.display = 'none';
-        loadTasks();
-    };
+        async function finishTask(task, status) {
+            await window.db.taskHistory.add({ taskId: task.id, date: todayStr, status: status });
+            // Auto-complete one-off tasks
+            if (!task.recurrenceType || task.recurrenceType === 'none') {
+                await window.db.tasks.update(task.id, { status: 'Completed' });
+            }
+            loadTasks();
+        }
 
+        prevBtn.onclick = () => { if (taskQueue.length > 1) { currentTaskIdx--; renderTaskSlide(); } };
+        nextBtn.onclick = () => { if (taskQueue.length > 1) { currentTaskIdx++; renderTaskSlide(); } };
 
-    // ===============================================
-    // LOGIC 2: GOALS (New Integration)
-    // ===============================================
-    const goalListEl = document.getElementById('gw-goal-list');
-    const catFilter = document.getElementById('gw-category-filter');
+        // --- Task Overlay ---
+        const tOverlay = document.getElementById('tw-overlay');
+        const tForm = document.getElementById('tw-form');
+        document.getElementById('tw-add-task-btn').onclick = () => {
+            tForm.reset();
+            document.getElementById('tw-due-date').value = todayStr;
+            tOverlay.style.display = 'flex';
+        };
+        document.getElementById('tw-close-btn').onclick = () => tOverlay.style.display = 'none';
 
-    async function loadGoals() {
-        if (!isAlive()) return;
-        try {
-            const allGoals = await window.db.goals.toArray();
-            const filter = catFilter.value;
-            
-            // Build Tree
-            const map = new Map();
-            allGoals.forEach(g => { g.subgoals = []; map.set(g.id, g); });
-            
-            const roots = [];
-            allGoals.forEach(g => {
-                if (g.parentId) {
-                    const p = map.get(g.parentId);
-                    if (p) p.subgoals.push(g);
-                } else {
-                    if (filter === 'all' || g.category === filter) roots.push(g);
-                }
+        tForm.onsubmit = async (e) => {
+            e.preventDefault();
+            await window.db.tasks.add({
+                name: document.getElementById('tw-name').value,
+                category: document.getElementById('tw-category').value,
+                priority: document.getElementById('tw-priority').value,
+                dueDate: document.getElementById('tw-due-date').value,
+                status: 'Active',
+                recurrenceType: 'none'
             });
-            
-            roots.sort((a,b) => a.name.localeCompare(b.name));
-            renderGoals(roots);
-            
-        } catch(e) { console.error(e); }
-    }
+            tOverlay.style.display = 'none';
+            loadTasks();
+        };
 
-    function renderGoals(roots) {
-        goalListEl.innerHTML = '';
-        if (roots.length === 0) {
-            goalListEl.innerHTML = `<li style="padding:10px; color:#aaa;">No goals found.</li>`;
-            return;
+
+        // ===============================================
+        // LOGIC 2: GOALS (New Integration)
+        // ===============================================
+        const goalListEl = document.getElementById('gw-goal-list');
+        const catFilter = document.getElementById('gw-category-filter');
+
+        async function loadGoals() {
+            if (!isAlive()) return;
+            try {
+                const allGoals = await window.db.goals.toArray();
+                const filter = catFilter.value;
+
+                // Build Tree
+                const map = new Map();
+                allGoals.forEach(g => { g.subgoals = []; map.set(g.id, g); });
+
+                const roots = [];
+                allGoals.forEach(g => {
+                    if (g.parentId) {
+                        const p = map.get(g.parentId);
+                        if (p) p.subgoals.push(g);
+                    } else {
+                        if (filter === 'all' || g.category === filter) roots.push(g);
+                    }
+                });
+
+                roots.sort((a, b) => a.name.localeCompare(b.name));
+                renderGoals(roots);
+
+            } catch (e) { console.error(e); }
         }
 
-        roots.forEach(g => {
-            const li = document.createElement('li');
-            li.className = 'goal-item';
-            
-            // Calculate Progress
-            const hasSubs = g.subgoals.length > 0;
-            let pct = 0;
-            let label = "";
-            const isFin = g.category === 'financial';
-            
-            if (hasSubs) {
-                if (isFin) {
-                    const total = g.targetAmount || 1;
-                    const saved = g.subgoals.reduce((sum, sg) => sum + (sg.targetAmount||0), 0);
-                    pct = Math.min((saved/total)*100, 100);
-                    label = `$${saved} / $${total}`;
-                } else {
-                    const done = g.subgoals.filter(s => s.isComplete).length;
-                    pct = (done / g.subgoals.length) * 100;
-                    label = `${done}/${g.subgoals.length}`;
-                }
+        function renderGoals(roots) {
+            goalListEl.innerHTML = '';
+            if (roots.length === 0) {
+                goalListEl.innerHTML = `<li style="padding:10px; color:#aaa;">No goals found.</li>`;
+                return;
             }
 
-            // HTML Structure
-            const progressHtml = hasSubs ? 
-                `<div class="gw-progress-container" title="${label}"><div class="gw-progress-bar" style="width:${pct}%"></div></div>` : '';
-            
-            li.innerHTML = `
+            roots.forEach(g => {
+                const li = document.createElement('li');
+                li.className = 'goal-item';
+
+                // Calculate Progress
+                const hasSubs = g.subgoals.length > 0;
+                let pct = 0;
+                let label = "";
+                const isFin = g.category === 'financial';
+
+                if (hasSubs) {
+                    if (isFin) {
+                        const total = g.targetAmount || 1;
+                        const saved = g.subgoals.reduce((sum, sg) => sum + (sg.targetAmount || 0), 0);
+                        pct = Math.min((saved / total) * 100, 100);
+                        label = `$${saved} / $${total}`;
+                    } else {
+                        const done = g.subgoals.filter(s => s.isComplete).length;
+                        pct = (done / g.subgoals.length) * 100;
+                        label = `${done}/${g.subgoals.length}`;
+                    }
+                }
+
+                // HTML Structure
+                const progressHtml = hasSubs ?
+                    `<div class="gw-progress-container" title="${label}"><div class="gw-progress-bar" style="width:${pct}%"></div></div>` : '';
+
+                li.innerHTML = `
                 <details ${hasSubs ? '' : 'disabled'}>
                     <summary class="goal-summary ${hasSubs ? '' : 'no-subgoals'}">
                         <span class="goal-text ${g.isComplete ? 'completed' : ''}">${g.name}</span>
@@ -641,16 +861,16 @@
                 ${progressHtml}
             `;
 
-            // Render Subgoals
-            const subUl = li.querySelector('.subgoal-list');
-            g.subgoals.forEach(sg => {
-                const subLi = document.createElement('li');
-                subLi.className = 'subgoal-item';
-                const isFinSub = sg.category === 'financial';
-                
-                subLi.innerHTML = `
-                    ${isFinSub ? '' : `<input type="checkbox" class="subgoal-checkbox" ${sg.isComplete?'checked':''}>`}
-                    <span class="subgoal-text ${sg.isComplete?'completed':''}">
+                // Render Subgoals
+                const subUl = li.querySelector('.subgoal-list');
+                g.subgoals.forEach(sg => {
+                    const subLi = document.createElement('li');
+                    subLi.className = 'subgoal-item';
+                    const isFinSub = sg.category === 'financial';
+
+                    subLi.innerHTML = `
+                    ${isFinSub ? '' : `<input type="checkbox" class="subgoal-checkbox" ${sg.isComplete ? 'checked' : ''}>`}
+                    <span class="subgoal-text ${sg.isComplete ? 'completed' : ''}">
                         ${sg.name}
                         ${isFinSub ? `<span class="financial-amount">+$${sg.targetAmount}</span>` : ''}
                     </span>
@@ -659,122 +879,122 @@
                          <button class="gw-icon-btn del">🗑️</button>
                     </div>
                 `;
-                
-                // Subgoal Events
-                if(!isFinSub) subLi.querySelector('input').onchange = (e) => toggleGoal(sg.id, e.target.checked);
-                subLi.querySelector('.edit').onclick = () => openGoalModal(sg.id);
-                subLi.querySelector('.del').onclick = () => deleteGoal(sg.id);
-                subUl.appendChild(subLi);
+
+                    // Subgoal Events
+                    if (!isFinSub) subLi.querySelector('input').onchange = (e) => toggleGoal(sg.id, e.target.checked);
+                    subLi.querySelector('.edit').onclick = () => openGoalModal(sg.id);
+                    subLi.querySelector('.del').onclick = () => deleteGoal(sg.id);
+                    subUl.appendChild(subLi);
+                });
+
+                // Parent Events
+                li.querySelector('.add-sub').onclick = (e) => { e.preventDefault(); addSubgoal(g); };
+                li.querySelector('.edit').onclick = (e) => { e.preventDefault(); openGoalModal(g.id); };
+                li.querySelector('.del').onclick = (e) => { e.preventDefault(); deleteGoal(g.id); };
+
+                goalListEl.appendChild(li);
             });
-
-            // Parent Events
-            li.querySelector('.add-sub').onclick = (e) => { e.preventDefault(); addSubgoal(g); };
-            li.querySelector('.edit').onclick = (e) => { e.preventDefault(); openGoalModal(g.id); };
-            li.querySelector('.del').onclick = (e) => { e.preventDefault(); deleteGoal(g.id); };
-
-            goalListEl.appendChild(li);
-        });
-    }
-
-    // --- Goal Actions ---
-    async function toggleGoal(id, status) {
-        await window.db.goals.update(id, { isComplete: status });
-        // Check Parent status logic could go here (omitted for brevity)
-        loadGoals();
-    }
-    
-    async function deleteGoal(id) {
-        if(!confirm("Delete this goal?")) return;
-        // Recursive delete not fully implemented in widget for safety/brevity, just deleting node
-        // Ideally should delete children too.
-        await window.db.goals.delete(id); 
-        loadGoals();
-    }
-
-    async function addSubgoal(parent) {
-        const isFin = parent.category === 'financial';
-        const name = prompt(isFin ? "Contribution Name:" : "Subgoal Name:");
-        if (!name) return;
-        
-        let amount = null;
-        if (isFin) {
-            amount = parseFloat(prompt("Amount ($):"));
-            if(isNaN(amount)) return;
         }
 
-        await window.db.goals.add({
-            name: name,
-            parentId: parent.id,
-            isComplete: false,
-            category: parent.category,
-            targetAmount: amount
-        });
-        loadGoals();
-    }
-
-    // --- Goal Overlay ---
-    const gOverlay = document.getElementById('gw-overlay');
-    const gForm = document.getElementById('gw-form');
-    
-    function openGoalModal(id = null) {
-        gForm.reset();
-        document.getElementById('gw-id').value = id || "";
-        const finGroup = document.getElementById('gw-financial-group');
-        
-        if (id) {
-             window.db.goals.get(id).then(g => {
-                 document.getElementById('gw-name').value = g.name;
-                 document.getElementById('gw-category').value = g.category || 'general';
-                 document.getElementById('gw-due').value = g.dueDate || '';
-                 if(g.category === 'financial') {
-                     finGroup.style.display = 'block';
-                     document.getElementById('gw-target').value = g.targetAmount;
-                 } else {
-                     finGroup.style.display = 'none';
-                 }
-                 document.getElementById('gw-overlay-title').textContent = "Edit Goal";
-                 gOverlay.style.display = 'flex';
-             });
-        } else {
-             finGroup.style.display = 'none'; // Default hidden
-             document.getElementById('gw-overlay-title').textContent = "New Goal";
-             gOverlay.style.display = 'flex';
+        // --- Goal Actions ---
+        async function toggleGoal(id, status) {
+            await window.db.goals.update(id, { isComplete: status });
+            // Check Parent status logic could go here (omitted for brevity)
+            loadGoals();
         }
-    }
-    
-    // Toggle financial input
-    document.getElementById('gw-category').onchange = (e) => {
-        const isFin = e.target.value === 'financial';
-        const label = document.getElementById('gw-financial-label');
-        document.getElementById('gw-financial-group').style.display = isFin ? 'block' : 'none';
-        label.textContent = "Target Amount ($)";
-    };
 
-    document.getElementById('gw-add-btn').onclick = () => openGoalModal(null);
-    document.getElementById('gw-close-btn').onclick = () => gOverlay.style.display = 'none';
-    catFilter.onchange = loadGoals;
+        async function deleteGoal(id) {
+            if (!confirm("Delete this goal?")) return;
+            // Recursive delete not fully implemented in widget for safety/brevity, just deleting node
+            // Ideally should delete children too.
+            await window.db.goals.delete(id);
+            loadGoals();
+        }
 
-    gForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('gw-id').value;
-        const cat = document.getElementById('gw-category').value;
-        const data = {
-            name: document.getElementById('gw-name').value,
-            category: cat,
-            dueDate: document.getElementById('gw-due').value,
-            targetAmount: cat === 'financial' ? parseFloat(document.getElementById('gw-target').value) : null
+        async function addSubgoal(parent) {
+            const isFin = parent.category === 'financial';
+            const name = prompt(isFin ? "Contribution Name:" : "Subgoal Name:");
+            if (!name) return;
+
+            let amount = null;
+            if (isFin) {
+                amount = parseFloat(prompt("Amount ($):"));
+                if (isNaN(amount)) return;
+            }
+
+            await window.db.goals.add({
+                name: name,
+                parentId: parent.id,
+                isComplete: false,
+                category: parent.category,
+                targetAmount: amount
+            });
+            loadGoals();
+        }
+
+        // --- Goal Overlay ---
+        const gOverlay = document.getElementById('gw-overlay');
+        const gForm = document.getElementById('gw-form');
+
+        function openGoalModal(id = null) {
+            gForm.reset();
+            document.getElementById('gw-id').value = id || "";
+            const finGroup = document.getElementById('gw-financial-group');
+
+            if (id) {
+                window.db.goals.get(id).then(g => {
+                    document.getElementById('gw-name').value = g.name;
+                    document.getElementById('gw-category').value = g.category || 'general';
+                    document.getElementById('gw-due').value = g.dueDate || '';
+                    if (g.category === 'financial') {
+                        finGroup.style.display = 'block';
+                        document.getElementById('gw-target').value = g.targetAmount;
+                    } else {
+                        finGroup.style.display = 'none';
+                    }
+                    document.getElementById('gw-overlay-title').textContent = "Edit Goal";
+                    gOverlay.style.display = 'flex';
+                });
+            } else {
+                finGroup.style.display = 'none'; // Default hidden
+                document.getElementById('gw-overlay-title').textContent = "New Goal";
+                gOverlay.style.display = 'flex';
+            }
+        }
+
+        // Toggle financial input
+        document.getElementById('gw-category').onchange = (e) => {
+            const isFin = e.target.value === 'financial';
+            const label = document.getElementById('gw-financial-label');
+            document.getElementById('gw-financial-group').style.display = isFin ? 'block' : 'none';
+            label.textContent = "Target Amount ($)";
         };
-        
-        if (id) await window.db.goals.update(parseInt(id), data);
-        else await window.db.goals.add({ ...data, parentId: null, isComplete: false });
-        
-        gOverlay.style.display = 'none';
+
+        document.getElementById('gw-add-btn').onclick = () => openGoalModal(null);
+        document.getElementById('gw-close-btn').onclick = () => gOverlay.style.display = 'none';
+        catFilter.onchange = loadGoals;
+
+        gForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('gw-id').value;
+            const cat = document.getElementById('gw-category').value;
+            const data = {
+                name: document.getElementById('gw-name').value,
+                category: cat,
+                dueDate: document.getElementById('gw-due').value,
+                targetAmount: cat === 'financial' ? parseFloat(document.getElementById('gw-target').value) : null
+            };
+
+            if (id) await window.db.goals.update(parseInt(id), data);
+            else await window.db.goals.add({ ...data, parentId: null, isComplete: false });
+
+            gOverlay.style.display = 'none';
+            loadGoals();
+        };
+
+        // Init
+        loadTasks();
         loadGoals();
-    };
 
-    // Init
-    loadTasks();
-    loadGoals();
-
-})();
+    })();
 </script>

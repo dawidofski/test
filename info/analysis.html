@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Analytics Center</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="database.js"></script> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; padding-top: 80px; }
+
+        /* --- Navigation --- */
+        .nav-tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: fit-content; margin-left: auto; margin-right: auto; }
+        .nav-tab { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-sub); transition: 0.2s; }
+        .nav-tab:hover { background: #f1f5f9; color: var(--primary); }
+        .nav-tab.active { background: var(--primary); color: white; }
+
+        /* --- Views --- */
+        .view-section { display: none; animation: fadeIn 0.3s ease-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Header --- */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card-bg); padding: 15px 25px; border-radius: 12px; border: 1px solid var(--border); }
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 700; }
+        select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.95rem; cursor: pointer; background: #f8fafc; }
+
+        /* --- Cards & Grid --- */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .card h2 { margin: 0; font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        
+        /* --- Score Hero --- */
+        .score-hero { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+        .score-val { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .score-sub { opacity: 0.9; font-weight: 500; }
+        .score-trend { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; margin-top: 10px; display: inline-block; }
+
+        /* --- Stats --- */
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+        .stat-row:last-child { border-bottom: none; }
+        .trend-badge { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 600; }
+        .t-up { background: #dcfce7; color: #166534; } .t-down { background: #fee2e2; color: #991b1b; } .t-flat { background: #f1f5f9; color: #64748b; }
+
+        /* --- Chart Controls --- */
+        .chart-controls { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .chart-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .chart-row select { flex: 1; }
+        .chart-container { height: 500px; position: relative; }
+        button.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        button.btn-primary:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchView('review')">📊 Daily Review</div>
+        <div class="nav-tab" onclick="switchView('plotter')">📈 Correlation Plotter</div>
+    </div>
+
+    <div id="view-review" class="view-section active">
+        <header>
+            <h1>End-of-Day Review</h1>
+            <select id="period-select">
+                <option value="day" selected>Today vs. 7-Day Avg</option>
+                <option value="week">This Week vs. Last Week</option>
+            </select>
+        </header>
+
+        <div id="loading-review" style="text-align:center; padding:40px; color:#aaa;">Analyzing data...</div>
+
+        <div id="review-content" style="display:none;">
+            
+            <div class="score-hero">
+                <div class="score-val" id="main-score">--</div>
+                <div class="score-sub">Day Score</div>
+                <div class="score-trend" id="score-comparison">Calculating...</div>
+            </div>
+
+            <div class="dashboard-grid">
+
+                <div class="card">
+                    <div class="card-header"><h2>🚀 Productivity</h2></div>
+                    <div id="productivity-stats">Loading...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h2>🧬 Biological Status</h2></div>
+                    <div id="health-stats">Loading...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h2>🧠 Mind & Learning</h2></div>
+                    <div id="mind-stats">Loading...</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h2>🛡️ Assets & Discipline</h2></div>
+                    <div id="discipline-stats">Loading...</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header"><h2>🔗 General Patterns (Last 30 Days)</h2></div>
+                    <p style="font-size:0.9rem; color:#666; margin-top:-10px;">Calculated based on your history.</p>
+                    <div id="correlation-list" style="padding:10px; color:#666;">Loading...</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="view-plotter" class="view-section">
+        <header>
+            <h1>Custom Data Plotter</h1>
+        </header>
+
+        <div class="card">
+            <div class="chart-controls">
+                <div class="chart-row">
+                    <select id="select-x"><option disabled selected>Select Metric 1 (X-Axis)</option></select>
+                    <select id="select-y"><option disabled selected>Select Metric 2 (Y-Axis)</option></select>
+                </div>
+                <div class="chart-row">
+                    <select id="chart-type">
+                        <option value="scatter">Scatter Plot (Correlation)</option>
+                        <option value="line">Line Chart (Trend)</option>
+                    </select>
+                    <select id="date-range-chart">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 3 Months</option>
+                        <option value="365">All Time</option>
+                    </select>
+                    <button class="btn-primary" id="plot-btn">Plot Data</button>
+                </div>
+            </div>
+            
+            <div id="r-value-display" style="text-align:center; font-weight:bold; margin-bottom:10px; color:var(--primary);"></div>
+            <div class="chart-container">
+                <canvas id="correlation-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATABASE CONNECTIONS ---
+        const spanishDb = new Dexie('spanishLearningDB');
+        spanishDb.version(4).stores({
+            words: '++id, &spanish, english, learned',
+            sentences: '++id, &spanish, english, learned',
+            verbs: '++id, infinitive, mood, tense, learned',
+            activityLog: '++id, timestamp, type, result'
+        });
+
+        // --- 2. VIEW SWITCHER ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`view-${viewName}`).classList.add('active');
+            const tabs = document.querySelectorAll('.nav-tab');
+            if(viewName === 'review') tabs[0].classList.add('active');
+            else tabs[1].classList.add('active');
+        }
+
+        // --- 3. HELPERS ---
+        const getYYYYMMDD = (d) => {
+            const offset = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - offset).toISOString().split('T')[0];
+        };
+
+        function getDates(period) {
+            const now = new Date();
+            const currentEnd = new Date(now); currentEnd.setHours(23,59,59,999);
+            const currentStart = new Date(now); currentStart.setHours(0,0,0,0);
+            const prevEnd = new Date(now); prevEnd.setHours(23,59,59,999);
+            const prevStart = new Date(now); prevStart.setHours(0,0,0,0);
+
+            if (period === 'day') {
+                prevStart.setDate(now.getDate() - 7); // Compare vs 7-Day avg
+                prevEnd.setDate(now.getDate() - 1);
+            } else {
+                currentStart.setDate(now.getDate() - 6); 
+                prevEnd.setDate(currentStart.getDate() - 1);
+                prevStart.setDate(prevEnd.getDate() - 6);
+            }
+            return { currentStart, currentEnd, prevStart, prevEnd };
+        }
+
+        // --- 4. DATA ENGINE (Universal) ---
+        async function fetchMetric(metric, start, end) {
+            const startTs = start.getTime();
+            const endTs = end.getTime();
+            const dateArr = getYYYYMMDD(start);
+            const dateArrEnd = getYYYYMMDD(end);
+
+            // --- A. Specific Habits (Pattern: habit_ID) ---
+            if (metric.startsWith('habit_')) {
+                const habitId = parseInt(metric.split('_')[1]);
+                if(!isNaN(habitId)) {
+                    return await window.db.habitHistory
+                        .where('[habitId+date]').between([habitId, dateArr], [habitId, dateArrEnd], true, true)
+                        .and(h => h.status === 'Completed').count();
+                }
+            }
+
+            // --- B. Specific Foods/Items (Pattern: food_count_Name) ---
+            // This catches ANYTHING logged: "Beer", "Cigarette", "Pizza"
+            if (metric.startsWith('food_count_')) {
+                const name = metric.replace('food_count_', ''); 
+                // Decoded URI component might be needed if names have spaces
+                const decodedName = decodeURIComponent(name);
+
+                const logs = await window.db.nutritionLogs.where('date').between(dateArr, dateArrEnd, true, true)
+                    .and(n => n.foodName === decodedName).toArray();
+                
+                // Sum the 'amountG' (which we treat as quantity for non-weight items)
+                return logs.reduce((a, b) => a + (parseInt(b.amountG) || 1), 0);
+            }
+
+            // --- C. Standard Metrics ---
+            switch(metric) {
+                case 'tasks_done': return await window.db.taskHistory.where('date').between(dateArr, dateArrEnd, true, true).and(t => t.status === 'Completed').count();
+                case 'habits_all': return await window.db.habitHistory.where('date').between(dateArr, dateArrEnd, true, true).and(h => h.status === 'Completed').count();
+                
+                case 'sleep_hours': {
+                    const logs = await window.db.sleepLogs.where('date').between(dateArr, dateArrEnd, true, true).toArray();
+                    const sum = logs.reduce((a, b) => a + (b.durationSeconds || 0), 0);
+                    return logs.length ? (sum / logs.length / 3600) : 0; 
+                }
+                case 'water_ml': {
+                    const logs = await window.db.waterLogs.where('date').between(dateArr, dateArrEnd, true, true).toArray();
+                    return logs.reduce((a, b) => a + (parseInt(b.amountMl) || 0), 0);
+                }
+                case 'calories_total': {
+                    const logs = await window.db.nutritionLogs.where('date').between(dateArr, dateArrEnd, true, true).toArray();
+                    return logs.reduce((a, b) => a + (parseInt(b.calories) || 0), 0);
+                }
+                case 'mood_avg': {
+                    const logs = await window.db.mood.where('datetime').between(startTs, endTs).toArray();
+                    if (logs.length === 0) return 0;
+                    return logs.reduce((a, b) => a + b.value, 0) / logs.length;
+                }
+                case 'spanish_total': {
+                    const logs = await spanishDb.activityLog.where('timestamp').between(startTs, endTs).toArray();
+                    return logs.filter(l => l.result === 'correct' || l.result === 'completed').length;
+                }
+                case 'spent': {
+                    const logs = await window.db.financeTransactions.where('date').between(dateArr, dateArrEnd, true, true).toArray();
+                    return logs.filter(t => t.type === 'expense').reduce((a, b) => a + parseFloat(b.amount), 0);
+                }
+                case 'relapses': return await window.db.sobrietyRelapses.where('datetime').between(startTs, endTs).count();
+            }
+            return 0;
+        }
+
+        // --- 5. PLOTTER POPULATION LOGIC ---
+        async function populatePlotterDropdowns() {
+            const xSelect = document.getElementById('select-x');
+            const ySelect = document.getElementById('select-y');
+
+            function addGroup(label) {
+                const g1 = document.createElement('optgroup'); g1.label = label;
+                const g2 = document.createElement('optgroup'); g2.label = label;
+                xSelect.appendChild(g1); ySelect.appendChild(g2);
+                return [g1, g2];
+            }
+            function addOpt(groups, value, text) {
+                groups.forEach(g => {
+                    const o = document.createElement('option');
+                    o.value = value; o.text = text;
+                    g.appendChild(o);
+                });
+            }
+
+            // Standard Metrics
+            const gGen = addGroup('General Metrics');
+            addOpt(gGen, 'mood_avg', 'Mood (Avg)');
+            addOpt(gGen, 'sleep_hours', 'Sleep (Hours)');
+            addOpt(gGen, 'tasks_done', 'Tasks Done');
+            addOpt(gGen, 'spent', 'Money Spent ($)');
+            addOpt(gGen, 'spanish_total', 'Spanish Activity');
+            addOpt(gGen, 'relapses', 'Relapses');
+            addOpt(gGen, 'calories_total', 'Total Calories');
+
+            // Dynamic Habits
+            const gHab = addGroup('Individual Habits');
+            const habits = await window.db.habits.toArray();
+            habits.forEach(h => addOpt(gHab, `habit_${h.id}`, `Habit: ${h.name}`));
+
+            // Dynamic Items (Foods / Addictions)
+            // This finds EVERY unique name in nutritionLogs (Beer, Pizza, Cigarette, etc)
+            const gItems = addGroup('Logged Items (Food/Addictions)');
+            const allItems = await window.db.nutritionLogs.orderBy('foodName').uniqueKeys();
+            
+            allItems.forEach(name => {
+                if(name) {
+                    // Add as a countable item
+                    addOpt(gItems, `food_count_${encodeURIComponent(name)}`, `${name} (Count/Amount)`);
+                }
+            });
+        }
+
+        // --- 6. REVIEW LOGIC ---
+        async function runReview() {
+            document.getElementById('review-content').style.display = 'none';
+            document.getElementById('loading-review').style.display = 'block';
+
+            const period = document.getElementById('period-select').value;
+            const { currentStart, currentEnd, prevStart, prevEnd } = getDates(period);
+
+            const metricsList = ['tasks_done', 'habits_all', 'sleep_hours', 'water_ml', 'mood_avg', 'spanish_total', 'spent', 'relapses'];
+
+            const stats = {};
+            await Promise.all(metricsList.map(async (key) => {
+                let currVal = await fetchMetric(key, currentStart, currentEnd);
+                let prevVal = await fetchMetric(key, prevStart, prevEnd);
+                if(period === 'day') prevVal = prevVal / 7; 
+                stats[key] = { curr: currVal, prev: prevVal };
+            }));
+
+            updateScore(stats);
+            renderStats(stats);
+            await runCorrelations();
+
+            document.getElementById('loading-review').style.display = 'none';
+            document.getElementById('review-content').style.display = 'block';
+        }
+
+        function updateScore(stats) {
+            let score = 50;
+            score += Math.min(stats.tasks_done.curr * 2, 15);
+            score += Math.min(stats.habits_all.curr * 3, 15);
+            if(stats.sleep_hours.curr >= 7) score += 10; else if(stats.sleep_hours.curr < 5) score -= 10;
+            if(stats.mood_avg.curr >= 4) score += 10; else if(stats.mood_avg.curr <= 2) score -= 10;
+            score -= (stats.relapses.curr * 25);
+            
+            score = Math.max(0, Math.min(100, Math.round(score)));
+            
+            document.getElementById('main-score').innerText = score;
+            const diff = Math.round(score - 60); 
+            document.getElementById('score-comparison').innerText = (diff>=0?'+':'') + diff + " vs Avg";
+        }
+
+        function renderStats(stats) {
+            function row(label, key, unit='', inverse=false) {
+                const c = stats[key].curr;
+                const p = stats[key].prev;
+                const diff = p > 0 ? Math.round(((c-p)/p)*100) : 0;
+                const isGood = inverse ? (c < p) : (c > p);
+                const cls = diff === 0 ? 't-flat' : (isGood ? 't-up' : 't-down');
+                const arrow = c > p ? '↑' : '↓';
+                return `<div class="stat-row"><span>${label}</span><div><strong>${Number.isInteger(c)?c:c.toFixed(1)}${unit}</strong><span class="trend-badge ${cls}">${arrow} ${Math.abs(diff)}%</span></div></div>`;
+            }
+            document.getElementById('productivity-stats').innerHTML = row('Tasks', 'tasks_done') + row('Habits', 'habits_all') + row('Spent', 'spent', '$', true);
+            document.getElementById('health-stats').innerHTML = row('Sleep', 'sleep_hours', 'h') + row('Water', 'water_ml', 'ml');
+            document.getElementById('mind-stats').innerHTML = row('Mood', 'mood_avg') + row('Spanish', 'spanish_total');
+            document.getElementById('discipline-stats').innerHTML = row('Relapses', 'relapses', '', true);
+        }
+
+        async function runCorrelations() {
+            const container = document.getElementById('correlation-list');
+            // Simple correlation summary logic (Placeholder for advanced)
+            container.innerHTML = '<div style="padding:10px;">Correlations update as you collect data over 30 days.</div>';
+        }
+
+        // --- 7. PLOTTER LOGIC ---
+        async function runPlotter() {
+            const xMetric = document.getElementById('select-x').value;
+            const yMetric = document.getElementById('select-y').value;
+            const days = parseInt(document.getElementById('date-range-chart').value);
+            
+            if(!xMetric || !yMetric) return alert("Select metrics!");
+            
+            const end = new Date();
+            const start = new Date(); start.setDate(start.getDate() - days);
+            const dates = [];
+            for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(getYYYYMMDD(d));
+
+            const data = [];
+            for(const d of dates) {
+                const dObj = new Date(d); dObj.setHours(0,0,0,0);
+                const dEnd = new Date(d); dEnd.setHours(23,59,59,999);
+                const vx = await fetchMetric(xMetric, dObj, dEnd);
+                const vy = await fetchMetric(yMetric, dObj, dEnd);
+                data.push({x: vx, y: vy});
+            }
+
+            // Pearson Calculation
+            let sumX=0, sumY=0, sumXY=0, sumX2=0, sumY2=0, n=data.length;
+            data.forEach(p => { sumX+=p.x; sumY+=p.y; sumXY+=p.x*p.y; sumX2+=p.x*p.x; sumY2+=p.y*p.y; });
+            const num = (n*sumXY) - (sumX*sumY);
+            const den = Math.sqrt(((n*sumX2)-sumX*sumX) * ((n*sumY2)-sumY*sumY));
+            const r = den===0 ? 0 : num/den;
+            
+            document.getElementById('r-value-display').innerText = `Correlation (r): ${r.toFixed(2)}`;
+
+            const ctx = document.getElementById('correlation-chart').getContext('2d');
+            if(window.myChart) window.myChart.destroy();
+            
+            const type = document.getElementById('chart-type').value;
+            
+            const dataset = {
+                label: `${xMetric} vs ${yMetric}`,
+                data: data,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.5)'
+            };
+            
+            let chartData = { datasets: [dataset] };
+            if(type === 'line') {
+                chartData = {
+                    labels: dates,
+                    datasets: [
+                        { label: xMetric, data: data.map(p => p.x), borderColor: '#2563eb', yAxisID: 'y' },
+                        { label: yMetric, data: data.map(p => p.y), borderColor: '#ef4444', yAxisID: 'y1' }
+                    ]
+                };
+            }
+
+            window.myChart = new Chart(ctx, {
+                type: type,
+                data: chartData,
+                options: {
+                    scales: type==='line' ? { y: {position:'left'}, y1: {position:'right'} } : { x: {title: {display:true, text: xMetric}}, y: {title: {display:true, text: yMetric}} }
+                }
+            });
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            Promise.all([window.db.open(), spanishDb.open()]).then(() => {
+                populatePlotterDropdowns();
+                runReview();
+                document.getElementById('period-select').addEventListener('change', runReview);
+                document.getElementById('plot-btn').addEventListener('click', runPlotter);
+            });
+        });
+    </script>
+</body>
+</html>

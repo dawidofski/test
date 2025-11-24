@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="database.js"></script> 
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
+        h1 { color: #333; }
+        .controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        select, button { padding: 10px 15px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+        button { cursor: pointer; background-color: #007bff; color: white; border-color: #007bff; }
+        button:hover { background-color: #0056b3; }
+        
+        .task-list { list-style: none; padding: 0; }
+        .task-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 10px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .task-info { flex-grow: 1; min-width: 200px; }
+        .task-info .task-name { font-size: 18px; font-weight: 600; }
+        .task-info .task-details { color: #555; font-size: 14px; }
+        .task-actions { display: flex; gap: 10px; padding-top: 10px; }
+        .task-actions button { padding: 8px 12px; font-size: 14px; }
+
+        .priority-high { color: #dc3545; font-weight: bold; }
+        .priority-medium { color: #ffc107; }
+        .priority-low { color: #6c757d; }
+
+        .complete-btn { background-color: #28a745; border-color: #28a745; }
+        .complete-btn:hover { background-color: #1e7e34; }
+        .uncomplete-btn { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+        .uncomplete-btn:hover { background-color: #e0a800; }
+        .edit-btn { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+        .edit-btn:hover { background-color: #e0a800; }
+        .delete-btn { background-color: #dc3545; border-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        
+        /* === Section Styles === */
+        details { margin-top: 30px; }
+        summary { font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        
+        /* Overdue List Styles */
+        .overdue-tasks-container { margin-top: 10px; } /* Added */
+        .overdue-tasks-container .task-item { border-left: 5px solid #dc3545; }
+        .overdue-tasks-container .task-name { color: #dc3545; }
+
+        /* Completed List Styles */
+        .completed-tasks-container .task-item { background-color: #f8f9fa; opacity: 0.7; }
+        .completed-tasks-container .task-name { text-decoration: line-through; }
+        
+        .danger-outline {
+            background-color: #fff;
+            color: #dc3545;
+            border-color: #dc3545;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .danger-outline:hover {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        /* --- Overlay Styles --- */
+        #task-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .overlay-content { background: white; padding: 25px; border-radius: 10px; max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .overlay-content h2 { margin-top: 0; }
+        .form-field { margin-bottom: 15px; }
+        .form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-field input[type="text"], .form-field input[type="date"], .form-field select, .form-field textarea {
+            width: calc(100% - 22px); padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px;
+        }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-field { flex: 1; }
+
+        /* Recurrence Styles */
+        .day-selector { display: flex; justify-content: space-between; gap: 5px; }
+        .day-selector button { width: 13%; padding: 10px 5px; margin: 0; border: 1px solid #ccc; background: #f0f0f0; cursor: pointer; font-size: 14px; }
+        .day-selector button.selected { background: #007bff; color: white; font-weight: bold; }
+        
+        .interval-selector { display: flex; gap: 10px; }
+        .interval-selector input { width: 60px; }
+        .interval-selector select { flex: 1; }
+
+        .form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .form-actions button.cancel { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <h1>Task Manager</h1>
+
+    <div class="controls">
+        <select id="category-filter">
+            <option value="">All Categories</option>
+        </select>
+        <button id="add-task-btn">Add New Task</button>
+    </div>
+
+    <details class="overdue-tasks-container" open>
+        <summary>Overdue Tasks</summary>
+        <ul id="overdue-tasks-container" class="task-list">
+            </ul>
+    </details>
+    
+    <h2>Active Tasks</h2>
+    <ul id="tasks-container" class="task-list">
+        </ul>
+    
+    <details class="completed-tasks-container">
+        <summary>Show Completed Tasks</summary>
+        <ul id="completed-tasks-container" class="task-list">
+            </ul>
+        <button id="delete-completed-btn" class="danger-outline">Delete All Completed Tasks</button>
+    </details>
+
+    <div id="task-overlay">
+        <div class="overlay-content">
+            <h2 id="overlay-title">Add New Task</h2>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-field">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="category">Category:</label>
+                        <input type="text" id="category">
+                    </div>
+                    <div class="form-field">
+                        <label for="priority">Priority:</label>
+                        <select id="priority">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="due-date">Due Date:</label>
+                    <input type="date" id="due-date">
+                </div>
+                <div class="form-field">
+                    <label for="recurrence-type">Recurrence:</label>
+                    <select id="recurrence-type">
+                        <option value="none" selected>None (One-off task)</option>
+                        <option value="weekly">Weekly (Specific days)</option>
+                        <option value="interval">Interval (e.g., every 10 days)</option>
+                    </select>
+                </div>
+                <div class="form-field" id="weekly-recurrence" style="display: none;">
+                    <label>Recur on Days:</label>
+                    <div class="day-selector" id="recurrence-days">
+                        <button type="button" data-day="0">S</button>
+                        <button type="button" data-day="1">M</button>
+                        <button type="button" data-day="2">T</button>
+                        <button type="button" data-day="3">W</button>
+                        <button type="button" data-day="4">T</button>
+                        <button type="button" data-day="5">F</button>
+                        <button type="button" data-day="6">S</button>
+                    </div>
+                </div>
+                <div class="form-field" id="interval-recurrence" style="display: none;">
+                    <label>Recur Every:</label>
+                    <div class="interval-selector">
+                        <input type="number" id="recurrence-interval" value="1" min="1">
+                        <select id="recurrence-unit">
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="notes">Notes:</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="close-overlay-btn" class="cancel">Cancel</button>
+                    <button type="submit">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // === GLOBALS ===
+        let allCategories = [];
+        
+        const tasksContainer = document.getElementById('tasks-container');
+        const overdueTasksContainer = document.getElementById('overdue-tasks-container');
+        const completedTasksContainer = document.getElementById('completed-tasks-container');
+        const categoryFilter = document.getElementById('category-filter');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const deleteCompletedBtn = document.getElementById('delete-completed-btn');
+        
+        const taskOverlay = document.getElementById('task-overlay');
+        const taskForm = document.getElementById('task-form');
+        const closeOverlayBtn = document.getElementById('close-overlay-btn');
+        const recurrenceType = document.getElementById('recurrence-type');
+        const weeklyRecurrence = document.getElementById('weekly-recurrence');
+        const intervalRecurrence = document.getElementById('interval-recurrence');
+
+        // === DATE & RECURRENCE HELPERS ===
+
+        function getDateString(d) {
+            const date = new Date(d);
+            return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+                .toISOString()
+                .split("T")[0];
+        }
+        const todayStr = getDateString(new Date());
+
+        /**
+         * Checks if a task is due today based on its rules
+         */
+        function isTaskDueToday(task, allTaskHistory) {
+            if (task.status === 'Completed') return false;
+
+            if (task.recurrenceType === 'none' || !task.recurrenceType) {
+                return task.dueDate === todayStr;
+            }
+
+            if (task.recurrenceType === 'weekly') {
+            const todayIndex = new Date().getDay();
+            const isScheduledDay = task.recurrenceDays && task.recurrenceDays.includes(todayIndex);
+
+            // This is the new logic:
+            // A weekly task is only due if:
+            // 1. Today is one of the scheduled days.
+            // 2. The task has a "due date" (start date) set.
+            // 3. Today is on or after that start date.
+            return isScheduledDay && task.dueDate && task.dueDate <= todayStr;
+        }
+
+            if (task.recurrenceType === 'interval') {
+                const history = allTaskHistory
+                    .filter(h => h.taskId === task.id)
+                    .sort((a, b) => b.date.localeCompare(a.date));
+                
+                let lastDateStr = history.length > 0 ? history[0].date : task.dueDate;
+                if (!lastDateStr) return false;
+                
+                // If last action was today, it's not due again
+                if (history.length > 0 && history[0].date === todayStr) return false;
+
+                if (task.dueDate === todayStr && history.length === 0) return true;
+                
+                const [year, month, day] = lastDateStr.split('-').map(Number);
+                let nextDueDate = new Date(year, month - 1, day);
+                
+                const interval = task.recurrenceInterval || 1;
+                
+                if (task.recurrenceUnit === 'days') nextDueDate.setDate(nextDueDate.getDate() + interval);
+                else if (task.recurrenceUnit === 'weeks') nextDueDate.setDate(nextDueDate.getDate() + (interval * 7));
+                else if (task.recurrenceUnit === 'months') nextDueDate.setMonth(nextDueDate.getMonth() + interval);
+                
+                return getDateString(nextDueDate) <= todayStr;
+            }
+            return false;
+        }
+
+        // === RENDERING & FILTERING ===
+
+        function populateCategoryFilter(categories) {
+            const currentVal = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categoryFilter.appendChild(option);
+            });
+            categoryFilter.value = currentVal;
+        }
+
+        /**
+         * Renders the main list of active tasks.
+         */
+        async function renderActiveTasks(tasksToRender) {
+            tasksContainer.innerHTML = '';
+            
+            const historyToday = await db.taskHistory.where('date').equals(todayStr).toArray();
+            const allTaskHistory = await db.taskHistory.toArray();
+
+            tasksToRender.forEach(task => {
+                const dueToday = isTaskDueToday(task, allTaskHistory);
+                const completedToday = historyToday.some(h => h.taskId === task.id && h.status === 'Completed');
+                
+                let statusText = `Due: ${task.dueDate || 'No date'}`;
+                
+                if (dueToday && !completedToday) {
+                    statusText = '🔥 <strong>Due Today</strong>';
+                } else if (completedToday) {
+                    statusText = '✅ <strong>Completed Today</strong>';
+                }
+
+                const item = document.createElement('li');
+                item.className = 'task-item';
+                
+                let completeButton = '';
+                // FIX: Correctly show Uncomplete for recurring tasks
+                if (dueToday) {
+                    if (completedToday) {
+                        completeButton = `<button class="uncomplete-btn" onclick="uncompleteTask(${task.id})">Uncomplete</button>`;
+                    } else {
+                        completeButton = `<button class="complete-btn" onclick="completeTask(${task.id})">Complete</button>`;
+                    }
+                } else {
+                     completeButton = `<button class="complete-btn" disabled title="Not due today">Complete</button>`;
+                }
+
+                item.innerHTML = `
+                    <div class="task-info">
+                        <span class="task-name">${task.name}</span>
+                        <div class="task-details">
+                            <span class="priority-${task.priority.toLowerCase()}">${task.priority} Priority</span>
+                            ${task.category ? `| ${task.category}` : ''}
+                            <br>
+                            <small>${statusText}</small>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        ${completeButton}
+                        <button class="edit-btn" onclick="openEditOverlay(${task.id})">Edit</button>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                `;
+                tasksContainer.appendChild(item);
+            });
+        }
+        
+        /**
+         * Renders the separate list of OVERDUE tasks.
+         */
+        function renderOverdueTasks(tasksToRender) {
+            overdueTasksContainer.innerHTML = '';
+            
+            tasksToRender.forEach(task => {
+                const item = document.createElement('li');
+                item.className = 'task-item';
+                
+                item.innerHTML = `
+                    <div class="task-info">
+                        <span class="task-name">${task.name}</span>
+                        <div class="task-details">
+                            <span class="priority-${task.priority.toLowerCase()}">${task.priority} Priority</span>
+                            ${task.category ? `| ${task.category}` : ''}
+                            <br>
+                            <small>Overdue: ${task.dueDate}</small>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="complete-btn" onclick="completeTask(${task.id})">Complete</button>
+                        <button class="edit-btn" onclick="openEditOverlay(${task.id})">Edit</button>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                `;
+                overdueTasksContainer.appendChild(item);
+            });
+        }
+        
+        /**
+         * Renders the separate list of COMPLETED tasks.
+         */
+        function renderCompletedTasks(tasksToRender) {
+            completedTasksContainer.innerHTML = '';
+            
+            tasksToRender.forEach(task => {
+                const item = document.createElement('li');
+                item.className = 'task-item';
+                
+                item.innerHTML = `
+                    <div class="task-info">
+                        <span class="task-name">${task.name}</span>
+                        <div class="task-details">
+                            <span class="priority-${task.priority.toLowerCase()}">${task.priority} Priority</span>
+                            ${task.category ? `| ${task.category}` : ''}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="uncomplete-btn" onclick="uncompleteTask(${task.id})">Uncomplete</button>
+                        <button class="edit-btn" onclick="openEditOverlay(${task.id})">Edit</button>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                `;
+                completedTasksContainer.appendChild(item);
+            });
+        }
+
+        /**
+         * Main function to load, filter, and sort tasks.
+         * THIS IS THE CORRECTED FUNCTION
+         */
+        async function loadTasks() {
+            try {
+                if (allCategories.length === 0) {
+                    const tasksForCategories = await db.tasks.toArray();
+                    allCategories = [...new Set(tasksForCategories.map(t => t.category).filter(c => c))];
+                    populateCategoryFilter(allCategories);
+                }
+                
+                const category = categoryFilter.value;
+                
+                // === FIX 1: Corrected Query Logic ===
+                // Get all tasks, then filter in JS. This is the pattern from habits.html
+                let allTasks = await db.tasks.toArray();
+
+                // 2. Apply category filter in JavaScript
+                if (category) {
+                    allTasks = allTasks.filter(task => task.category === category);
+                }
+                
+                // 3. Split tasks into Overdue, Active, and Completed
+                const overdueTasks = [];
+                const futureTasks = []; 
+                const completedTasks = [];
+                
+                for (const task of allTasks) {
+                    if (task.status === 'Completed') {
+                        completedTasks.push(task);
+                        continue;
+                    }
+                    
+                    // Overdue only applies to non-recurring tasks
+                    const isOverdue = (task.recurrenceType === 'none' || !task.recurrenceType) && task.dueDate && task.dueDate < todayStr;
+                    if (isOverdue) {
+                        overdueTasks.push(task);
+                    } else {
+                        futureTasks.push(task);
+                    }
+                }
+                // === END OF FIX 1 ===
+
+                // === FIX 2: Corrected Sorting Logic ===
+                const sortTasks = (a, b) => {
+                    // Use null for missing dates
+                    const dateA = a.dueDate ? new Date(a.dueDate).getTime() : null;
+                    const dateB = b.dueDate ? new Date(b.dueDate).getTime() : null;
+
+                    // This sort function always sorts ASC (closest date first)
+                    // and puts tasks with no date at the end.
+                    if (dateA && dateB) return dateA - dateB; // Sort by date
+                    if (!dateA && !dateB) return 0; // Keep order if no dates
+                    if (!dateA) return 1;  // a (no date) goes to end
+                    if (!dateB) return -1; // b (no date) goes to end
+                    return 0;
+                };
+                
+                overdueTasks.sort(sortTasks);
+                futureTasks.sort(sortTasks);
+                // Sort completed by date, descending (most recent first)
+                completedTasks.sort((a,b) => (new Date(b.dueDate) - new Date(a.dueDate))); 
+                // === END OF FIX 2 ===
+                
+                // 5. Render all three lists
+                renderOverdueTasks(overdueTasks);
+                renderActiveTasks(futureTasks);
+                renderCompletedTasks(completedTasks); // THIS WAS THE BUG. Corrected to `completedTasks`
+
+            } catch (e) {
+                console.error("Error loading tasks:", e);
+                tasksContainer.innerHTML = `<li>Error loading tasks: ${e.message}</li>`;
+            }
+        }
+
+        // === CRUD ACTIONS & EVENT LISTENERS ===
+
+        async function completeTask(taskId) {
+            try {
+                const task = await db.tasks.get(taskId);
+                
+                // Add to history
+                await db.taskHistory.add({
+                    taskId: taskId,
+                    date: todayStr,
+                    status: 'Completed'
+                });
+                
+                // Only mark one-off tasks as 'Completed'
+                if (task.recurrenceType === 'none' || !task.recurrenceType) {
+                    await db.tasks.update(taskId, { status: 'Completed' });
+                }
+                loadTasks();
+            } catch (e) {
+                console.error("Error completing task:", e);
+            }
+        }
+        
+        async function uncompleteTask(taskId) {
+            try {
+                // Find *any* history record for today
+                const record = await db.taskHistory.where({
+                    taskId: taskId,
+                    date: todayStr
+                }).first();
+
+                if (record) {
+                    await db.taskHistory.delete(record.id);
+                }
+                
+                // Always set status back to 'Active'
+                await db.tasks.update(taskId, { status: 'Active' });
+                loadTasks();
+            } catch (e) {
+                console.error("Error un-completing task:", e);
+            }
+        }
+        
+        async function deleteTask(id) {
+            const task = await db.tasks.get(id);
+            if (!task) return;
+            
+            if (confirm(`Are you sure you want to delete the task "${task.name}"?`)) {
+                try {
+                    await db.transaction('rw', db.tasks, db.taskHistory, async () => {
+                        await db.tasks.delete(id);
+                        await db.taskHistory.where('taskId').equals(id).delete();
+                    });
+                    loadTasks();
+                } catch (e) {
+                    console.error("Error deleting task:", e);
+                }
+            }
+        }
+        
+        async function deleteCompletedTasks() {
+            if (!confirm("Are you sure you want to permanently delete ALL completed tasks? This cannot be undone.")) {
+                return;
+            }
+            
+            try {
+                const completedTasks = await db.tasks.where('status').equals('Completed').toArray();
+                if (completedTasks.length === 0) {
+                    alert("No completed tasks to delete.");
+                    return;
+                }
+                const idsToDelete = completedTasks.map(task => task.id);
+                
+                await db.transaction('rw', db.tasks, db.taskHistory, async () => {
+                    await db.tasks.bulkDelete(idsToDelete);
+                    await db.taskHistory.where('taskId').anyOf(idsToDelete).delete();
+                });
+                
+                console.log(`Deleted ${idsToDelete.length} completed tasks and their history.`);
+                loadTasks(); 
+            } catch (e) {
+                console.error("Error deleting completed tasks:", e);
+                alert("Could not delete completed tasks. See console for details.");
+            }
+        }
+
+        // --- Overlay Logic (Unchanged) ---
+
+        function resetForm() {
+            taskForm.reset(); 
+            document.getElementById('task-id').value = '';
+            document.getElementById('priority').value = 'Medium';
+            document.getElementById('overlay-title').textContent = 'Add New Task';
+            document.getElementById('due-date').value = todayStr;
+            
+            recurrenceType.value = 'none';
+            weeklyRecurrence.style.display = 'none';
+            intervalRecurrence.style.display = 'none';
+            document.querySelectorAll('.day-selector button').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('recurrence-interval').value = 1;
+            document.getElementById('recurrence-unit').value = 'days';
+        }
+
+        addTaskBtn.addEventListener('click', () => {
+            resetForm();
+            taskOverlay.style.display = 'flex';
+        });
+
+        closeOverlayBtn.addEventListener('click', () => {
+            taskOverlay.style.display = 'none';
+        });
+
+        recurrenceType.addEventListener('change', () => {
+            weeklyRecurrence.style.display = (recurrenceType.value === 'weekly') ? 'block' : 'none';
+            intervalRecurrence.style.display = (recurrenceType.value === 'interval') ? 'flex' : 'none';
+        });
+
+        document.querySelectorAll('.day-selector button').forEach(btn => {
+            btn.addEventListener('click', () => btn.classList.toggle('selected'));
+        });
+
+        async function openEditOverlay(id) {
+            try {
+                const task = await db.tasks.get(id);
+                if (!task) return;
+
+                resetForm(); 
+                document.getElementById('task-id').value = task.id;
+                document.getElementById('name').value = task.name;
+                document.getElementById('category').value = task.category || '';
+                document.getElementById('priority').value = task.priority || 'Medium';
+                document.getElementById('due-date').value = task.dueDate || '';
+                document.getElementById('notes').value = task.notes || '';
+                document.getElementById('overlay-title').textContent = `Edit Task: ${task.name}`;
+
+                const recType = task.recurrenceType || 'none';
+                recurrenceType.value = recType;
+                
+                weeklyRecurrence.style.display = 'none';
+                intervalRecurrence.style.display = 'none';
+                
+                if (recType === 'weekly') {
+                    weeklyRecurrence.style.display = 'block';
+                    document.querySelectorAll('.day-selector button').forEach(btn => {
+                        if (task.recurrenceDays && task.recurrenceDays.includes(parseInt(btn.dataset.day))) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                } else if (recType === 'interval') {
+                    intervalRecurrence.style.display = 'flex';
+                    document.getElementById('recurrence-interval').value = task.recurrenceInterval || 1;
+                    document.getElementById('recurrence-unit').value = task.recurrenceUnit || 'days';
+                }
+
+                taskOverlay.style.display = 'flex';
+            } catch (e) {
+                console.error("Error opening edit overlay:", e);
+            }
+        }
+
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const idStr = document.getElementById('task-id').value;
+            const id = idStr ? parseInt(idStr) : null;
+            
+            const recType = recurrenceType.value;
+            
+            const taskData = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                priority: document.getElementById('priority').value,
+                status: 'Active', 
+                dueDate: document.getElementById('due-date').value,
+                notes: document.getElementById('notes').value,
+                recurrenceType: recType,
+                recurrenceDays: recType === 'weekly' ? 
+                    Array.from(document.querySelectorAll('.day-selector button.selected')).map(btn => parseInt(btn.dataset.day)) : null,
+                recurrenceInterval: recType === 'interval' ? 
+                    parseInt(document.getElementById('recurrence-interval').value) : null,
+                recurrenceUnit: recType === 'interval' ? 
+                    document.getElementById('recurrence-unit').value : null,
+            };
+
+            try {
+                if (id) {
+                    await db.tasks.update(id, taskData);
+                } else {
+                    await db.tasks.add(taskData);
+                }
+                taskOverlay.style.display = 'none';
+                loadTasks(); 
+            } catch (e) {
+                console.error("Error saving task:", e);
+                alert(`Error saving task: ${e.message}`);
+            }
+        });
+        
+        // --- INITIAL LOAD & LISTENERS ---
+        
+        categoryFilter.addEventListener('change', loadTasks);
+        
+        db.open().then(() => {
+            console.log("Task Manager DB is ready.");
+            deleteCompletedBtn.addEventListener('click', deleteCompletedTasks);
+            loadTasks(); 
+        }).catch(e => {
+            console.error("Could not open database:", e);
+            tasksContainer.innerHTML = '<li>Error loading database. See console.</li>';
+        });
+
+    </script>
+</body>
+</html>

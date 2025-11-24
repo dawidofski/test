@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Habit Tracker</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="database.js"></script> 
+
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f7f6; 
+        }
+        h1 { color: #333; }
+        .controls { 
+            margin-bottom: 20px; 
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 10px; 
+            align-items: center; 
+        }
+        select, button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        button:hover { background-color: #0056b3; }
+        .habit-list { list-style: none; padding: 0; }
+        .habit-item { 
+            display: flex; 
+            flex-wrap: wrap;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .habit-info { flex-grow: 1; min-width: 200px; }
+        .habit-info small { color: #555; }
+        .habit-actions { display: flex; gap: 10px; padding-top: 10px; }
+        .habit-actions button { padding: 8px 12px; font-size: 14px; }
+        
+        /* Button Styles */
+        .complete-btn { background-color: #28a745; border-color: #28a745; }
+        .complete-btn:hover { background-color: #1e7e34; }
+        
+        .edit-btn { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+        .edit-btn:hover { background-color: #e0a800; }
+        
+        .delete-btn { background-color: #dc3545; border-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        
+        /* === NEW UNCOMPLETE BUTTON STYLE === */
+        .uncomplete-btn { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+        .uncomplete-btn:hover { background-color: #e0a800; }
+
+        
+        /* --- Overlay Styles --- */
+        #habit-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 1000; 
+            display: none; justify-content: center; align-items: center;
+        }
+        .overlay-content { 
+            background: white; padding: 25px; border-radius: 10px; 
+            max-width: 450px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .overlay-content h2 { margin-top: 0; }
+        .form-field { margin-bottom: 15px; }
+        .form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-field input[type="text"], .form-field select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .day-selector { display: flex; justify-content: space-between; gap: 5px; }
+        .day-selector button { 
+            width: 13%; padding: 10px 5px; margin: 0;
+            border: 1px solid #ccc; background: #f0f0f0; 
+            cursor: pointer; font-size: 14px;
+        }
+        .day-selector button.selected { background: #007bff; color: white; font-weight: bold; }
+
+        .streak-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f4f7f6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .streak-info span { font-size: 14px; }
+        .streak-info strong { font-size: 16px; color: #007bff; }
+
+        .form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .form-actions button.cancel { background-color: #6c757d; }
+        .form-actions button.cancel:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <h1>Habit Tracker</h1>
+
+    <div class="controls">
+        <select id="category-filter">
+            <option value="">All Categories</option>
+            </select>
+        
+        <select id="day-filter">
+            <option value="">All Days</option>
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+        </select>
+        
+        <button id="add-habit-btn">Add New Habit</button>
+    </div>
+
+    <ul id="habits-container" class="habit-list">
+        </ul>
+    
+    <div id="habit-overlay">
+        <div class="overlay-content">
+            <h2 id="overlay-title">Add New Habit</h2>
+            <form id="habit-form">
+                <input type="hidden" id="habit-id">
+
+                <div class="form-field">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="category">Category:</label>
+                    <input type="text" id="category">
+                </div>
+
+                <div class="form-field">
+                    <label for="status">Status:</label>
+                    <select id="status">
+                        <option value="Active">Active</option>
+                        <option value="Paused">Paused</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Recurrence Days:</label>
+                    <div class="day-selector" id="recurrence-days">
+                        <button type="button" data-day="0">S</button>
+                        <button type="button" data-day="1">M</button>
+                        <button type="button" data-day="2">T</button>
+                        <button type="button" data-day="3">W</button>
+                        <button type="button" data-day="4">T</button>
+                        <button type="button" data-day="5">F</button>
+                        <button type="button" data-day="6">S</button>
+                    </div>
+                </div>
+
+                <div class="form-field" id="habit-stats-display" style="display: none;">
+                    <label>Habit Streaks</label>
+                    <div class="streak-info">
+                        <span>Current Streak: <strong id="stat-current">0</strong> days</span>
+                        <span>Longest Streak: <strong id="stat-longest">0</strong> days</span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="close-overlay-btn" class="cancel">Cancel</button>
+                    <button type="submit">Save Habit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // === STEP 3: UTILITIES & GLOBALS ===
+
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function calculateNextRecurrence(recurrenceDays) {
+            if (!recurrenceDays || recurrenceDays.length === 0) return null;
+            let nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + 1);
+            for (let i = 0; i < 7; i++) {
+                let currentDayIndex = nextDate.getDay();
+                if (recurrenceDays.includes(currentDayIndex)) {
+                    let year = nextDate.getFullYear();
+                    let month = String(nextDate.getMonth() + 1).padStart(2, '0');
+                    let day = String(nextDate.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day} (${dayNames[currentDayIndex]})`;
+                }
+                nextDate.setDate(nextDate.getDate() + 1);
+            }
+            return null;
+        }
+        
+        function isDueToday(recurrenceDays) {
+            if (!recurrenceDays) return false;
+            const todayIndex = new Date().getDay();
+            return recurrenceDays.includes(todayIndex);
+        }
+        
+        function isCompletedToday(history) {
+            if (!history || history.length === 0) return false;
+            const today = new Date().toISOString().split('T')[0];
+            return history.some(entry => entry.date === today && entry.status === 'Completed');
+        }
+
+        function calculateCurrentStreak(habit, history) {
+            if (!habit.recurrenceDays || habit.recurrenceDays.length === 0) return 0;
+            let currentStreak = 0;
+            let checkDate = new Date();
+            const historyDates = new Set(history.map(h => h.date));
+            for (let i = 0; i < 365; i++) {
+                const dayOfWeek = checkDate.getDay();
+                const dateString = checkDate.toISOString().split('T')[0];
+                if (habit.recurrenceDays.includes(dayOfWeek)) {
+                    if (historyDates.has(dateString)) {
+                        currentStreak++;
+                    } else {
+                         if (i > 0) { break; } 
+                         else { return 0; }
+                    }
+                }
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            return currentStreak;
+        }
+
+        function calculateLongestStreak(habit, history) {
+            if (!habit.recurrenceDays || habit.recurrenceDays.length === 0 || history.length === 0) {
+                return 0;
+            }
+            let longestStreak = 0;
+            let currentStreak = 0;
+            history.sort((a, b) => a.date.localeCompare(b.date));
+            const historyDates = new Set(history.map(h => h.date));
+            let checkDate = new Date(history[0].date);
+            const lastDate = new Date(history[history.length - 1].date);
+            while (checkDate <= lastDate) {
+                const dayOfWeek = checkDate.getDay();
+                const dateString = checkDate.toISOString().split('T')[0];
+                if (habit.recurrenceDays.includes(dayOfWeek)) {
+                    if (historyDates.has(dateString)) {
+                        currentStreak++;
+                    } else {
+                        if (currentStreak > longestStreak) {
+                            longestStreak = currentStreak;
+                        }
+                        currentStreak = 0;
+                    }
+                }
+                checkDate.setDate(checkDate.getDate() + 1);
+            }
+            return Math.max(longestStreak, currentStreak);
+        }
+
+        // Global element references
+        let allHabits = [];
+        let allCategories = [];
+        const habitsContainer = document.getElementById('habits-container');
+        const categoryFilter = document.getElementById('category-filter');
+        const dayFilter = document.getElementById('day-filter');
+        const habitOverlay = document.getElementById('habit-overlay');
+        const habitForm = document.getElementById('habit-form');
+        const recurrenceDaysDiv = document.getElementById('recurrence-days');
+        const addHabitBtn = document.getElementById('add-habit-btn');
+        const closeOverlayBtn = document.getElementById('close-overlay-btn');
+        const habitStatsDisplay = document.getElementById('habit-stats-display');
+        const statCurrent = document.getElementById('stat-current');
+        const statLongest = document.getElementById('stat-longest');
+
+
+        // === STEP 4: RENDERING & FILTERING ===
+
+        function populateCategoryFilter(categories) {
+            const currentVal = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categoryFilter.appendChild(option);
+            });
+            categoryFilter.value = currentVal;
+        }
+
+        async function renderHabits(habitsToRender) {
+            habitsContainer.innerHTML = '';
+            
+            const today = new Date().toISOString().split('T')[0];
+            const historyToday = await db.habitHistory
+                .where('[habitId+date]')
+                .between([Dexie.minKey, today], [Dexie.maxKey, today])
+                .toArray();
+
+            habitsToRender.forEach(habit => {
+                const nextRecurrence = calculateNextRecurrence(habit.recurrenceDays);
+                const nextRecurrenceText = nextRecurrence ? `Next: ${nextRecurrence}` : 'No upcoming recurrence.';
+
+                const dueToday = isDueToday(habit.recurrenceDays);
+                const habitHistory = historyToday.filter(h => h.habitId === habit.id);
+                const completedToday = isCompletedToday(habitHistory);
+
+                let statusText = `Status: ${habit.status}`;
+                if (dueToday && !completedToday) {
+                    statusText = '🔥 <strong>Due Today</strong>';
+                } else if (completedToday) {
+                    statusText = '✅ <strong>Completed Today</strong>';
+                }
+
+                const item = document.createElement('li');
+                item.className = 'habit-item';
+                
+                // === MODIFIED BUTTON LOGIC ===
+                let completeButton = '';
+                if (dueToday && habit.status === 'Active') {
+                    if (completedToday) {
+                        // Show Uncomplete button
+                        completeButton = `<button class="uncomplete-btn" onclick="uncompleteHabit(${habit.id})">
+                                              Uncomplete
+                                          </button>`;
+                    } else {
+                        // Show Complete button
+                        completeButton = `<button class="complete-btn" onclick="completeHabit(${habit.id})">
+                                              Complete
+                                          </button>`;
+                    }
+                } else {
+                    // Show disabled button if not due today or not active
+                    completeButton = `<button class="complete-btn" disabled>
+                                          Complete
+                                      </button>`;
+                }
+                // === END OF MODIFIED LOGIC ===
+
+                item.innerHTML = `
+                    <div class="habit-info">
+                        <strong>${habit.name}</strong> 
+                        ${habit.category ? `(${habit.category})` : ''}
+                        <br>
+                        <small>${nextRecurrenceText} | ${statusText}</small>
+                    </div>
+                    <div class="habit-actions">
+                        ${completeButton}
+                        <button class="edit-btn" onclick="openEditOverlay(${habit.id})">Edit</button>
+                        <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
+                    </div>
+                `;
+                habitsContainer.appendChild(item);
+            });
+        }
+
+        async function loadHabits() {
+            try {
+                if (allCategories.length === 0) {
+                    const habitsForCategories = await db.habits.toArray();
+                    allCategories = [...new Set(habitsForCategories.map(h => h.category).filter(c => c))];
+                    populateCategoryFilter(allCategories);
+                }
+                
+                const category = categoryFilter.value;
+                const day = dayFilter.value;
+                
+                let query = db.habits;
+
+                if (category) {
+                    query = query.where('category').equals(category);
+                }
+                
+                let filteredHabits = await query.toArray();
+
+                if (day) {
+                    const dayNumber = parseInt(day);
+                    filteredHabits = filteredHabits.filter(habit => 
+                        habit.recurrenceDays && habit.recurrenceDays.includes(dayNumber)
+                    );
+                }
+                
+                renderHabits(filteredHabits);
+
+            } catch (e) {
+                console.error("Error loading habits:", e);
+                habitsContainer.innerHTML = '<li>Error loading habits. See console.</li>';
+            }
+        }
+
+        // === STEP 5: CRUD ACTIONS & EVENT LISTENERS ===
+
+        /**
+         * Logs a habit as complete for today.
+         * (Added a check to prevent duplicates)
+         */
+        async function completeHabit(habitId) {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                // Check if already completed, just in case
+                const existing = await db.habitHistory.where({
+                    habitId: habitId,
+                    date: today,
+                    status: 'Completed'
+                }).first();
+
+                if (existing) {
+                    console.log("Habit already completed.");
+                    return; // Don't add a duplicate
+                }
+                
+                const habit = await db.habits.get(habitId);
+                if (!habit) return;
+
+                await db.habitHistory.add({
+                    habitId: habit.id,
+                    date: today,
+                    status: 'Completed'
+                });
+
+                console.log(`Habit ${habit.id} completed and logged for ${today}`);
+                loadHabits(); 
+
+            } catch (e) {
+                console.error("Error completing habit:", e);
+                alert('Could not complete habit. Check console.');
+            }
+        }
+        
+        /**
+         * === NEW FUNCTION ===
+         * Removes a "Completed" record for today.
+         */
+        async function uncompleteHabit(habitId) {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                // Find the specific "Completed" record for today
+                const record = await db.habitHistory.where({
+                    habitId: habitId,
+                    date: today,
+                    status: 'Completed'
+                }).first(); // Get the first match
+
+                if (record) {
+                    // Delete it by its primary key
+                    await db.habitHistory.delete(record.id);
+                    console.log(`Habit ${habitId} un-completed for ${today}`);
+                }
+                
+                loadHabits(); // Refresh the list
+            } catch (e) {
+                console.error("Error un-completing habit:", e);
+                alert('Could not un-complete habit.');
+            }
+        }
+        
+        async function deleteHabit(id) {
+            const habit = await db.habits.get(id);
+            if (!habit) return;
+            
+            if (confirm(`Are you sure you want to delete the habit "${habit.name}"?`)) {
+                try {
+                    await db.transaction('rw', db.habits, db.habitHistory, async () => {
+                        await db.habits.delete(id);
+                        await db.habitHistory.where('habitId').equals(id).delete();
+                    });
+
+                    console.log(`Deleted habit ${id} and its history.`);
+                    loadHabits(); 
+                } catch (e) {
+                    console.error("Error deleting habit:", e);
+                    alert('Error deleting habit. See console.');
+                }
+            }
+        }
+
+        function resetForm() {
+            habitForm.reset(); 
+            document.getElementById('habit-id').value = '';
+            document.getElementById('status').value = 'Active';
+            document.getElementById('overlay-title').textContent = 'Add New Habit';
+            document.querySelectorAll('.day-selector button').forEach(btn => btn.classList.remove('selected'));
+            habitStatsDisplay.style.display = 'none';
+        }
+
+        addHabitBtn.addEventListener('click', () => {
+            resetForm();
+            habitOverlay.style.display = 'flex';
+        });
+
+        closeOverlayBtn.addEventListener('click', () => {
+            habitOverlay.style.display = 'none';
+        });
+
+        async function openEditOverlay(id) {
+            try {
+                const habit = await db.habits.get(id);
+                if (!habit) return;
+                const history = await db.habitHistory.where('habitId').equals(id).toArray();
+
+                document.getElementById('habit-id').value = habit.id;
+                document.getElementById('name').value = habit.name;
+                document.getElementById('category').value = habit.category || '';
+                document.getElementById('status').value = habit.status;
+                document.getElementById('overlay-title').textContent = `Edit Habit: ${habit.name}`;
+                
+                document.querySelectorAll('.day-selector button').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (habit.recurrenceDays && habit.recurrenceDays.includes(parseInt(btn.dataset.day))) {
+                        btn.classList.add('selected');
+                    }
+                });
+
+                statCurrent.textContent = calculateCurrentStreak(habit, history);
+                statLongest.textContent = calculateLongestStreak(habit, history);
+                habitStatsDisplay.style.display = 'block';
+
+                habitOverlay.style.display = 'flex';
+
+            } catch (e) {
+                console.error("Error opening edit overlay:", e);
+            }
+        }
+
+        document.querySelectorAll('.day-selector button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('selected');
+            });
+        });
+
+        habitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const idStr = document.getElementById('habit-id').value;
+            const id = idStr ? parseInt(idStr) : null;
+            
+            const recurrenceDays = Array.from(document.querySelectorAll('.day-selector button.selected'))
+                .map(btn => parseInt(btn.dataset.day));
+
+            const habitData = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                status: document.getElementById('status').value,
+                recurrenceDays: recurrenceDays
+            };
+
+            try {
+                if (id) {
+                    await db.habits.update(id, habitData);
+                    console.log(`Updated habit ${id}`);
+                } else {
+                    habitData.createdAt = new Date().toISOString();
+                    await db.habits.add(habitData);
+                    console.log('Added new habit');
+                }
+
+                habitOverlay.style.display = 'none';
+                loadHabits(); 
+
+            } catch (e) {
+                console.error("Error saving habit:", e);
+                alert(`Error saving habit: ${e.message}`);
+            }
+        });
+        
+        // --- INITIAL LOAD ---
+        
+        categoryFilter.addEventListener('change', loadHabits);
+        dayFilter.addEventListener('change', loadHabits);
+
+        db.open().then(() => {
+            console.log("Habit Tracker DB is ready.");
+            loadHabits(); 
+        }).catch(e => {
+            console.error("Could not open database:", e);
+            habitsContainer.innerHTML = '<li>Error loading database. See console.</li>';
+        });
+
+    </script>
+</body>
+</html>

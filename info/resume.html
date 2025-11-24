@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume & Streaks</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <style>
+        /* Base styles from your style.css */
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background-color: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.5rem;
+        }
+
+        nav a.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--dark-gray);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .widget {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .widget h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        /* New styles for this page */
+        .streak-container {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .streak-item {
+            flex-basis: 50%;
+        }
+
+        .streak-item h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .streak-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            line-height: 1;
+        }
+
+        .streak-value span {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #6c757d;
+            margin-left: 0.25rem;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stats-header h2 {
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        .stats-header select {
+            font-size: 1rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        #stats-summary-text {
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        /* NEW: Styles for the stats list */
+        #stats-summary-list {
+            list-style-type: none;
+            padding-left: 0;
+            font-size: 1.1rem;
+        }
+        #stats-summary-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #stats-summary-list li:last-child {
+            border-bottom: none;
+        }
+        #stats-summary-list li strong {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            width: 100px;
+            display: inline-block;
+        }
+
+
+        #stats-comparison-text {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .positive {
+            color: var(--success-color);
+        }
+
+        .negative {
+            color: var(--danger-color);
+        }
+        
+        .neutral {
+            color: #6c757d;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="quiz.html">Vocabulary Quiz</a>
+        <a href="sentences.html">Sentence Trainer</a>
+        <a href="dictation.html">Dictation</a>
+        <a href="verb-quiz.html">Verb Quiz</a>
+        <a href="resume.html" class="active">Resume</a>
+    </nav>
+
+    <main>
+        <div class="widget">
+            <h2>Daily Streak</h2>
+            <div class="streak-container">
+                <div class="streak-item">
+                    <h3>Current Streak</h3>
+                    <div class="streak-value" id="current-streak">0<span>days</span></div>
+                </div>
+                <div class="streak-item">
+                    <h3>Longest Streak</h3>
+                    <div class="streak-value" id="longest-streak">0<span>days</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="widget">
+            <div class="stats-header">
+                <h2>Statistics</h2>
+                <select id="stats-period">
+                    <option value="day">Compare to Yesterday</option>
+                    <option value="week">Compare to Last Week</option>
+                </select>
+            </div>
+            <div class="stats-body">
+                <p id="stats-summary-text">Loading stats...</p>
+                <ul id="stats-summary-list"></ul>
+                <p id="stats-comparison-text" class="neutral">...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="db.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statsPeriodSelect = document.getElementById('stats-period');
+            const summaryText = document.getElementById('stats-summary-text');
+            const summaryList = document.getElementById('stats-summary-list'); // NEW
+            const comparisonText = document.getElementById('stats-comparison-text');
+            const currentStreakDisplay = document.getElementById('current-streak');
+            const longestStreakDisplay = document.getElementById('longest-streak');
+
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+            /**
+             * Gets the start of the day (00:00:00) for a given timestamp.
+             */
+            function getStartOfDay(timestamp) {
+                return new Date(timestamp).setHours(0, 0, 0, 0);
+            }
+
+            /**
+             * Calculates and displays the current and longest streaks.
+             */
+            async function calculateStreaks() {
+                try {
+                    // 1. Get all activity timestamps, sort them
+                    const activities = await db.activityLog.orderBy('timestamp').toArray();
+                    if (activities.length === 0) {
+                        updateStreakUI(0, 0);
+                        return;
+                    }
+
+                    // 2. Get a unique, sorted set of days with activity
+                    const activityDays = [...new Set(
+                        activities.map(a => getStartOfDay(a.timestamp))
+                    )];
+
+                    // 3. Find the longest streak
+                    let longestStreak = 0;
+                    let currentLongest = 0;
+                    for (let i = 0; i < activityDays.length; i++) {
+                        if (i > 0 && (activityDays[i] - activityDays[i - 1]) === MS_PER_DAY) {
+                            currentLongest++;
+                        } else {
+                            currentLongest = 1; // Start a new streak
+                        }
+                        if (currentLongest > longestStreak) {
+                            longestStreak = currentLongest;
+                        }
+                    }
+
+                    // 4. Calculate the current streak
+                    let currentStreak = 0;
+                    const today = getStartOfDay(Date.now());
+                    const yesterday = getStartOfDay(Date.now() - MS_PER_DAY);
+
+                    // Find the last active day
+                    const lastActiveDay = activityDays[activityDays.length - 1];
+
+                    // Only count streak if active today or yesterday
+                    if (lastActiveDay === today || lastActiveDay === yesterday) {
+                        currentStreak = 1;
+                        // Iterate backwards from the second-to-last day
+                        for (let i = activityDays.length - 2; i >= 0; i--) {
+                            const day = activityDays[i];
+                            const nextDay = activityDays[i + 1];
+                            if ((nextDay - day) === MS_PER_DAY) {
+                                currentStreak++;
+                            } else {
+                                break; // Gap in streak
+                            }
+                        }
+                    }
+                    
+                    // If last active day was *not* today, and not yesterday, current streak is 0
+                    if (lastActiveDay !== today && lastActiveDay !== yesterday) {
+                        currentStreak = 0;
+                    }
+
+                    updateStreakUI(currentStreak, longestStreak);
+
+                } catch (error) {
+                    console.error("Error calculating streaks:", error);
+                    updateStreakUI('Error', 'Error');
+                }
+            }
+
+            /**
+             * Updates the streak UI.
+             */
+            function updateStreakUI(current, longest) {
+                currentStreakDisplay.innerHTML = `${current}<span>days</span>`;
+                longestStreakDisplay.innerHTML = `${longest}<span>days</span>`;
+            }
+
+            /**
+             * Fetches and displays the statistics based on the dropdown.
+             */
+            async function updateStatistics() {
+                try {
+                    const period = statsPeriodSelect.value;
+                    const todayStart = getStartOfDay(Date.now());
+                    const yesterdayStart = getStartOfDay(Date.now() - MS_PER_DAY);
+                    
+                    // Get the start of the week (Sunday)
+                    const todayDate = new Date();
+                    const dayOfWeek = todayDate.getDay(); // 0 = Sunday, 1 = Monday...
+                    const thisWeekStart = getStartOfDay(Date.now() - dayOfWeek * MS_PER_DAY);
+                    const lastWeekStart = getStartOfDay(thisWeekStart - 7 * MS_PER_DAY);
+
+                    // 1. Get stats for the relevant periods
+                    const todayStats = await getStatsForPeriod(todayStart, Date.now() + 1); // +1 to include all of today
+                    const yesterdayStats = await getStatsForPeriod(yesterdayStart, todayStart);
+                    const thisWeekStats = await getStatsForPeriod(thisWeekStart, Date.now() + 1);
+                    const lastWeekStats = await getStatsForPeriod(lastWeekStart, thisWeekStart);
+
+                    // 2. Determine which stats to use
+                    let currentStats, prevStats, summaryPeriod, comparisonPeriod;
+                    if (period === 'day') {
+                        currentStats = todayStats;
+                        prevStats = yesterdayStats;
+                        summaryPeriod = "today";
+                        comparisonPeriod = "yesterday";
+                    } else { // period === 'week'
+                        currentStats = thisWeekStats;
+                        prevStats = lastWeekStats;
+                        summaryPeriod = "this week";
+                        comparisonPeriod = "last week";
+                    }
+
+                    // 3. Update Summary Text
+                    summaryText.innerHTML = `You have <strong>${currentStats.total.completed}</strong> correct completions (${currentStats.total.attempted} total activities) ${summaryPeriod}.`;
+                    
+                    // 4. NEW: Update Summary List
+                    summaryList.innerHTML = ''; // Clear previous
+                    
+                    function formatStat(name, stat) {
+                        if (stat.attempted === 0) return ''; // Don't show if not used
+                        
+                        // Special cases for non-quizzes
+                        if (name === 'Sentences Viewed') {
+                            return `<li><strong>${stat.attempted}</strong> ${name}</li>`;
+                        }
+                        if (name === 'Verb Lookups') {
+                            return `<li><strong>${stat.attempted}</strong> ${name}</li>`;
+                        }
+                        // Default quiz format
+                        return `<li><strong>${stat.completed} / ${stat.attempted}</strong> ${name}</li>`;
+                    }
+                    
+                    summaryList.innerHTML += formatStat('Vocab Quizzes', currentStats.quiz);
+                    summaryList.innerHTML += formatStat('Verb Quizzes', currentStats.verbQuiz);
+                    summaryList.innerHTML += formatStat('Dictations', currentStats.dictation);
+                    summaryList.innerHTML += formatStat('Sentences Viewed', currentStats.sentence);
+                    summaryList.innerHTML += formatStat('Verb Lookups', currentStats.verbLookup);
+
+
+                    // 5. Update Comparison Text (comparing TOTAL CORRECT COMPLETIONS)
+                    const diff = currentStats.total.completed - prevStats.total.completed;
+                    let percentage = 0;
+
+                    if (prevStats.total.completed > 0) {
+                        percentage = Math.round((diff / prevStats.total.completed) * 100);
+                    } else if (prevStats.total.completed === 0 && currentStats.total.completed > 0) {
+                        percentage = 100; // Handled as "100% more"
+                    }
+
+                    if (diff > 0) {
+                        comparisonText.textContent = `That's ${percentage}% more correct completions than ${comparisonPeriod}.`;
+                        comparisonText.className = 'positive';
+                    } else if (diff < 0) {
+                        comparisonText.textContent = `That's ${Math.abs(percentage)}% fewer correct completions than ${comparisonPeriod}.`;
+                        comparisonText.className = 'negative';
+                    } else {
+                        comparisonText.textContent = `That's the same number of correct completions as ${comparisonPeriod}.`;
+                        comparisonText.className = 'neutral';
+                    }
+
+                } catch (error) {
+                    console.error("Error updating stats:", error);
+                    summaryText.textContent = "Could not load statistics.";
+                    comparisonText.textContent = "";
+                }
+            }
+
+            /**
+             * Helper function to get activity counts for a time range.
+             * --- COMPLETELY REBUILT ---
+             */
+            async function getStatsForPeriod(startTimestamp, endTimestamp) {
+                const activities = await db.activityLog
+                    .where('timestamp')
+                    .between(startTimestamp, endTimestamp, true, false) // [start, end)
+                    .toArray();
+
+                // Initialize nested stats object
+                const stats = {
+                    quiz: { attempted: 0, completed: 0 },
+                    sentence: { attempted: 0, completed: 0 },
+                    dictation: { attempted: 0, completed: 0 },
+                    verbQuiz: { attempted: 0, completed: 0 },
+                    verbLookup: { attempted: 0, completed: 0 },
+                    total: { attempted: 0, completed: 0 }
+                };
+                
+                for (const activity of activities) {
+                    if (stats.hasOwnProperty(activity.type)) {
+                        stats[activity.type].attempted++;
+                        stats.total.attempted++;
+
+                        // Check for 'completed' (defined as 'correct')
+                        if (activity.result === 'correct') {
+                            stats[activity.type].completed++;
+                            stats.total.completed++;
+                        }
+                    }
+                }
+                return stats;
+            }
+
+            // --- Initial Load ---
+            db.open().then(() => {
+                calculateStreaks();
+                updateStatistics();
+            }).catch(err => {
+                console.error('Failed to open db', err);
+                summaryText.textContent = 'Error: Could not connect to the database.';
+            });
+
+            // --- Event Listeners ---
+            statsPeriodSelect.addEventListener('change', updateStatistics);
+        });
+    </script>
+</body>
+</html>

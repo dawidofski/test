@@ -11,7 +11,9 @@
         overflow: hidden;
     }
 
-    .widget-swipe-area { touch-action: pan-y; }
+    .widget-swipe-area {
+        touch-action: pan-y;
+    }
 
     /* --- Header --- */
     .mw-header-row {
@@ -28,12 +30,22 @@
         color: var(--text-color);
     }
 
-    .mw-dots { display: flex; gap: 5px; }
+    .mw-dots {
+        display: flex;
+        gap: 5px;
+    }
+
     .mw-dot {
-        width: 6px; height: 6px; border-radius: 50%; background: #ccc;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ccc;
         transition: background 0.3s;
     }
-    .mw-dot.active { background: var(--accent-color); }
+
+    .mw-dot.active {
+        background: var(--accent-color);
+    }
 
     /* --- Carousel --- */
     .mw-views-wrapper {
@@ -45,7 +57,10 @@
 
     .mw-view {
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease, transform 0.3s ease;
@@ -55,14 +70,18 @@
         background: var(--card-bg);
         z-index: 0;
     }
-    
+
     @media (prefers-color-scheme: dark) {
-        .mw-view { background: #1e1e1e; }
+        .mw-view {
+            background: #1e1e1e;
+        }
     }
 
     .mw-view.active {
-        opacity: 1; pointer-events: all;
-        transform: translateX(0); z-index: 10;
+        opacity: 1;
+        pointer-events: all;
+        transform: translateX(0);
+        z-index: 10;
     }
 
     /* --- View 0: Quick Log --- */
@@ -74,14 +93,14 @@
         align-items: center;
         gap: 15px;
     }
-    
+
     .mw-emoji-row {
         display: flex;
         justify-content: space-between;
         width: 100%;
         max-width: 320px;
     }
-    
+
     .mw-emoji-btn {
         font-size: 32px;
         cursor: pointer;
@@ -92,8 +111,16 @@
         text-align: center;
         border: 2px solid transparent;
     }
-    .mw-emoji-btn:hover { transform: scale(1.2); }
-    .mw-emoji-btn.selected { background: rgba(0,123,255,0.1); border-color: var(--accent-color); transform: scale(1.1); }
+
+    .mw-emoji-btn:hover {
+        transform: scale(1.2);
+    }
+
+    .mw-emoji-btn.selected {
+        background: rgba(0, 123, 255, 0.1);
+        border-color: var(--accent-color);
+        transform: scale(1.1);
+    }
 
     .mw-status-text {
         font-size: 14px;
@@ -102,9 +129,15 @@
     }
 
     .mw-log-btn {
-        width: 100%; padding: 10px; margin-top: auto;
-        background: rgba(0,0,0,0.05); border: none; border-radius: 8px;
-        color: var(--text-color); font-weight: 600; cursor: pointer;
+        width: 100%;
+        padding: 10px;
+        margin-top: auto;
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 8px;
+        color: var(--text-color);
+        font-weight: 600;
+        cursor: pointer;
     }
 
     /* --- View 1: Average --- */
@@ -116,54 +149,227 @@
         align-items: center;
         text-align: center;
     }
-    .mw-avg-emoji { font-size: 60px; line-height: 1; margin-bottom: 10px; }
-    .mw-avg-score { font-size: 24px; font-weight: 700; color: var(--text-color); }
-    .mw-avg-label { font-size: 13px; color: #888; margin-top: 5px; }
 
-    /* --- View 2: Chart --- */
-    .mw-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-    .mw-select {
-        padding: 5px; font-size: 12px; border-radius: 6px;
-        border: 1px solid #ccc; background: rgba(0,0,0,0.05);
+    .mw-avg-emoji {
+        font-size: 60px;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+
+    .mw-avg-score {
+        font-size: 24px;
+        font-weight: 700;
         color: var(--text-color);
     }
-    .mw-chart-wrapper { flex-grow: 1; position: relative; width: 100%; min-height: 150px; }
+
+    .mw-avg-label {
+        font-size: 13px;
+        color: #888;
+        margin-top: 5px;
+    }
+
+    /* --- View 2: Chart/List --- */
+    .mw-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .mw-select {
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--text-color);
+    }
+
+    .mw-chart-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 150px;
+    }
+
+    /* --- Toggle Switch --- */
+    .mw-toggle-container {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        padding: 2px;
+    }
+
+    .mw-toggle-btn {
+        padding: 4px 12px;
+        font-size: 11px;
+        border-radius: 15px;
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        cursor: pointer;
+        opacity: 0.6;
+    }
+
+    .mw-toggle-btn.active {
+        background: var(--card-bg);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- List View (CRUD) --- */
+    .mw-list-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .mw-date-group {
+        margin-bottom: 15px;
+    }
+
+    .mw-date-header {
+        font-size: 12px;
+        font-weight: 700;
+        color: #888;
+        margin-bottom: 5px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 2px;
+    }
+
+    .mw-log-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        font-size: 13px;
+    }
+
+    .mw-log-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex-grow: 1;
+    }
+
+    .mw-log-emoji {
+        font-size: 18px;
+    }
+
+    .mw-log-meta {
+        font-size: 11px;
+        color: #888;
+    }
+
+    .mw-log-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .mw-log-del {
+        color: #dc3545;
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 0 5px;
+        opacity: 0.5;
+    }
+
+    .mw-log-del:hover {
+        opacity: 1;
+    }
 
     /* --- Overlay --- */
-    .mw-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.6); z-index: 2000; 
-        display: none; justify-content: center; align-items: center; 
+    .mw-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    .mw-overlay-content { 
-        background: var(--card-bg); padding: 25px; border-radius: 12px; 
-        max-width: 400px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        color: var(--text-color); max-height: 90vh; overflow-y: auto;
-    }
-    
-    .mw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-    .mw-tag-chk { display: none; }
-    .mw-tag-lbl {
-        padding: 6px 12px; border: 1px solid #ccc; border-radius: 15px;
-        font-size: 12px; cursor: pointer;
-    }
-    .mw-tag-chk:checked + .mw-tag-lbl {
-        background: var(--accent-color); color: white; border-color: var(--accent-color);
-    }
-    
-    .mw-textarea {
-        width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;
-        margin-bottom: 15px; font-family: inherit; box-sizing: border-box;
-    }
-    
-    .mw-btn-row { display: flex; justify-content: flex-end; gap: 10px; }
-    .mw-btn-save { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-    .mw-btn-cancel { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
 
+    .mw-overlay-content {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        color: var(--text-color);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .mw-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .mw-tag-chk {
+        display: none;
+    }
+
+    .mw-tag-lbl {
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-radius: 15px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .mw-tag-chk:checked+.mw-tag-lbl {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .mw-textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .mw-btn-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .mw-btn-save {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .mw-btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
 </style>
 
 <div class="mw-widget widget-swipe-area" id="mw-widget-root">
-    
+
     <div class="mw-header-row">
         <div class="mw-title" id="mw-view-title">Mood Tracker</div>
         <div class="mw-dots">
@@ -174,7 +380,7 @@
     </div>
 
     <div class="mw-views-wrapper">
-        
+
         <div class="mw-view active" id="mw-view-0">
             <div class="mw-scale-container">
                 <div style="font-weight:600;">How are you feeling?</div>
@@ -210,9 +416,20 @@
                     <option value="7">Last 7 Days</option>
                     <option value="30">Last 30 Days</option>
                 </select>
+                <div class="mw-toggle-container">
+                    <button class="mw-toggle-btn active" id="mw-mode-chart">Chart</button>
+                    <button class="mw-toggle-btn" id="mw-mode-list">List</button>
+                </div>
             </div>
-            <div class="mw-chart-wrapper">
+
+            <!-- Chart Container -->
+            <div class="mw-chart-wrapper" id="mw-chart-container">
                 <canvas id="mw-chart-canvas"></canvas>
+            </div>
+
+            <!-- List Container -->
+            <div class="mw-list-container" id="mw-list-container" style="display: none;">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -221,8 +438,11 @@
 
 <div id="mw-overlay" class="mw-overlay">
     <div class="mw-overlay-content">
-        <h3>Detailed Entry</h3>
+        <h3 id="mw-log-title">Detailed Entry</h3>
         <form id="mw-form">
+            <input type="hidden" id="mw-edit-id">
+            <input type="hidden" id="mw-edit-date">
+
             <div class="mw-emoji-row" id="mw-form-scale" style="margin-bottom:15px; justify-content:center; gap:10px;">
                 <div class="mw-emoji-btn" data-val="1">😠</div>
                 <div class="mw-emoji-btn" data-val="2">😕</div>
@@ -230,14 +450,14 @@
                 <div class="mw-emoji-btn" data-val="4">🙂</div>
                 <div class="mw-emoji-btn" data-val="5">😄</div>
             </div>
-            
+
             <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Tags</label>
             <div class="mw-tags" id="mw-tags-container">
-                </div>
-            
+            </div>
+
             <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Note</label>
             <textarea id="mw-note" class="mw-textarea" rows="3" placeholder="Why do you feel this way?"></textarea>
-            
+
             <div class="mw-btn-row">
                 <button type="button" id="mw-cancel" class="mw-btn-cancel">Cancel</button>
                 <button type="submit" class="mw-btn-save">Save</button>
@@ -247,167 +467,192 @@
 </div>
 
 <script>
-(() => {
-    // === DOM & STATE ===
-    const root = document.getElementById('mw-widget-root');
-    const titleEl = document.getElementById('mw-view-title');
-    const dots = root.querySelectorAll('.mw-dot');
-    const views = [
-        document.getElementById('mw-view-0'),
-        document.getElementById('mw-view-1'),
-        document.getElementById('mw-view-2')
-    ];
-    const titles = ["Mood Tracker", "Average Mood", "Mood Trends"];
-    
-    let currentView = 0;
-    let moodChart = null;
-    const TAGS = ['Family', 'Work', 'Health', 'Social', 'Relaxing', 'Chores', 'Sleep', 'Exercise'];
+    (() => {
+        // === DOM & STATE ===
+        const root = document.getElementById('mw-widget-root');
+        const titleEl = document.getElementById('mw-view-title');
+        const dots = root.querySelectorAll('.mw-dot');
+        const views = [
+            document.getElementById('mw-view-0'),
+            document.getElementById('mw-view-1'),
+            document.getElementById('mw-view-2')
+        ];
+        const titles = ["Mood Tracker", "Average Mood", "Mood Trends"];
 
-    const isAlive = () => root && root.isConnected;
+        let currentView = 0;
+        let moodChart = null;
+        let view2Mode = 'chart'; // 'chart' or 'list'
+        const TAGS = ['Family', 'Work', 'Health', 'Social', 'Relaxing', 'Chores', 'Sleep', 'Exercise'];
 
-    // --- Swipe Logic ---
-    let touchStartX = 0, touchStartY = 0;
-    root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: true});
-    root.addEventListener('touchend', e => {
-        if (!isAlive()) return;
-        const diffX = touchStartX - e.changedTouches[0].screenX;
-        const diffY = touchStartY - e.changedTouches[0].screenY;
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
-    }, {passive: true});
+        const isAlive = () => root && root.isConnected;
 
-    function switchView(dir) {
-        if (!isAlive()) return;
-        views[currentView].classList.remove('active');
-        dots[currentView].classList.remove('active');
-        currentView += dir;
-        if (currentView >= views.length) currentView = 0;
-        if (currentView < 0) currentView = views.length - 1;
-        views[currentView].classList.add('active');
-        dots[currentView].classList.add('active');
-        titleEl.textContent = titles[currentView];
-        
-        if (currentView === 1) updateAverage();
-        if (currentView === 2) initChart();
-    }
+        // --- Swipe Logic ---
+        let touchStartX = 0, touchStartY = 0;
+        root.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+        root.addEventListener('touchend', e => {
+            if (!isAlive()) return;
+            const diffX = touchStartX - e.changedTouches[0].screenX;
+            const diffY = touchStartY - e.changedTouches[0].screenY;
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) switchView(diffX > 0 ? 1 : -1);
+        }, { passive: true });
 
-    // ==========================
-    // VIEW 0: QUICK LOG
-    // ==========================
-    const quickScale = document.getElementById('mw-quick-scale');
-    const statusText = document.getElementById('mw-today-status');
+        function switchView(dir) {
+            if (!isAlive()) return;
+            views[currentView].classList.remove('active');
+            dots[currentView].classList.remove('active');
+            currentView += dir;
+            if (currentView >= views.length) currentView = 0;
+            if (currentView < 0) currentView = views.length - 1;
+            views[currentView].classList.add('active');
+            dots[currentView].classList.add('active');
+            titleEl.textContent = titles[currentView];
 
-    Array.from(quickScale.children).forEach(btn => {
-        btn.onclick = () => saveMood(parseInt(btn.dataset.val));
-    });
+            if (currentView === 1) updateAverage();
+            if (currentView === 2) updateView2();
+        }
 
-    async function saveMood(val, tags = [], note = "") {
-        try {
-            await window.db.mood.add({
-                value: val,
-                datetime: new Date().toISOString(),
-                tags: tags,
-                notes: note
-            });
-            statusText.textContent = "Saved! " + getEmoji(val);
-            statusText.style.color = "#28a745";
-            setTimeout(() => { 
-                if(isAlive()) { 
-                    statusText.textContent = "Tap an emoji to save"; 
-                    statusText.style.color = "#888"; 
-                } 
-            }, 2000);
-            
-            // Refresh views if active
-            if(currentView === 1) updateAverage();
-            if(currentView === 2 && moodChart) updateChart();
-        } catch(e) { console.error(e); }
-    }
+        // ==========================
+        // VIEW 0: QUICK LOG
+        // ==========================
+        const quickScale = document.getElementById('mw-quick-scale');
+        const statusText = document.getElementById('mw-today-status');
 
-    function getEmoji(v) {
-        return ['','😠','😕','😐','🙂','😄'][Math.round(v)] || '❓';
-    }
-
-    // ==========================
-    // VIEW 1: AVERAGE MOOD
-    // ==========================
-    const avgSelect = document.getElementById('mw-avg-range');
-    const avgEmoji = document.getElementById('mw-avg-emoji');
-    const avgScore = document.getElementById('mw-avg-score');
-
-    avgSelect.onchange = updateAverage;
-
-    async function updateAverage() {
-        if (!isAlive() || currentView !== 1) return;
-        
-        const days = parseInt(avgSelect.value);
-        const end = new Date();
-        const start = new Date();
-        start.setDate(end.getDate() - days);
-
-        try {
-            const logs = await window.db.mood
-                .where('datetime').between(start.toISOString(), end.toISOString())
-                .toArray();
-
-            if (logs.length === 0) {
-                avgEmoji.textContent = "🤷";
-                avgScore.textContent = "No Data";
-                return;
-            }
-
-            const sum = logs.reduce((a, b) => a + b.value, 0);
-            const avg = sum / logs.length;
-
-            avgEmoji.textContent = getEmoji(avg);
-            avgScore.textContent = avg.toFixed(1);
-
-        } catch(e) { console.error(e); }
-    }
-
-    // ==========================
-    // VIEW 2: MOOD TRENDS (Chart)
-    // ==========================
-    const chartRange = document.getElementById('mw-chart-range');
-
-    function initChart() {
-        if (!isAlive()) return;
-        const ctx = document.getElementById('mw-chart-canvas');
-        if (!ctx) return;
-
-        const existing = Chart.getChart(ctx);
-        if (existing) existing.destroy();
-
-        moodChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Mood', data: [], borderColor: '#007bff', tension: 0.3, fill:true, backgroundColor: 'rgba(0,123,255,0.1)' }] },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 } } },
-                plugins: { legend: { display: false } }
-            }
+        Array.from(quickScale.children).forEach(btn => {
+            btn.onclick = () => saveMood(parseInt(btn.dataset.val));
         });
-        
-        chartRange.onchange = updateChart;
-        updateChart();
-    }
 
-    async function updateChart() {
-        if (!isAlive() || !moodChart?.canvas?.isConnected) return;
-        
-        const days = parseInt(chartRange.value);
-        const end = new Date();
-        const start = new Date();
-        start.setDate(end.getDate() - days);
+        async function saveMood(val, tags = [], note = "", id = null, date = null) {
+            try {
+                const data = {
+                    value: val,
+                    datetime: date || new Date().toISOString(),
+                    tags: tags,
+                    notes: note
+                };
 
-        try {
-            const logs = await window.db.mood
-                .where('datetime').between(start.toISOString(), end.toISOString())
-                .toArray();
+                if (id) {
+                    await window.db.mood.update(parseInt(id), data);
+                } else {
+                    await window.db.mood.add(data);
+                }
+
+                statusText.textContent = "Saved! " + getEmoji(val);
+                statusText.style.color = "#28a745";
+                setTimeout(() => {
+                    if (isAlive()) {
+                        statusText.textContent = "Tap an emoji to save";
+                        statusText.style.color = "#888";
+                    }
+                }, 2000);
+
+                // Refresh views if active
+                if (currentView === 1) updateAverage();
+                if (currentView === 2) updateView2();
+            } catch (e) { console.error(e); }
+        }
+
+        function getEmoji(v) {
+            return ['', '😠', '😕', '😐', '🙂', '😄'][Math.round(v)] || '❓';
+        }
+
+        // ==========================
+        // VIEW 1: AVERAGE MOOD
+        // ==========================
+        const avgSelect = document.getElementById('mw-avg-range');
+        const avgEmoji = document.getElementById('mw-avg-emoji');
+        const avgScore = document.getElementById('mw-avg-score');
+
+        avgSelect.onchange = updateAverage;
+
+        async function updateAverage() {
+            if (!isAlive() || currentView !== 1) return;
+
+            const days = parseInt(avgSelect.value);
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - days);
+
+            try {
+                const logs = await window.db.mood
+                    .where('datetime').between(start.toISOString(), end.toISOString())
+                    .toArray();
+
+                if (logs.length === 0) {
+                    avgEmoji.textContent = "🤷";
+                    avgScore.textContent = "No Data";
+                    return;
+                }
+
+                const sum = logs.reduce((a, b) => a + b.value, 0);
+                const avg = sum / logs.length;
+
+                avgEmoji.textContent = getEmoji(avg);
+                avgScore.textContent = avg.toFixed(1);
+
+            } catch (e) { console.error(e); }
+        }
+
+        // ==========================
+        // VIEW 2: MOOD TRENDS (Chart/List)
+        // ==========================
+        const chartRange = document.getElementById('mw-chart-range');
+        const chartContainer = document.getElementById('mw-chart-container');
+        const listContainer = document.getElementById('mw-list-container');
+        const btnChart = document.getElementById('mw-mode-chart');
+        const btnList = document.getElementById('mw-mode-list');
+
+        // Toggle Logic
+        btnChart.onclick = () => setView2Mode('chart');
+        btnList.onclick = () => setView2Mode('list');
+
+        function setView2Mode(mode) {
+            view2Mode = mode;
+            btnChart.classList.toggle('active', mode === 'chart');
+            btnList.classList.toggle('active', mode === 'list');
+
+            chartContainer.style.display = mode === 'chart' ? 'block' : 'none';
+            listContainer.style.display = mode === 'list' ? 'block' : 'none';
+
+            updateView2();
+        }
+
+        chartRange.onchange = updateView2;
+
+        async function updateView2() {
+            if (!isAlive() || currentView !== 2) return;
+
+            const days = parseInt(chartRange.value);
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - days);
+
+            try {
+                const logs = await window.db.mood
+                    .where('datetime').between(start.toISOString(), end.toISOString())
+                    .reverse()
+                    .sortBy('datetime');
+
+                if (view2Mode === 'chart') {
+                    renderChart(logs);
+                } else {
+                    renderList(logs);
+                }
+
+            } catch (e) { console.error(e); }
+        }
+
+        function renderChart(logs) {
+            const ctx = document.getElementById('mw-chart-canvas');
+            if (!ctx) return;
+
+            const existing = Chart.getChart(ctx);
+            if (existing) existing.destroy();
 
             const daily = {};
-            logs.forEach(l => {
+            // Process in chronological order for chart
+            [...logs].reverse().forEach(l => {
                 const date = l.datetime.split('T')[0];
-                if(!daily[date]) daily[date] = {sum:0, count:0};
+                if (!daily[date]) daily[date] = { sum: 0, count: 0 };
                 daily[date].sum += l.value;
                 daily[date].count++;
             });
@@ -415,55 +660,149 @@
             const labels = Object.keys(daily).sort().map(d => d.slice(5)); // MM-DD
             const data = Object.keys(daily).sort().map(d => daily[d].sum / daily[d].count);
 
-            moodChart.data.labels = labels;
-            moodChart.data.datasets[0].data = data;
-            moodChart.update();
+            moodChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: [{ label: 'Mood', data: data, borderColor: '#007bff', tension: 0.3, fill: true, backgroundColor: 'rgba(0,123,255,0.1)' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { min: 1, max: 5, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
 
-        } catch(e) { console.error(e); }
-    }
+        function renderList(logs) {
+            listContainer.innerHTML = '';
+            if (logs.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No logs found.</div>';
+                return;
+            }
 
-    // ==========================
-    // OVERLAY LOGIC
-    // ==========================
-    const overlay = document.getElementById('mw-overlay');
-    const form = document.getElementById('mw-form');
-    const formScale = document.getElementById('mw-form-scale');
-    const tagsContainer = document.getElementById('mw-tags-container');
-    let selectedFormVal = 3; // Default
+            // Group by Date
+            const groups = {};
+            logs.forEach(l => {
+                const date = l.datetime.split('T')[0];
+                if (!groups[date]) groups[date] = [];
+                groups[date].push(l);
+            });
 
-    tagsContainer.innerHTML = '';
-    TAGS.forEach(tag => {
-        const lbl = document.createElement('label');
-        lbl.innerHTML = `<input type="checkbox" class="mw-tag-chk" value="${tag}"><span class="mw-tag-lbl">${tag}</span>`;
-        tagsContainer.appendChild(lbl);
-    });
+            const dates = Object.keys(groups).sort().reverse();
 
-    Array.from(formScale.children).forEach(btn => {
-        btn.onclick = () => {
+            dates.forEach(date => {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'mw-date-group';
+
+                const header = document.createElement('div');
+                header.className = 'mw-date-header';
+                header.textContent = new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                groupEl.appendChild(header);
+
+                groups[date].forEach(l => {
+                    const item = document.createElement('div');
+                    item.className = 'mw-log-item';
+                    item.innerHTML = `
+                    <div class="mw-log-left" onclick="editLog(${l.id})">
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <span class="mw-log-emoji">${getEmoji(l.value)}</span>
+                            <span style="font-weight:600; font-size:12px;">${new Date(l.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div class="mw-log-meta">${l.notes || (l.tags && l.tags.length ? l.tags.join(', ') : 'No notes')}</div>
+                    </div>
+                    <div class="mw-log-right">
+                        <button class="mw-log-del" onclick="deleteLog(${l.id})">×</button>
+                    </div>
+                `;
+                    groupEl.appendChild(item);
+                });
+
+                listContainer.appendChild(groupEl);
+            });
+        }
+
+        // ==========================
+        // OVERLAY LOGIC
+        // ==========================
+        const overlay = document.getElementById('mw-overlay');
+        const form = document.getElementById('mw-form');
+        const formScale = document.getElementById('mw-form-scale');
+        const tagsContainer = document.getElementById('mw-tags-container');
+        let selectedFormVal = 3; // Default
+
+        tagsContainer.innerHTML = '';
+        TAGS.forEach(tag => {
+            const lbl = document.createElement('label');
+            lbl.innerHTML = `<input type="checkbox" class="mw-tag-chk" value="${tag}"><span class="mw-tag-lbl">${tag}</span>`;
+            tagsContainer.appendChild(lbl);
+        });
+
+        Array.from(formScale.children).forEach(btn => {
+            btn.onclick = () => {
+                Array.from(formScale.children).forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedFormVal = parseInt(btn.dataset.val);
+            };
+        });
+
+        document.getElementById('mw-open-log').onclick = () => {
+            form.reset();
+            document.getElementById('mw-log-title').textContent = 'Detailed Entry';
+            document.getElementById('mw-edit-id').value = '';
+            document.getElementById('mw-edit-date').value = '';
+
             Array.from(formScale.children).forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedFormVal = parseInt(btn.dataset.val);
+            formScale.children[2].classList.add('selected');
+            selectedFormVal = 3;
+
+            // Uncheck all tags
+            tagsContainer.querySelectorAll('input').forEach(i => i.checked = false);
+
+            overlay.style.display = 'flex';
         };
-    });
 
-    document.getElementById('mw-open-log').onclick = () => {
-        form.reset();
-        Array.from(formScale.children).forEach(b => b.classList.remove('selected'));
-        formScale.children[2].classList.add('selected');
-        selectedFormVal = 3;
-        overlay.style.display = 'flex';
-    };
-    
-    document.getElementById('mw-cancel').onclick = () => overlay.style.display = 'none';
+        window.editLog = async (id) => {
+            const log = await window.db.mood.get(id);
+            if (log) {
+                document.getElementById('mw-log-title').textContent = 'Edit Entry';
+                document.getElementById('mw-edit-id').value = log.id;
+                document.getElementById('mw-edit-date').value = log.datetime;
+                document.getElementById('mw-note').value = log.notes || '';
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const tags = Array.from(tagsContainer.querySelectorAll('input:checked')).map(i => i.value);
-        const note = document.getElementById('mw-note').value;
-        
-        await saveMood(selectedFormVal, tags, note);
-        overlay.style.display = 'none';
-    };
+                // Set Emoji
+                selectedFormVal = log.value;
+                Array.from(formScale.children).forEach(b => {
+                    b.classList.remove('selected');
+                    if (parseInt(b.dataset.val) === log.value) b.classList.add('selected');
+                });
 
-})();
+                // Set Tags
+                tagsContainer.querySelectorAll('input').forEach(i => {
+                    i.checked = log.tags && log.tags.includes(i.value);
+                });
+
+                overlay.style.display = 'flex';
+            }
+        };
+
+        window.deleteLog = async (id) => {
+            if (confirm('Delete this entry?')) {
+                await window.db.mood.delete(id);
+                if (currentView === 2) updateView2();
+                if (currentView === 1) updateAverage();
+            }
+        };
+
+        document.getElementById('mw-cancel').onclick = () => overlay.style.display = 'none';
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('mw-edit-id').value;
+            const date = document.getElementById('mw-edit-date').value;
+            const tags = Array.from(tagsContainer.querySelectorAll('input:checked')).map(i => i.value);
+            const note = document.getElementById('mw-note').value;
+
+            await saveMood(selectedFormVal, tags, note, id, date);
+            overlay.style.display = 'none';
+        };
+
+    })();
 </script>

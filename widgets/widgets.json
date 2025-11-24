@@ -1,6 +1,6 @@
 {
   "config": {
-    "baseUrl": "widgets/", 
+    "baseUrl": "widgets/",
     "updateIntervalMinutes": 1
   },
   "widgets": [
@@ -19,26 +19,32 @@
     {
       "id": "food-widget",
       "file": "food-widget.html",
-      "version": "1.0.0",
+      "version": "1.0.3",
       "containerId": "widget-container-food"
     },
     {
       "id": "finance-widget",
       "file": "finance-widget.html",
-      "version": "1.0.1",
+      "version": "1.2.0",
       "containerId": "widget-container-finance"
     },
     {
       "id": "sobriety-widget",
       "file": "sobriety-widget.html",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "containerId": "widget-container-sobriety"
     },
     {
       "id": "mood-widget",
       "file": "mood-widget.html",
-      "version": "1.0.",
+      "version": "1.0.2",
       "containerId": "widget-container-mood"
+    },
+    {
+      "id": "overview-widget",
+      "file": "overview-widget.html",
+      "version": "2.8.0",
+      "containerId": "widget-container-overview"
     },
     {
       "id": "spanish-quiz",
@@ -73,7 +79,7 @@
     {
       "id": "db-utilities",
       "file": "db-utilities.html",
-      "version": "1.0.7",
+      "version": "1.9.0",
       "type": "overlay",
       "targetId": "settings-content"
     },

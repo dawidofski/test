@@ -1,0 +1,432 @@
+<style>
+    /* --- Layout --- */
+    .wt-widget {
+        width: 100%;
+        height: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* --- Header --- */
+    .wt-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        min-height: 30px;
+    }
+
+    .wt-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    /* --- Current Weight Display --- */
+    .wt-current-weight {
+        text-align: center;
+        padding: 20px;
+        margin-bottom: 15px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .wt-current-weight:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .wt-current-weight {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .wt-current-weight:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+    }
+
+    .wt-weight-value {
+        font-size: 36px;
+        font-weight: bold;
+        color: var(--accent-color);
+        margin-bottom: 5px;
+    }
+
+    .wt-weight-label {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* --- Controls --- */
+    .wt-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+
+    .wt-toggle-container {
+        display: flex;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        padding: 2px;
+    }
+
+    .wt-toggle-btn {
+        padding: 6px 16px;
+        font-size: 12px;
+        border-radius: 15px;
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        cursor: pointer;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+
+    .wt-toggle-btn.active {
+        background: var(--card-bg);
+        opacity: 1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- Chart Container --- */
+    .wt-chart-wrapper {
+        flex-grow: 1;
+        position: relative;
+        width: 100%;
+        min-height: 200px;
+    }
+
+    /* --- Overlay --- */
+    .wt-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .wt-overlay-content {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        color: var(--text-color);
+    }
+
+    .wt-form-group {
+        margin-bottom: 15px;
+    }
+
+    .wt-form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .wt-input {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .wt-btn-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .wt-btn-save {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .wt-btn-cancel {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .wt-date-info {
+        font-size: 11px;
+        color: #888;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="wt-widget" id="wt-widget-root">
+    <div class="wt-header-row">
+        <div class="wt-title">Body Weight</div>
+    </div>
+
+    <div class="wt-current-weight" id="wt-current-display">
+        <div class="wt-weight-value" id="wt-current-value">--</div>
+        <div class="wt-weight-label">Current Weight (kg)</div>
+        <div class="wt-date-info" id="wt-last-date">Click to add entry</div>
+    </div>
+
+    <div class="wt-controls">
+        <div class="wt-toggle-container">
+            <button class="wt-toggle-btn active" id="wt-mode-week">Week</button>
+            <button class="wt-toggle-btn" id="wt-mode-month">Month</button>
+        </div>
+    </div>
+
+    <div class="wt-chart-wrapper">
+        <canvas id="wt-chart"></canvas>
+    </div>
+</div>
+
+<!-- Add Weight Overlay -->
+<div id="wt-overlay" class="wt-overlay">
+    <div class="wt-overlay-content">
+        <h3 style="margin-top:0">Log Weight</h3>
+        <form id="wt-form">
+            <div class="wt-form-group">
+                <label>Weight (kg)</label>
+                <input type="number" id="wt-input-weight" class="wt-input" step="0.1" required>
+            </div>
+            <div class="wt-form-group">
+                <label>Date</label>
+                <input type="date" id="wt-input-date" class="wt-input" required>
+            </div>
+            <div class="wt-form-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="wt-input-notes" class="wt-input" placeholder="Optional notes">
+            </div>
+            <div class="wt-btn-row">
+                <button type="button" id="wt-btn-cancel" class="wt-btn-cancel">Cancel</button>
+                <button type="submit" class="wt-btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // === DOM & STATE ===
+        const root = document.getElementById('wt-widget-root');
+        const currentValue = document.getElementById('wt-current-value');
+        const lastDate = document.getElementById('wt-last-date');
+        const currentDisplay = document.getElementById('wt-current-display');
+        const overlay = document.getElementById('wt-overlay');
+        const form = document.getElementById('wt-form');
+        const btnWeek = document.getElementById('wt-mode-week');
+        const btnMonth = document.getElementById('wt-mode-month');
+
+        let chartInstance = null;
+        let currentMode = 'week'; // 'week' or 'month'
+
+        const getTodayStr = () => {
+            const d = new Date();
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+        };
+
+        const isAlive = () => root && root.isConnected;
+
+        // === LOAD DATA ===
+        async function loadData() {
+            if (!isAlive()) return;
+
+            // Get latest weight
+            const latest = await window.db.weightLogs.orderBy('date').reverse().first();
+
+            if (latest) {
+                currentValue.textContent = latest.weight.toFixed(1);
+                const dateObj = new Date(latest.date);
+                lastDate.textContent = `Last updated: ${dateObj.toLocaleDateString()}`;
+            } else {
+                currentValue.textContent = '--';
+                lastDate.textContent = 'Click to add entry';
+            }
+
+            // Load chart data
+            await loadChart();
+        }
+
+        async function loadChart() {
+            if (!isAlive()) return;
+
+            const end = new Date();
+            const start = new Date();
+
+            if (currentMode === 'week') {
+                start.setDate(end.getDate() - 6);
+            } else {
+                start.setDate(end.getDate() - 29);
+            }
+
+            const startStr = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+            const endStr = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+            const logs = await window.db.weightLogs
+                .where('date').between(startStr, endStr, true, true)
+                .sortBy('date');
+
+            renderChart(logs, start, end);
+        }
+
+        function renderChart(logs, start, end) {
+            const ctx = document.getElementById('wt-chart');
+            if (!ctx) return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            // Create data points for each day
+            const dataPoints = [];
+            const labels = [];
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                const log = logs.find(l => l.date === dStr);
+
+                labels.push(dStr.slice(5)); // MM-DD format
+                dataPoints.push(log ? log.weight : null);
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: dataPoints,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toFixed(1) + ' kg';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.parsed.y ? context.parsed.y.toFixed(1) + ' kg' : 'No data';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // === EVENT HANDLERS ===
+
+        // Open overlay to add weight
+        currentDisplay.onclick = () => {
+            document.getElementById('wt-input-date').value = getTodayStr();
+            document.getElementById('wt-input-weight').value = '';
+            document.getElementById('wt-input-notes').value = '';
+            overlay.style.display = 'flex';
+            // Focus on weight input
+            setTimeout(() => document.getElementById('wt-input-weight').focus(), 100);
+        };
+
+        // Close overlay
+        document.getElementById('wt-btn-cancel').onclick = () => {
+            overlay.style.display = 'none';
+        };
+
+        // Submit form
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const weight = parseFloat(document.getElementById('wt-input-weight').value);
+            const date = document.getElementById('wt-input-date').value;
+            const notes = document.getElementById('wt-input-notes').value;
+
+            if (!weight || !date) return;
+
+            // Check if entry for this date already exists
+            const existing = await window.db.weightLogs.where('date').equals(date).first();
+
+            if (existing) {
+                if (confirm('An entry for this date already exists. Update it?')) {
+                    await window.db.weightLogs.update(existing.id, { weight, notes });
+                }
+            } else {
+                await window.db.weightLogs.add({ date, weight, notes });
+            }
+
+            overlay.style.display = 'none';
+            loadData();
+        };
+
+        // Toggle between week and month
+        btnWeek.onclick = () => {
+            currentMode = 'week';
+            btnWeek.classList.add('active');
+            btnMonth.classList.remove('active');
+            loadChart();
+        };
+
+        btnMonth.onclick = () => {
+            currentMode = 'month';
+            btnMonth.classList.add('active');
+            btnWeek.classList.remove('active');
+            loadChart();
+        };
+
+        // Close overlay on background click
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        };
+
+        // === INIT ===
+        loadData();
+
+    })();
+</script>

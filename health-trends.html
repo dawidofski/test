@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Health Trends</title>
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="database.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f7f6; 
+            color: #333;
+        }
+        h1 { color: #333; }
+        
+        /* --- Control Section --- */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .control-group label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        select, button, input[type="date"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box; /* Important for grid */
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+        button:hover { background-color: #0056b3; }
+        
+        /* Date Range Specifics */
+        .date-range-group {
+            grid-column: 1 / -1; /* Span full width */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .date-range-group label {
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        .date-range-group button {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            flex-grow: 1;
+            width: auto;
+        }
+        .date-range-group button:hover { background-color: #5a6268; }
+        .date-range-group .custom-date {
+            display: flex;
+            gap: 5px;
+            flex-grow: 2;
+            min-width: 280px;
+        }
+        
+        /* Plot Button */
+        #plot-btn {
+            grid-column: 1 / -1; /* Span full width */
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        #plot-btn:hover { background-color: #218838; }
+        
+        /* --- Status & Chart --- */
+        #status-message {
+            margin: 15px 0;
+            font-style: italic;
+            color: #555;
+        }
+        
+        .chart-container {
+            position: relative; 
+            height: 60vh; 
+            width: 90vw;
+            max-width: 1000px;
+            margin-top: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>Health Trends</h1>
+
+    <div class="controls-grid">
+        <div class="control-group">
+            <label for="metric-select">Metric:</label>
+            <select id="metric-select">
+                <option value="steps_total">Steps</option>
+                <option value="heart_rate_avg">Heart Rate (Avg)</option>
+                <option value="sleep_duration">Sleep (Hours)</option>
+            </select>
+        </div>
+
+        <div class="date-range-group">
+            <label>Date Range:</label>
+            <button id="range-week">This Week</button>
+            <button id="range-month">This Month</button>
+            <button id="range-all">All Time</button>
+            <div class="custom-date">
+                <input type="date" id="date-start" aria-label="Start Date">
+                <input type="date" id="date-end" aria-label="End Date">
+            </div>
+        </div>
+        
+        <button id="plot-btn">Plot Chart</button>
+    </div>
+
+    <div id="status-message">Select a metric and a date range.</div>
+
+    <div class="chart-container">
+        <canvas id="trend-chart"></canvas>
+    </div>
+    
+    <script>
+        // === GLOBALS & DOM REFERENCES ===
+        const metricSelect = document.getElementById('metric-select');
+        const plotBtn = document.getElementById('plot-btn');
+        const statusMsg = document.getElementById('status-message');
+        const chartCtx = document.getElementById('trend-chart').getContext('2d');
+        
+        const dateStartInput = document.getElementById('date-start');
+        const dateEndInput = document.getElementById('date-end');
+        
+        let chartInstance = null;
+        let currentStartDate = null;
+        let currentEndDate = null;
+        
+        // Date Range Buttons
+        document.getElementById('range-week').addEventListener('click', () => setDateRange('week'));
+        document.getElementById('range-month').addEventListener('click', () => setDateRange('month'));
+        document.getElementById('range-all').addEventListener('click', () => setDateRange('all'));
+
+        // === DATE HELPERS (from correlation.html) ===
+        
+        function getYYYYMMDD(dateInput) {
+            if (!dateInput) return null;
+            try {
+                if (typeof dateInput === 'string' && dateInput.length === 10 && dateInput.includes('-')) {
+                    return dateInput;
+                }
+                const date = new Date(dateInput);
+                const tzOffset = date.getTimezoneOffset() * 60000;
+                const localDate = new Date(date.getTime() - tzOffset);
+                return localDate.toISOString().split('T')[0];
+            } catch (e) {
+                console.warn("Could not parse date:", dateInput);
+                return null;
+            }
+        }
+        
+        const today = new Date();
+        const todayStr = getYYYYMMDD(today);
+        dateEndInput.value = todayStr; // Default end date to today
+
+        function setDateRange(rangeType) {
+            const today = new Date();
+            currentEndDate = getYYYYMMDD(today);
+            dateEndInput.value = currentEndDate;
+
+            if (rangeType === 'week') {
+                const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                currentStartDate = getYYYYMMDD(weekStart);
+            } else if (rangeType === 'month') {
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                currentStartDate = getYYYYMMDD(monthStart);
+            } else if (rangeType === 'all') {
+                currentStartDate = "1970-01-01"; // Dexie min date
+            }
+            
+            dateStartInput.value = currentStartDate;
+            handlePlot(); // Auto-plot when a range button is clicked
+        }
+        
+        function getDatesArray(start, end) {
+            const arr = [];
+            const endDate = new Date(end);
+            let dt = new Date(start + 'T00:00:00'); // Ensure start date is treated as local
+            for(dt; dt <= endDate; dt.setDate(dt.getDate() + 1)){
+                arr.push(getYYYYMMDD(new Date(dt)));
+            }
+            return arr;
+        }
+
+        // === DATA FETCHING (Adapted from correlation.html) ===
+
+        /**
+         * Fetches and aggregates data for the selected health metric.
+         * This uses the *exact* same logic as your correlation file.
+         */
+        async function getMetricData(metricId, startDate, endDate) {
+            const dataMap = new Map();
+            const startOfDay = new Date(startDate + 'T00:00:00');
+            const endOfDay = new Date(endDate + 'T23:59:59');
+            
+            // --- HEALTH ---
+            if (metricId === 'sleep_duration') {
+                const logs = await db.sleepLogs.where('date').between(startDate, endDate, true, true).toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.date);
+                    const hours = (parseFloat(entry.durationSeconds) || 0) / 3600;
+                    dataMap.set(date, (dataMap.get(date) || 0) + hours);
+                }
+            }
+            else if (metricId === 'heart_rate_avg') {
+                const logs = await db.healthTimeSeries
+                    .where('[type+datetime]').between(['heartrate', startOfDay], ['heartrate', endOfDay], true, true)
+                    .toArray();
+                const dailySums = new Map();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    const current = dailySums.get(date) || { sum: 0, count: 0 };
+                    dailySums.set(date, { sum: current.sum + entry.value, count: current.count + 1 });
+                }
+                for (const [date, data] of dailySums.entries()) {
+                    dataMap.set(date, data.sum / data.count);
+                }
+            }
+            else if (metricId === 'steps_total') {
+                const logs = await db.healthTimeSeries
+                    .where('[type+datetime]').between(['steps', startOfDay], ['steps', endOfDay], true, true)
+                    .toArray();
+                for (const entry of logs) {
+                    const date = getYYYYMMDD(entry.datetime);
+                    dataMap.set(date, entry.value);
+                }
+            }
+
+            return dataMap;
+        }
+
+        // === PLOTTING ===
+
+        /**
+         * Draws the line chart.
+         */
+        function drawChart(dataPoints, label, startDate, endDate) {
+            if (chartInstance) {
+                chartInstance.destroy(); // Clear old chart
+            }
+            
+            chartInstance = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: label,
+                            data: dataPoints,
+                            borderColor: 'rgb(0, 123, 255)',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            spanGaps: true, // Connect lines over null points
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' },
+                            title: { display: true, text: 'Date' },
+                            min: startDate, // Set view range
+                            max: endDate
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: label },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        }
+
+        // === MAIN EXECUTION ===
+
+        /**
+         * Main function called to plot the chart
+         */
+        async function handlePlot() {
+            // 1. Get plot parameters
+            const metricId = metricSelect.value;
+            const label = metricSelect.options[metricSelect.selectedIndex].text;
+            
+            // 2. Get and validate date range
+            currentStartDate = dateStartInput.value;
+            currentEndDate = dateEndInput.value;
+            
+            if (!currentStartDate || !currentEndDate) {
+                alert("Please select a valid start and end date.");
+                return;
+            }
+            if (currentStartDate > currentEndDate) {
+                alert("Start date must be before end date.");
+                return;
+            }
+
+            statusMsg.textContent = `Loading data for ${label}...`;
+
+            try {
+                // 3. Fetch data
+                const dataMap = await getMetricData(metricId, currentStartDate, currentEndDate);
+                
+                if (dataMap.size === 0) {
+                     statusMsg.textContent = `No data found for ${label} in the selected date range.`;
+                     if(chartInstance) chartInstance.destroy();
+                     return;
+                }
+                
+                // 4. Format data for line chart
+                // We create a full array of dates so the line chart shows gaps for missing days
+                const dateLabels = getDatesArray(currentStartDate, currentEndDate);
+                const dataPoints = dateLabels.map(date => ({
+                    x: date,
+                    y: dataMap.get(date) ?? null // Use null for missing data
+                }));
+
+                // 5. Draw the chart
+                drawChart(dataPoints, label, currentStartDate, currentEndDate);
+                statusMsg.textContent = `Showing ${label} from ${currentStartDate} to ${currentEndDate}.`;
+
+            } catch (e) {
+                console.error("Error during plotting:", e);
+                statusMsg.textContent = `Error: ${e.message}. See console for details.`;
+            }
+        }
+
+        // --- INITIALIZE ---
+        db.open().then(() => {
+            console.log("Trends DB is ready.");
+            
+            // Set default range to "This Month" and plot
+            setDateRange('month'); 
+            
+            // Add listener for the main plot button
+            plotBtn.addEventListener('click', handlePlot);
+            
+            // Add listener to auto-plot when metric changes
+            metricSelect.addEventListener('change', handlePlot);
+            
+        }).catch(e => {
+            console.error("Could not open database:", e);
+            statusMsg.textContent = 'Fatal Error: Could not open database. See console.';
+        });
+
+    </script>
+</body>
+</html>
